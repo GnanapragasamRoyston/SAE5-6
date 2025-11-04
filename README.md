@@ -15,7 +15,12 @@ L’objectif : proposer des suggestions personnalisées basées sur l’usage, t
 Les défis : représenter les données efficacement, optimiser la recommandation pour la batterie et choisir les technologies mobiles appropriées.
 
 ## Fonctionnalités principales
-
+- Recommandations adaptatives basées sur l’usage
+- Fonctionnement hors ligne
+- Suivi des préférences de l’utilisateur
+- Contrôle total des données personnelles
+- Interface mobile intuitive
+- Optimisation des ressources (batterie et mémoire)
 
 ---
 
@@ -57,5 +62,6 @@ Décompressez ou placez le projet dans un répertoire local.
   
 
 ## Technologies utilisées
+
 
 
