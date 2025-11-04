@@ -1,0 +1,962 @@
+[
+    {
+        "nom": "Pique-nique",
+        "description": "Manger et se détendre dans un parc ou en extérieur",
+        "joueurs_min": 1,
+        "joueurs_max": 10,
+        "lieu": "Parc",
+        "duree_moyenne": "2h"
+    },
+    {
+        "nom": "Bowling",
+        "description": "Lancer des boules pour renverser des quilles",
+        "joueurs_min": 2,
+        "joueurs_max": 6,
+        "lieu": "Bowling",
+        "duree_moyenne": "1h30"
+    },
+    {
+        "nom": "Jacques a dit",
+        "description": "Jeu de mouvements où il faut suivre les instructions",
+        "joueurs_min": 3,
+        "joueurs_max": 20,
+        "lieu": "Intérieur ou Jardin",
+        "duree_moyenne": "15min"
+    },
+    {
+        "nom": "Cache-cache",
+        "description": "Un joueur cherche les autres qui se cachent",
+        "joueurs_min": 2,
+        "joueurs_max": 10,
+        "lieu": "Maison ou Jardin",
+        "duree_moyenne": "20min"
+    },
+    {
+        "nom": "Scrabble",
+        "description": "Jeu de lettres pour former des mots sur un plateau",
+        "joueurs_min": 2,
+        "joueurs_max": 4,
+        "lieu": "Intérieur",
+        "duree_moyenne": "1h"
+    },
+    {
+        "nom": "Chasse au trésor",
+        "description": "Suivre des indices pour trouver un trésor caché",
+        "joueurs_min": 2,
+        "joueurs_max": 10,
+        "lieu": "Parc ou Maison",
+        "duree_moyenne": "1h30"
+    },
+    {
+        "nom": "Pétanque",
+        "description": "Lancer des boules pour se rapprocher du cochonnet",
+        "joueurs_min": 2,
+        "joueurs_max": 6,
+        "lieu": "Extérieur",
+        "duree_moyenne": "1h"
+    },
+    {
+        "nom": "Mölkky",
+        "description": "Jeu de quilles finlandaises à lancer",
+        "joueurs_min": 2,
+        "joueurs_max": 10,
+        "lieu": "Extérieur",
+        "duree_moyenne": "45min"
+    },
+    {
+        "nom": "Monopoly",
+        "description": "Jeu de société pour acheter et vendre des propriétés",
+        "joueurs_min": 2,
+        "joueurs_max": 6,
+        "lieu": "Intérieur",
+        "duree_moyenne": "2h"
+    },
+    {
+        "nom": "Course en sac",
+        "description": "Course où chaque joueur saute dans un sac",
+        "joueurs_min": 2,
+        "joueurs_max": 10,
+        "lieu": "Extérieur",
+        "duree_moyenne": "20min"
+    },
+    {
+        "nom": "Twister",
+        "description": "Jeu de position et de flexibilité sur un tapis coloré",
+        "joueurs_min": 2,
+        "joueurs_max": 4,
+        "lieu": "Intérieur",
+        "duree_moyenne": "15min"
+    },
+    {
+        "nom": "Karaoké",
+        "description": "Chanter sur des chansons enregistrées avec micro",
+        "joueurs_min": 1,
+        "joueurs_max": 6,
+        "lieu": "Intérieur",
+        "duree_moyenne": "1h"
+    },
+    {
+        "nom": "Football",
+        "description": "Jeu d’équipe où l’on marque des buts avec un ballon",
+        "joueurs_min": 4,
+        "joueurs_max": 22,
+        "lieu": "Extérieur",
+        "duree_moyenne": "1h"
+    },
+    {
+        "nom": "Cache-tout",
+        "description": "Jeu où il faut cacher de petits objets et les retrouver",
+        "joueurs_min": 2,
+        "joueurs_max": 8,
+        "lieu": "Maison ou Jardin",
+        "duree_moyenne": "30min"
+    },
+    {
+        "nom": "Course d’orientation",
+        "description": "Suivre un parcours à l’aide d’une carte ou boussole",
+        "joueurs_min": 1,
+        "joueurs_max": 6,
+        "lieu": "Forêt ou Parc",
+        "duree_moyenne": "1h30"
+    },
+    {
+        "nom": "Badminton",
+        "description": "Jeu de raquettes pour faire passer un volant au-dessus d’un filet",
+        "joueurs_min": 2,
+        "joueurs_max": 4,
+        "lieu": "Extérieur ou Gymnase",
+        "duree_moyenne": "45min"
+    },
+    {
+        "nom": "Ping-pong",
+        "description": "Jeu de raquettes sur une table avec une balle légère",
+        "joueurs_min": 2,
+        "joueurs_max": 4,
+        "lieu": "Intérieur",
+        "duree_moyenne": "30min"
+    },
+    {
+        "nom": "Peinture sur toile",
+        "description": "Créer des dessins ou peintures avec de la peinture et des pinceaux",
+        "joueurs_min": 1,
+        "joueurs_max": 5,
+        "lieu": "Intérieur",
+        "duree_moyenne": "1h"
+    },
+    {
+        "nom": "Origami",
+        "description": "Plier du papier pour créer des formes et animaux",
+        "joueurs_min": 1,
+        "joueurs_max": 4,
+        "lieu": "Intérieur",
+        "duree_moyenne": "30min"
+    },
+    {
+        "nom": "Cache-objet",
+        "description": "Cacher un objet et faire deviner aux autres où il est",
+        "joueurs_min": 2,
+        "joueurs_max": 6,
+        "lieu": "Maison",
+        "duree_moyenne": "20min"
+    },
+    {
+        "nom": "Course relais",
+        "description": "Courir en équipe et passer un témoin",
+        "joueurs_min": 4,
+        "joueurs_max": 20,
+        "lieu": "Extérieur",
+        "duree_moyenne": "30min"
+    },
+    {
+        "nom": "Twilight Imperium",
+        "description": "Jeu de stratégie complexe et long",
+        "joueurs_min": 3,
+        "joueurs_max": 6,
+        "lieu": "Intérieur",
+        "duree_moyenne": "6h"
+    },
+    {
+        "nom": "Charades",
+        "description": "Faire deviner des mots par mime",
+        "joueurs_min": 2,
+        "joueurs_max": 12,
+        "lieu": "Intérieur",
+        "duree_moyenne": "30min"
+    },
+    {
+        "nom": "UNO",
+        "description": "Jeu de cartes colorées pour se débarrasser de ses cartes",
+        "joueurs_min": 2,
+        "joueurs_max": 10,
+        "lieu": "Intérieur",
+        "duree_moyenne": "20min"
+    },
+    {
+        "nom": "Mots croisés",
+        "description": "Compléter une grille avec des mots selon des définitions",
+        "joueurs_min": 1,
+        "joueurs_max": 4,
+        "lieu": "Intérieur",
+        "duree_moyenne": "30min"
+    },
+    {
+        "nom": "Puzzle",
+        "description": "Assembler des pièces pour former une image",
+        "joueurs_min": 1,
+        "joueurs_max": 4,
+        "lieu": "Intérieur",
+        "duree_moyenne": "1h"
+    },
+    {
+        "nom": "Lancer de frisbee",
+        "description": "Se lancer un disque volant",
+        "joueurs_min": 2,
+        "joueurs_max": 6,
+        "lieu": "Parc ou Plage",
+        "duree_moyenne": "30min"
+    },
+    {
+        "nom": "Yoga",
+        "description": "Exercices de relaxation et posture",
+        "joueurs_min": 1,
+        "joueurs_max": 10,
+        "lieu": "Intérieur ou Extérieur",
+        "duree_moyenne": "45min"
+    },
+    {
+        "nom": "Atelier cuisine",
+        "description": "Préparer des recettes ensemble",
+        "joueurs_min": 1,
+        "joueurs_max": 6,
+        "lieu": "Cuisine",
+        "duree_moyenne": "1h30"
+    },
+    {
+        "nom": "Danse libre",
+        "description": "Bouger et danser selon sa propre musique",
+        "joueurs_min": 1,
+        "joueurs_max": 10,
+        "lieu": "Intérieur ou Extérieur",
+        "duree_moyenne": "30min"
+    },
+    {
+        "nom": "Jeu de l’oie",
+        "description": "Jeu de plateau classique avec un dé",
+        "joueurs_min": 2,
+        "joueurs_max": 6,
+        "lieu": "Intérieur",
+        "duree_moyenne": "45min"
+    },
+    {
+        "nom": "Chasse aux insectes",
+        "description": "Chercher et observer des insectes",
+        "joueurs_min": 1,
+        "joueurs_max": 6,
+        "lieu": "Jardin ou Parc",
+        "duree_moyenne": "1h"
+    },
+    {
+        "nom": "Marathon lecture",
+        "description": "Lire un livre ou une série de livres",
+        "joueurs_min": 1,
+        "joueurs_max": 3,
+        "lieu": "Intérieur",
+        "duree_moyenne": "2h"
+    },
+    {
+        "nom": "Atelier bricolage",
+        "description": "Créer des objets avec différents matériaux",
+        "joueurs_min": 1,
+        "joueurs_max": 5,
+        "lieu": "Intérieur",
+        "duree_moyenne": "1h"
+    },
+    {
+        "nom": "Jeu de rôle",
+        "description": "Incarner un personnage et jouer une histoire",
+        "joueurs_min": 2,
+        "joueurs_max": 8,
+        "lieu": "Intérieur",
+        "duree_moyenne": "2h"
+    },
+    {
+        "nom": "Slackline",
+        "description": "Marcher sur une sangle tendue entre deux points",
+        "joueurs_min": 1,
+        "joueurs_max": 4,
+        "lieu": "Extérieur",
+        "duree_moyenne": "30min"
+    },
+    {
+        "nom": "Bricolage en carton",
+        "description": "Fabriquer des objets à partir de carton recyclé",
+        "joueurs_min": 1,
+        "joueurs_max": 5,
+        "lieu": "Intérieur",
+        "duree_moyenne": "1h"
+    },
+    {
+        "nom": "Chasse au trésor photo",
+        "description": "Prendre des photos d’objets selon des indices",
+        "joueurs_min": 2,
+        "joueurs_max": 6,
+        "lieu": "Parc",
+        "duree_moyenne": "1h"
+    },
+    {
+        "nom": "Course d’escargots",
+        "description": "Faire courir des escargots pour le fun",
+        "joueurs_min": 1,
+        "joueurs_max": 6,
+        "lieu": "Jardin",
+        "duree_moyenne": "15min"
+    },
+    {
+        "nom": "Slackline tandem",
+        "description": "Marcher à deux sur une slackline",
+        "joueurs_min": 2,
+        "joueurs_max": 4,
+        "lieu": "Extérieur",
+        "duree_moyenne": "20min"
+    },
+    {
+        "nom": "Peinture à l’eau",
+        "description": "Peindre avec de l’aquarelle ou gouache",
+        "joueurs_min": 1,
+        "joueurs_max": 5,
+        "lieu": "Intérieur",
+        "duree_moyenne": "45min"
+    },
+    {
+        "nom": "Origami animalier",
+        "description": "Plier du papier pour créer des animaux",
+        "joueurs_min": 1,
+        "joueurs_max": 4,
+        "lieu": "Intérieur",
+        "duree_moyenne": "30min"
+    },
+    {
+        "nom": "Danse en ligne",
+        "description": "Danser en suivant des pas précis",
+        "joueurs_min": 2,
+        "joueurs_max": 10,
+        "lieu": "Intérieur ou Extérieur",
+        "duree_moyenne": "20min"
+    },
+    {
+        "nom": "Jeu de memory",
+        "description": "Retrouver des paires de cartes identiques",
+        "joueurs_min": 1,
+        "joueurs_max": 4,
+        "lieu": "Intérieur",
+        "duree_moyenne": "15min"
+    },
+    {
+        "nom": "Course à trois jambes",
+        "description": "Courir en duo avec les jambes attachées",
+        "joueurs_min": 2,
+        "joueurs_max": 6,
+        "lieu": "Extérieur",
+        "duree_moyenne": "20min"
+    },
+    {
+        "nom": "Slackline tricks",
+        "description": "Faire des figures sur une slackline",
+        "joueurs_min": 1,
+        "joueurs_max": 4,
+        "lieu": "Extérieur",
+        "duree_moyenne": "30min"
+    },
+    {
+        "nom": "Jeu de construction",
+        "description": "Assembler des blocs pour créer des structures",
+        "joueurs_min": 1,
+        "joueurs_max": 6,
+        "lieu": "Intérieur",
+        "duree_moyenne": "1h"
+    },
+    {
+        "nom": "Course de cerceaux",
+        "description": "Faire passer un cerceau autour d’un parcours",
+        "joueurs_min": 2,
+        "joueurs_max": 6,
+        "lieu": "Extérieur",
+        "duree_moyenne": "15min"
+    },
+    {
+        "nom": "Peinture sur galets",
+        "description": "Décorer des galets avec peinture et pinceaux",
+        "joueurs_min": 1,
+        "joueurs_max": 4,
+        "lieu": "Intérieur ou Extérieur",
+        "duree_moyenne": "30min"
+    },
+    {
+        "nom": "Tir à la corde",
+        "description": "Tirer une corde pour faire passer l’équipe adverse",
+        "joueurs_min": 4,
+        "joueurs_max": 20,
+        "lieu": "Extérieur",
+        "duree_moyenne": "20min"
+    },
+    {
+        "nom": "Jeu de rôle médiéval",
+        "description": "Incarner des personnages et vivre une aventure",
+        "joueurs_min": 2,
+        "joueurs_max": 8,
+        "lieu": "Intérieur",
+        "duree_moyenne": "2h"
+    },
+    {
+        "nom": "Ping-pong géant",
+        "description": "Jouer au ping-pong avec une grande balle",
+        "joueurs_min": 2,
+        "joueurs_max": 4,
+        "lieu": "Extérieur",
+        "duree_moyenne": "30min"
+    },
+    {
+        "nom": "Atelier pâtisserie",
+        "description": "Préparer des gâteaux ou biscuits ensemble",
+        "joueurs_min": 1,
+        "joueurs_max": 6,
+        "lieu": "Cuisine",
+        "duree_moyenne": "1h30"
+    },
+    {
+        "nom": "Ballon prisonnier",
+        "description": "Jeu de ballon où il faut toucher les adversaires",
+        "joueurs_min": 4,
+        "joueurs_max": 20,
+        "lieu": "Extérieur",
+        "duree_moyenne": "30min"
+    },
+    {
+        "nom": "Slackline tandem",
+        "description": "Marcher en duo sur la slackline",
+        "joueurs_min": 2,
+        "joueurs_max": 4,
+        "lieu": "Extérieur",
+        "duree_moyenne": "20min"
+    },
+    {
+        "nom": "Jeu de dames",
+        "description": "Jeu de stratégie sur un plateau avec pions",
+        "joueurs_min": 2,
+        "joueurs_max": 2,
+        "lieu": "Intérieur",
+        "duree_moyenne": "45min"
+    },
+    {
+        "nom": "Jeu de cartes classique",
+        "description": "Jeu de cartes comme le rami, poker, etc.",
+        "joueurs_min": 2,
+        "joueurs_max": 6,
+        "lieu": "Intérieur",
+        "duree_moyenne": "1h"
+    },
+    {
+        "nom": "Atelier sculpture",
+        "description": "Sculpter de la pâte à modeler ou argile",
+        "joueurs_min": 1,
+        "joueurs_max": 5,
+        "lieu": "Intérieur",
+        "duree_moyenne": "1h"
+    },
+    {
+        "nom": "Course de relais en sac",
+        "description": "Courir en équipe en sautant dans un sac",
+        "joueurs_min": 4,
+        "joueurs_max": 12,
+        "lieu": "Extérieur",
+        "duree_moyenne": "20min"
+    },
+    {
+        "nom": "Jeu de société stratégique",
+        "description": "Jeux comme Risk ou Catan",
+        "joueurs_min": 2,
+        "joueurs_max": 6,
+        "lieu": "Intérieur",
+        "duree_moyenne": "2h"
+    },
+    {
+        "nom": "Danse créative",
+        "description": "Danser librement sur de la musique",
+        "joueurs_min": 1,
+        "joueurs_max": 10,
+        "lieu": "Intérieur ou Extérieur",
+        "duree_moyenne": "30min"
+    },
+    {
+        "nom": "Jeu de lettres",
+        "description": "Trouver des mots sur un plateau ou cartes",
+        "joueurs_min": 1,
+        "joueurs_max": 4,
+        "lieu": "Intérieur",
+        "duree_moyenne": "30min"
+    },
+    {
+        "nom": "Course à obstacles",
+        "description": "Parcourir un parcours avec obstacles",
+        "joueurs_min": 2,
+        "joueurs_max": 10,
+        "lieu": "Extérieur",
+        "duree_moyenne": "45min"
+    },
+    {
+        "nom": "Atelier dessin",
+        "description": "Dessiner avec crayons, feutres ou peinture",
+        "joueurs_min": 1,
+        "joueurs_max": 5,
+        "lieu": "Intérieur",
+        "duree_moyenne": "1h"
+    },
+    {
+        "nom": "Slackline freestyle",
+        "description": "Faire des figures sur la slackline",
+        "joueurs_min": 1,
+        "joueurs_max": 4,
+        "lieu": "Extérieur",
+        "duree_moyenne": "30min"
+    },
+    {
+        "nom": "Course à l’œuf",
+        "description": "Transporter un œuf sur une cuillère en courant",
+        "joueurs_min": 2,
+        "joueurs_max": 10,
+        "lieu": "Extérieur",
+        "duree_moyenne": "20min"
+    },
+    {
+        "nom": "Jeu de puzzle collectif",
+        "description": "Assembler un puzzle à plusieurs",
+        "joueurs_min": 2,
+        "joueurs_max": 6,
+        "lieu": "Intérieur",
+        "duree_moyenne": "1h"
+    },
+    {
+        "nom": "Slackline tandem avancé",
+        "description": "Marcher en duo sur slackline avec figures",
+        "joueurs_min": 2,
+        "joueurs_max": 4,
+        "lieu": "Extérieur",
+        "duree_moyenne": "30min"
+    },
+    {
+        "nom": "Atelier poterie",
+        "description": "Modeler de l’argile pour créer des objets",
+        "joueurs_min": 1,
+        "joueurs_max": 5,
+        "lieu": "Intérieur",
+        "duree_moyenne": "1h30"
+    },
+    {
+        "nom": "Jeu de cartes rapide",
+        "description": "Jeux de cartes simples comme Uno ou Dobble",
+        "joueurs_min": 2,
+        "joueurs_max": 6,
+        "lieu": "Intérieur",
+        "duree_moyenne": "15min"
+    },
+    {
+        "nom": "Slackline pour débutants",
+        "description": "Apprendre à marcher sur slackline",
+        "joueurs_min": 1,
+        "joueurs_max": 4,
+        "lieu": "Extérieur",
+        "duree_moyenne": "20min"
+    },
+    {
+        "nom": "Danse en duo",
+        "description": "Danser à deux en suivant la musique",
+        "joueurs_min": 2,
+        "joueurs_max": 4,
+        "lieu": "Intérieur ou Extérieur",
+        "duree_moyenne": "20min"
+    },
+    {
+        "nom": "Jeu de société rapide",
+        "description": "Jeux comme Dobble ou Jungle Speed",
+        "joueurs_min": 2,
+        "joueurs_max": 6,
+        "lieu": "Intérieur",
+        "duree_moyenne": "15min"
+    },
+    {
+        "nom": "Slackline challenge",
+        "description": "Faire des figures difficiles sur slackline",
+        "joueurs_min": 1,
+        "joueurs_max": 4,
+        "lieu": "Extérieur",
+        "duree_moyenne": "30min"
+    },
+    {
+        "nom": "Course de sacs tandem",
+        "description": "Courir en duo avec les jambes attachées",
+        "joueurs_min": 2,
+        "joueurs_max": 6,
+        "lieu": "Extérieur",
+        "duree_moyenne": "20min"
+    },
+    {
+        "nom": "Atelier création de bijoux",
+        "description": "Fabriquer des bracelets ou colliers",
+        "joueurs_min": 1,
+        "joueurs_max": 5,
+        "lieu": "Intérieur",
+        "duree_moyenne": "1h"
+    },
+    {
+        "nom": "Jeu de société familial",
+        "description": "Jeux adaptés à tous les âges",
+        "joueurs_min": 2,
+        "joueurs_max": 6,
+        "lieu": "Intérieur",
+        "duree_moyenne": "1h"
+    },
+    {
+        "nom": "Slackline duo freestyle",
+        "description": "Faire des figures en duo sur slackline",
+        "joueurs_min": 2,
+        "joueurs_max": 4,
+        "lieu": "Extérieur",
+        "duree_moyenne": "30min"
+    },
+    {
+        "nom": "Atelier couture",
+        "description": "Créer des vêtements ou accessoires simples",
+        "joueurs_min": 1,
+        "joueurs_max": 3,
+        "lieu": "Intérieur",
+        "duree_moyenne": "1h"
+    },
+    {
+        "nom": "Jeu de société d’ambiance",
+        "description": "Jeux comme Time’s Up ou Loup-Garou",
+        "joueurs_min": 4,
+        "joueurs_max": 12,
+        "lieu": "Intérieur",
+        "duree_moyenne": "45min"
+    },
+    {
+        "nom": "Slackline relais",
+        "description": "Parcourir un parcours de slackline en relais",
+        "joueurs_min": 2,
+        "joueurs_max": 6,
+        "lieu": "Extérieur",
+        "duree_moyenne": "20min"
+    },
+    {
+        "nom": "Jeu de rôle fantastique",
+        "description": "Créer une histoire avec des personnages fantastiques",
+        "joueurs_min": 2,
+        "joueurs_max": 8,
+        "lieu": "Intérieur",
+        "duree_moyenne": "2h"
+    },
+    {
+        "nom": "Slackline battle",
+        "description": "Compétition de figures sur slackline",
+        "joueurs_min": 2,
+        "joueurs_max": 6,
+        "lieu": "Extérieur",
+        "duree_moyenne": "30min"
+    },
+    {
+        "nom": "Atelier origami avancé",
+        "description": "Créer des modèles d’origami complexes",
+        "joueurs_min": 1,
+        "joueurs_max": 4,
+        "lieu": "Intérieur",
+        "duree_moyenne": "45min"
+    },
+    {
+        "nom": "Jeu de quiz",
+        "description": "Répondre à des questions de culture générale",
+        "joueurs_min": 2,
+        "joueurs_max": 10,
+        "lieu": "Intérieur",
+        "duree_moyenne": "30min"
+    },
+    {
+        "nom": "Randonnée",
+        "description": "Marcher en nature sur un parcours défini",
+        "joueurs_min": 1,
+        "joueurs_max": 10,
+        "lieu": "Montagne ou Forêt",
+        "duree_moyenne": "2h"
+    },
+    {
+        "nom": "Atelier photo",
+        "description": "Apprendre et pratiquer la photographie",
+        "joueurs_min": 1,
+        "joueurs_max": 5,
+        "lieu": "Extérieur ou Intérieur",
+        "duree_moyenne": "1h30"
+    },
+    {
+        "nom": "Théâtre improvisé",
+        "description": "Jouer des scènes spontanées sans script",
+        "joueurs_min": 3,
+        "joueurs_max": 12,
+        "lieu": "Intérieur",
+        "duree_moyenne": "1h"
+    },
+    {
+        "nom": "Jeu du téléphone arabe",
+        "description": "Transmettre un message oral et observer sa transformation",
+        "joueurs_min": 4,
+        "joueurs_max": 20,
+        "lieu": "Intérieur ou Extérieur",
+        "duree_moyenne": "15min"
+    },
+    {
+        "nom": "Atelier magie",
+        "description": "Apprendre des tours de magie simples",
+        "joueurs_min": 1,
+        "joueurs_max": 5,
+        "lieu": "Intérieur",
+        "duree_moyenne": "1h"
+    },
+    {
+        "nom": "Jeu de devinettes",
+        "description": "Faire deviner un mot ou objet avec des indices",
+        "joueurs_min": 2,
+        "joueurs_max": 10,
+        "lieu": "Intérieur",
+        "duree_moyenne": "20min"
+    },
+    {
+        "nom": "Cinéma maison",
+        "description": "Regarder un film ensemble à la maison",
+        "joueurs_min": 1,
+        "joueurs_max": 10,
+        "lieu": "Intérieur",
+        "duree_moyenne": "2h"
+    },
+    {
+        "nom": "Soirée jeux de société",
+        "description": "Jouer à plusieurs jeux de société en groupe",
+        "joueurs_min": 2,
+        "joueurs_max": 10,
+        "lieu": "Intérieur",
+        "duree_moyenne": "3h"
+    },
+    {
+        "nom": "Atelier origami géant",
+        "description": "Plier de grandes feuilles pour créer des formes",
+        "joueurs_min": 1,
+        "joueurs_max": 4,
+        "lieu": "Intérieur",
+        "duree_moyenne": "45min"
+    },
+    {
+        "nom": "Jeu de mime",
+        "description": "Faire deviner un mot sans parler",
+        "joueurs_min": 2,
+        "joueurs_max": 10,
+        "lieu": "Intérieur",
+        "duree_moyenne": "20min"
+    },
+    {
+        "nom": "Chorale improvisée",
+        "description": "Chanter en groupe sans préparation",
+        "joueurs_min": 3,
+        "joueurs_max": 10,
+        "lieu": "Intérieur",
+        "duree_moyenne": "30min"
+    },
+    {
+        "nom": "Balade à vélo",
+        "description": "Faire une promenade à vélo ensemble",
+        "joueurs_min": 1,
+        "joueurs_max": 8,
+        "lieu": "Extérieur",
+        "duree_moyenne": "1h30"
+    },
+    {
+        "nom": "Atelier jardinage",
+        "description": "Planter et entretenir des plantes ou fleurs",
+        "joueurs_min": 1,
+        "joueurs_max": 6,
+        "lieu": "Jardin ou Balcon",
+        "duree_moyenne": "1h"
+    },
+    {
+        "nom": "Jeu du pendu",
+        "description": "Deviner un mot lettre par lettre",
+        "joueurs_min": 2,
+        "joueurs_max": 6,
+        "lieu": "Intérieur",
+        "duree_moyenne": "15min"
+    },
+    {
+        "nom": "Atelier dessin manga",
+        "description": "Apprendre à dessiner des personnages manga",
+        "joueurs_min": 1,
+        "joueurs_max": 5,
+        "lieu": "Intérieur",
+        "duree_moyenne": "1h"
+    },
+    {
+        "nom": "Marche méditative",
+        "description": "Marcher lentement en pleine conscience",
+        "joueurs_min": 1,
+        "joueurs_max": 6,
+        "lieu": "Extérieur",
+        "duree_moyenne": "30min"
+    },
+    {
+        "nom": "Tournoi de jeux vidéo",
+        "description": "Compétition amicale sur un jeu vidéo",
+        "joueurs_min": 2,
+        "joueurs_max": 8,
+        "lieu": "Intérieur",
+        "duree_moyenne": "2h"
+    },
+    {
+        "nom": "Jeu de piste",
+        "description": "Suivre des indices pour retrouver un lieu ou un objet",
+        "joueurs_min": 2,
+        "joueurs_max": 10,
+        "lieu": "Parc ou Ville",
+        "duree_moyenne": "1h"
+    },
+    {
+        "nom": "Construction en LEGO",
+        "description": "Créer des structures avec des briques LEGO",
+        "joueurs_min": 1,
+        "joueurs_max": 6,
+        "lieu": "Intérieur",
+        "duree_moyenne": "1h"
+    },
+    {
+        "nom": "Atelier musique",
+        "description": "Créer ou jouer de la musique ensemble",
+        "joueurs_min": 1,
+        "joueurs_max": 5,
+        "lieu": "Intérieur",
+        "duree_moyenne": "1h"
+    },
+    {
+        "nom": "Jeu du roi du silence",
+        "description": "Rester silencieux le plus longtemps possible",
+        "joueurs_min": 2,
+        "joueurs_max": 10,
+        "lieu": "Intérieur",
+        "duree_moyenne": "10min"
+    },
+    {
+        "nom": "Course en brouette",
+        "description": "Un joueur pousse l’autre en brouette",
+        "joueurs_min": 2,
+        "joueurs_max": 8,
+        "lieu": "Extérieur",
+        "duree_moyenne": "15min"
+    },
+    {
+        "nom": "Chasse aux cailloux colorés",
+        "description": "Trouver des galets peints ou colorés",
+        "joueurs_min": 1,
+        "joueurs_max": 6,
+        "lieu": "Jardin ou Parc",
+        "duree_moyenne": "30min"
+    },
+    {
+        "nom": "Soirée contes",
+        "description": "Raconter des histoires ou légendes",
+        "joueurs_min": 1,
+        "joueurs_max": 10,
+        "lieu": "Intérieur ou Extérieur",
+        "duree_moyenne": "1h"
+    },
+    {
+        "nom": "Tournoi d’échecs",
+        "description": "Affronter d’autres joueurs aux échecs",
+        "joueurs_min": 2,
+        "joueurs_max": 8,
+        "lieu": "Intérieur",
+        "duree_moyenne": "2h"
+    },
+    {
+        "nom": "Atelier recyclage créatif",
+        "description": "Fabriquer des objets à partir de matériaux recyclés",
+        "joueurs_min": 1,
+        "joueurs_max": 6,
+        "lieu": "Intérieur",
+        "duree_moyenne": "1h"
+    },
+    {
+        "nom": "Jeu du ballon musical",
+        "description": "Passer un ballon pendant la musique et s’arrêter à temps",
+        "joueurs_min": 3,
+        "joueurs_max": 10,
+        "lieu": "Intérieur ou Extérieur",
+        "duree_moyenne": "20min"
+    },
+    {
+        "nom": "Atelier écriture",
+        "description": "Inventer des histoires ou poèmes",
+        "joueurs_min": 1,
+        "joueurs_max": 5,
+        "lieu": "Intérieur",
+        "duree_moyenne": "1h"
+    },
+    {
+        "nom": "Spectacle improvisé",
+        "description": "Créer un petit spectacle à partir d’idées du groupe",
+        "joueurs_min": 2,
+        "joueurs_max": 10,
+        "lieu": "Intérieur",
+        "duree_moyenne": "45min"
+    },
+    {
+        "nom": "Course d’obstacles aquatique",
+        "description": "Parcours dans ou autour de l’eau",
+        "joueurs_min": 2,
+        "joueurs_max": 10,
+        "lieu": "Piscine ou Plage",
+        "duree_moyenne": "45min"
+    },
+    {
+        "nom": "Jeu du chapeau",
+        "description": "Piocher des mots et les faire deviner par mime ou description",
+        "joueurs_min": 4,
+        "joueurs_max": 12,
+        "lieu": "Intérieur",
+        "duree_moyenne": "30min"
+    },
+    {
+        "nom": "Atelier collage",
+        "description": "Créer des œuvres avec papier découpé et colle",
+        "joueurs_min": 1,
+        "joueurs_max": 5,
+        "lieu": "Intérieur",
+        "duree_moyenne": "45min"
+    },
+    {
+        "nom": "Balade nature",
+        "description": "Observer les plantes et animaux en marchant",
+        "joueurs_min": 1,
+        "joueurs_max": 8,
+        "lieu": "Forêt ou Parc",
+        "duree_moyenne": "1h"
+    },
+    {
+        "nom": "Atelier perles",
+        "description": "Créer des bijoux ou décorations en perles",
+        "joueurs_min": 1,
+        "joueurs_max": 5,
+        "lieu": "Intérieur",
+        "duree_moyenne": "1h"
+    },
+    {
+        "nom": "Tournoi de baby-foot",
+        "description": "Compétition autour d’un baby-foot",
+        "joueurs_min": 2,
+        "joueurs_max": 8,
+        "lieu": "Intérieur",
+        "duree_moyenne": "1h"
+    }
+]
