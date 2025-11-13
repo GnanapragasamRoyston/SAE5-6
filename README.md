@@ -59,9 +59,11 @@ Décompressez ou placez le projet dans un répertoire local.
 ## Équipe du projet
 - **[Rania Bousfiha](https://github.com/rania212)**
 - **[Royston Gnanapragasam](https://github.com/GnanapragasamRoyston)**
+- **[Sajith Abdoul](https://github.com/GnanapragasamRoyston)**
   
 
 ## Technologies utilisées
+
 
 
 
