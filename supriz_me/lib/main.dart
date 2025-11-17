@@ -25,6 +25,7 @@ void main() async {
 
   // Load data if boxes are empty
   if (movieBox.isEmpty) {
+    print('📥 Chargement des données depuis les fichiers JSON...');
     await DataLoader.loadAllData(
       movieBox: movieBox,
       activityBox: activityBox,
@@ -32,12 +33,42 @@ void main() async {
     );
   }
 
-  runApp(MyApp(
-    movieBox: movieBox,
-    activityBox: activityBox,
-    boardGameBox: boardGameBox,
-    userBox: userBox,
-  ));
+  // Debug: afficher le nombre d'éléments chargés dans chaque box
+  print('✅ Données chargées avec succès:');
+  print('   🎬 Films: ${movieBox.length} éléments');
+  if (movieBox.isNotEmpty) {
+    final firstMovie = movieBox.getAt(0);
+    print(
+      '      └─ Premier film: "${firstMovie?.title}" (${firstMovie?.duration}min)',
+    );
+  }
+
+  print('   🎭 Activités: ${activityBox.length} éléments');
+  if (activityBox.isNotEmpty) {
+    final firstActivity = activityBox.getAt(0);
+    print(
+      '      └─ Première activité: "${firstActivity?.title}" (${firstActivity?.minParticipants}-${firstActivity?.maxParticipants} personnes)',
+    );
+  }
+
+  print('   🎲 Jeux de société: ${boardGameBox.length} éléments');
+  if (boardGameBox.isNotEmpty) {
+    final firstGame = boardGameBox.getAt(0);
+    print(
+      '      └─ Premier jeu: "${firstGame?.title}" (${firstGame?.minPlayers}-${firstGame?.maxPlayers} joueurs)',
+    );
+  }
+
+  print('   👤 Profils utilisateur: ${userBox.length} éléments');
+
+  runApp(
+    MyApp(
+      movieBox: movieBox,
+      activityBox: activityBox,
+      boardGameBox: boardGameBox,
+      userBox: userBox,
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
