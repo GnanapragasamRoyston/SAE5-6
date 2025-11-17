@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart'; // Police stylée
+import 'package:google_fonts/google_fonts.dart';
+
+// Import des pages
+import 'films.dart';
+import 'jeux.dart';
+import 'activites.dart'; // assure-toi que le fichier contient "ActivitePage"
 
 void main() {
   runApp(const SurprizMeApp());
@@ -48,11 +53,11 @@ class HomePage extends StatelessWidget {
             child: SingleChildScrollView(
               child: Padding(
                 padding:
-                const EdgeInsets.symmetric(horizontal: 20.0, vertical: 30),
+                    const EdgeInsets.symmetric(horizontal: 20.0, vertical: 30),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    // Nom de l'application
+                    // Nom application
                     Text(
                       "Surpriz'Me",
                       style: GoogleFonts.bebasNeue(
@@ -65,7 +70,7 @@ class HomePage extends StatelessWidget {
 
                     const SizedBox(height: 20),
 
-                    // Texte de description
+                    // Description
                     Text(
                       "L'ennui vous gagne et vous ne savez pas quoi faire ?\nLAISSEZ-VOUS SURPRENDRE !",
                       textAlign: TextAlign.center,
@@ -79,26 +84,41 @@ class HomePage extends StatelessWidget {
 
                     const SizedBox(height: 40),
 
-                    // Logo légèrement décalé vers la gauche
+                    // Logo
                     Align(
-                      alignment: const Alignment(-100, 0), // plus à gauche
+                      alignment: const Alignment(-0.7, 0),
                       child: Image.asset(
-                        'lib/assets/images/logo_app.png.webp',
-                        height: 400, // logo agrandi
+                        'assets/images/logo_app.png', // corrige le chemin
+                        height: 400,
                         fit: BoxFit.contain,
                       ),
                     ),
 
                     const SizedBox(height: 10),
 
-                    // Rectangles empilés (FILMS / SERIES / ACTIVITES)
+                    // Boutons FILMS / JEUX / ACTIVITES
                     Column(
                       children: [
-                        _buildCategoryBox("FILMS", Colors.orange),
+                        _buildCategoryBox(
+                          context,
+                          "FILMS",
+                          Colors.orange,
+                          FilmsPage(),
+                        ),
                         const SizedBox(height: 20),
-                        _buildCategoryBox("SÉRIES", Colors.purple),
+                        _buildCategoryBox(
+                          context,
+                          "JEUX",
+                          Colors.purple,
+                          JeuxPage(),
+                        ),
                         const SizedBox(height: 20),
-                        _buildCategoryBox("ACTIVITÉS", Colors.blue),
+                        _buildCategoryBox(
+                          context,
+                          "ACTIVITÉS",
+                          Colors.blue,
+                          ActivitePage(), // <-- nom correct de la classe
+                        ),
                       ],
                     ),
                   ],
@@ -111,23 +131,32 @@ class HomePage extends StatelessWidget {
     );
   }
 
-  // Widget réutilisable pour les rectangles
-  Widget _buildCategoryBox(String title, Color color) {
-    return Container(
-      width: double.infinity,
-      height: 70,
-      decoration: BoxDecoration(
-        color: color,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Center(
-        child: Text(
-          title,
-          style: const TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-            fontSize: 24, // texte des rectangles agrandi
-            letterSpacing: 1,
+  // Widget pour les boutons cliquables
+  Widget _buildCategoryBox(
+      BuildContext context, String title, Color color, Widget page) {
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => page),
+        );
+      },
+      child: Container(
+        width: double.infinity,
+        height: 70,
+        decoration: BoxDecoration(
+          color: color,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Center(
+          child: Text(
+            title,
+            style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+              fontSize: 24,
+              letterSpacing: 1,
+            ),
           ),
         ),
       ),
