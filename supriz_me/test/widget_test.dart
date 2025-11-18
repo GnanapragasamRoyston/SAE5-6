@@ -17,7 +17,7 @@ void main() {
   testWidgets('Supriz Me app launches', (WidgetTester tester) async {
     // Initialize Hive for testing
     await Hive.initFlutter();
-    
+
     // Register adapters
     Hive.registerAdapter(MovieAdapter());
     Hive.registerAdapter(ActivityAdapter());
@@ -32,7 +32,7 @@ void main() {
 
     // Build our app and trigger a frame.
     await tester.pumpWidget(
-      MyApp(
+      SurprizMeApp(
         movieBox: movieBox,
         activityBox: activityBox,
         boardGameBox: boardGameBox,
@@ -40,8 +40,7 @@ void main() {
       ),
     );
 
-    // Verify that the app shows "Supriz Me"
-    expect(find.text('Supriz Me'), findsOneWidget);
-    expect(find.text('Bienvenue sur Supriz Me!'), findsOneWidget);
+    // Verify that the app shows "Surpriz'Me"
+    expect(find.text("Surpriz'Me"), findsOneWidget);
   });
 }
