@@ -28,6 +28,8 @@ class UserProfileService {
         favoriteIds: user.favoriteIds,
         viewedIds: user.viewedIds,
         groupSize: user.groupSize,
+        filmScores: user.filmScores,
+        genreScores: user.genreScores,
       );
       await _userBox.put(userId, updated);
     }
@@ -46,6 +48,8 @@ class UserProfileService {
         favoriteIds: favorites,
         viewedIds: user.viewedIds,
         groupSize: user.groupSize,
+        filmScores: user.filmScores,
+        genreScores: user.genreScores,
       );
       await _userBox.put(userId, updated);
     }
@@ -64,6 +68,8 @@ class UserProfileService {
         favoriteIds: user.favoriteIds,
         viewedIds: viewed,
         groupSize: user.groupSize,
+        filmScores: user.filmScores,
+        genreScores: user.genreScores,
       );
       await _userBox.put(userId, updated);
     }
