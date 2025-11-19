@@ -61,18 +61,6 @@ class HomePage extends StatelessWidget {
 
                   const SizedBox(height: 40),
 
-                  // Logo
-                  Align(
-                    alignment: const Alignment(-0.7, 0),
-                    child: Image.asset(
-                      'assets/images/logo_app.png',
-                      height: 400,
-                      fit: BoxFit.contain,
-                    ),
-                  ),
-
-                  const SizedBox(height: 10),
-
                   // BOUTONS
                   _buildCategoryBox(
                     context,
@@ -82,12 +70,7 @@ class HomePage extends StatelessWidget {
                   ),
                   const SizedBox(height: 20),
 
-                  _buildCategoryBox(
-                    context,
-                    "JEUX",
-                    Colors.purple,
-                    JeuxPage(),
-                  ),
+                  _buildCategoryBox(context, "JEUX", Colors.purple, JeuxPage()),
                   const SizedBox(height: 20),
 
                   _buildCategoryBox(
@@ -106,11 +89,14 @@ class HomePage extends StatelessWidget {
   }
 
   Widget _buildCategoryBox(
-      BuildContext context, String title, Color color, Widget page) {
+    BuildContext context,
+    String title,
+    Color color,
+    Widget page,
+  ) {
     return GestureDetector(
       onTap: () {
-        Navigator.push(context,
-            MaterialPageRoute(builder: (context) => page));
+        Navigator.push(context, MaterialPageRoute(builder: (context) => page));
       },
       child: Container(
         width: double.infinity,
