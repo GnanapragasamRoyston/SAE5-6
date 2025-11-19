@@ -20,6 +20,8 @@ class UserProfileAdapter extends TypeAdapter<UserProfile> {
       favoriteIds: (fields[4] as List).cast<String>(),
       viewedIds: (fields[5] as List).cast<String>(),
       groupSize: fields[6] as int,
+      filmScores: fields[7] as Map<String, int>,
+      genreScores: fields[8] as Map<String, int>,
     );
   }
 
