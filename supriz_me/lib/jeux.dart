@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class JeuxPage extends StatelessWidget {
-  JeuxPage({super.key});
+  const JeuxPage({super.key});
 
   @override
   Widget build(BuildContext context) {

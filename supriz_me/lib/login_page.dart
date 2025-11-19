@@ -155,7 +155,7 @@ class _LoginPageState extends State<LoginPage> {
       style: const TextStyle(color: Colors.white),
       decoration: InputDecoration(
         filled: true,
-        fillColor: Colors.white.withOpacity(0.25),
+        fillColor: Colors.white.withValues(alpha: 0.25),
         labelText: label,
         labelStyle: const TextStyle(color: Colors.white),
         prefixIcon: Icon(icon, color: Colors.white),
