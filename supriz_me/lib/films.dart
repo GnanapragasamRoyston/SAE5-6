@@ -94,14 +94,25 @@ class FilmsPage extends StatelessWidget {
                               style: const TextStyle(
                                 color: Colors.white,
                                 fontWeight: FontWeight.bold,
+                                fontSize: 11,
                               ),
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              '⭐ ${movie?.rating.toStringAsFixed(1) ?? "0.0"}',
+                              '${movie?.duration ?? 0}min',
                               style: const TextStyle(
                                 color: Colors.orange,
-                                fontSize: 12,
+                                fontSize: 10,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              movie?.genre ?? 'N/A',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                color: Colors.grey,
+                                fontSize: 9,
                               ),
                             ),
                           ],
@@ -164,14 +175,25 @@ class FilmsPage extends StatelessWidget {
                                         style: const TextStyle(
                                           color: Colors.white,
                                           fontWeight: FontWeight.bold,
+                                          fontSize: 11,
                                         ),
                                       ),
                                       const SizedBox(height: 4),
                                       Text(
                                         '${movie.duration.toInt()}min',
                                         style: const TextStyle(
-                                          color: Colors.yellow,
-                                          fontSize: 12,
+                                          color: Colors.green,
+                                          fontSize: 10,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        movie.genre,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: const TextStyle(
+                                          color: Colors.grey,
+                                          fontSize: 9,
                                         ),
                                       ),
                                     ],
@@ -236,6 +258,7 @@ class FilmsPage extends StatelessWidget {
                                         style: const TextStyle(
                                           color: Colors.white,
                                           fontWeight: FontWeight.bold,
+                                          fontSize: 11,
                                         ),
                                       ),
                                       const SizedBox(height: 4),
@@ -243,7 +266,17 @@ class FilmsPage extends StatelessWidget {
                                         '${movie.duration.toInt()}min',
                                         style: const TextStyle(
                                           color: Colors.orange,
-                                          fontSize: 12,
+                                          fontSize: 10,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        movie.genre,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: const TextStyle(
+                                          color: Colors.grey,
+                                          fontSize: 9,
                                         ),
                                       ),
                                     ],
