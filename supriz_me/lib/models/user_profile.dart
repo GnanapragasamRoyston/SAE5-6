@@ -25,6 +25,15 @@ class UserProfile {
   @HiveField(6)
   final int groupSize; // nb de personnes pour activités/jeux
 
+// --------------------------------------------- AJOUT POUR RECOMANDATIONS FILMS ---------------------------------------------
+  @HiveField(7)
+  final Map<String, int> filmScores;
+
+  @HiveField(8)
+  final Map<String, int> genreScores;
+
+
+
   const UserProfile({
     required this.id,
     required this.username,
@@ -33,5 +42,7 @@ class UserProfile {
     required this.favoriteIds,
     required this.viewedIds,
     required this.groupSize,
+    required this.filmScores,
+    required this.genreScores,
   });
 }
