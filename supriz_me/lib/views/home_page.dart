@@ -80,7 +80,7 @@ class HomePage extends StatelessWidget {
                   // BOUTONS
                   _buildCategoryBox(
                     context,
-                    "MOVIES",
+                    "FILMS",
                     Colors.orange,
                     MoviesPage(movieBox: movieBox),
                   ),
@@ -88,7 +88,7 @@ class HomePage extends StatelessWidget {
 
                   _buildCategoryBox(
                     context,
-                    "GAMES",
+                    "JEUX",
                     Colors.purple,
                     GamesPage(boardGameBox: boardGameBox),
                   ),
@@ -96,7 +96,7 @@ class HomePage extends StatelessWidget {
 
                   _buildCategoryBox(
                     context,
-                    "ACTIVITIES",
+                    "ACTIVITÉS",
                     Colors.blue,
                     ActivitiesPage(activityBox: activityBox),
                   ),
