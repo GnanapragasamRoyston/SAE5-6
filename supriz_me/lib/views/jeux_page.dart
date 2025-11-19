@@ -1,18 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hive/hive.dart';
-import 'models/movie.dart';
+import '../models/board_game.dart';
 
-class FilmsPage extends StatelessWidget {
-  final Box<Movie> movieBox;
+class JeuxPage extends StatelessWidget {
+  final Box<BoardGame> boardGameBox;
 
-  const FilmsPage({super.key, required this.movieBox});
+  const JeuxPage({super.key, required this.boardGameBox});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Films"),
+        title: const Text("Jeux"),
         backgroundColor: Colors.black,
         elevation: 0,
       ),
@@ -20,10 +20,10 @@ class FilmsPage extends StatelessWidget {
         decoration: const BoxDecoration(
           gradient: LinearGradient(
             colors: [
-              Color(0xFFFF6F91), // rose
-              Color(0xFF845EC2), // violet
-              Color(0xFF2196F3), // bleu
-              Color(0xFF00C9A7), // turquoise
+              Color(0xFFFF6F91),
+              Color(0xFF845EC2),
+              Color(0xFF2196F3),
+              Color(0xFF00C9A7),
             ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
@@ -34,7 +34,7 @@ class FilmsPage extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Cube orange avec "Film"
+              // Cube orange
               Center(
                 child: Container(
                   width: 200,
@@ -45,7 +45,7 @@ class FilmsPage extends StatelessWidget {
                   ),
                   child: Center(
                     child: Text(
-                      "Film",
+                      "Jeux",
                       style: GoogleFonts.bebasNeue(
                         textStyle: const TextStyle(
                           color: Colors.white,
@@ -58,9 +58,9 @@ class FilmsPage extends StatelessWidget {
               ),
               const SizedBox(height: 30),
 
-              // Section 1 : Tous les films
+              // Section 1 : Tous les jeux
               const Text(
-                "Tous les films",
+                "Tous les jeux",
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 18,
@@ -72,9 +72,9 @@ class FilmsPage extends StatelessWidget {
                 height: 100,
                 child: ListView.builder(
                   scrollDirection: Axis.horizontal,
-                  itemCount: movieBox.length > 5 ? 5 : movieBox.length,
+                  itemCount: boardGameBox.length > 5 ? 5 : boardGameBox.length,
                   itemBuilder: (context, index) {
-                    final movie = movieBox.getAt(index);
+                    final game = boardGameBox.getAt(index);
                     return Container(
                       margin: const EdgeInsets.only(right: 10),
                       width: 150,
@@ -88,31 +88,20 @@ class FilmsPage extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              movie?.title ?? 'Film',
+                              game?.title ?? 'Jeu',
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
                               style: const TextStyle(
                                 color: Colors.white,
                                 fontWeight: FontWeight.bold,
-                                fontSize: 11,
                               ),
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              '${movie?.duration ?? 0}min',
+                              '${game?.minPlayers ?? 1}-${game?.maxPlayers ?? 0} joueurs',
                               style: const TextStyle(
-                                color: Colors.orange,
-                                fontSize: 10,
-                              ),
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              movie?.genre ?? 'N/A',
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                color: Colors.grey,
-                                fontSize: 9,
+                                color: Colors.yellow,
+                                fontSize: 12,
                               ),
                             ),
                           ],
@@ -124,9 +113,9 @@ class FilmsPage extends StatelessWidget {
               ),
               const SizedBox(height: 20),
 
-              // Section 2 : Films courts (< 120 min)
+              // Section 2 : Jeux pour 2 joueurs
               const Text(
-                "Films courts",
+                "Jeux pour 2 joueurs",
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 18,
@@ -138,23 +127,95 @@ class FilmsPage extends StatelessWidget {
                 height: 100,
                 child: Builder(
                   builder: (context) {
-                    final shortMovies = movieBox.values
-                        .where((m) => m.duration < 120)
+                    final twoPlayerGames = boardGameBox.values
+                        .where((g) => g.minPlayers <= 2 && g.maxPlayers >= 2)
                         .toList();
-                    return shortMovies.isEmpty
+                    return twoPlayerGames.isEmpty
                         ? const Center(
                             child: Text(
-                              'Aucun film court',
+                              'Aucun jeu pour 2',
                               style: TextStyle(color: Colors.white),
                             ),
                           )
                         : ListView.builder(
                             scrollDirection: Axis.horizontal,
-                            itemCount: shortMovies.length > 5
+                            itemCount: twoPlayerGames.length > 5
                                 ? 5
-                                : shortMovies.length,
+                                : twoPlayerGames.length,
                             itemBuilder: (context, index) {
-                              final movie = shortMovies[index];
+                              final game = twoPlayerGames[index];
+                              return Container(
+                                margin: const EdgeInsets.only(right: 10),
+                                width: 150,
+                                decoration: BoxDecoration(
+                                  color: Colors.blueGrey,
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        game.title,
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        '${game.minPlayers}-${game.maxPlayers} joueurs',
+                                        style: const TextStyle(
+                                          color: Colors.cyan,
+                                          fontSize: 12,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            },
+                          );
+                  },
+                ),
+              ),
+              const SizedBox(height: 20),
+
+              // Section 3 : Jeux pour groupes (4+ joueurs)
+              const Text(
+                "Jeux pour groupes (4+ joueurs)",
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 10),
+              SizedBox(
+                height: 100,
+                child: Builder(
+                  builder: (context) {
+                    final groupGames = boardGameBox.values
+                        .where((g) => g.maxPlayers >= 4)
+                        .toList();
+                    return groupGames.isEmpty
+                        ? const Center(
+                            child: Text(
+                              'Aucun jeu de groupe',
+                              style: TextStyle(color: Colors.white),
+                            ),
+                          )
+                        : ListView.builder(
+                            scrollDirection: Axis.horizontal,
+                            itemCount: groupGames.length > 5
+                                ? 5
+                                : groupGames.length,
+                            itemBuilder: (context, index) {
+                              final game = groupGames[index];
                               return Container(
                                 margin: const EdgeInsets.only(right: 10),
                                 width: 150,
@@ -169,114 +230,20 @@ class FilmsPage extends StatelessWidget {
                                         CrossAxisAlignment.start,
                                     children: [
                                       Text(
-                                        movie.title,
+                                        game.title,
                                         maxLines: 2,
                                         overflow: TextOverflow.ellipsis,
                                         style: const TextStyle(
                                           color: Colors.white,
                                           fontWeight: FontWeight.bold,
-                                          fontSize: 11,
                                         ),
                                       ),
                                       const SizedBox(height: 4),
                                       Text(
-                                        '${movie.duration.toInt()}min',
+                                        '${game.minPlayers}-${game.maxPlayers} joueurs',
                                         style: const TextStyle(
-                                          color: Colors.green,
-                                          fontSize: 10,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 2),
-                                      Text(
-                                        movie.genre,
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: const TextStyle(
-                                          color: Colors.grey,
-                                          fontSize: 9,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              );
-                            },
-                          );
-                  },
-                ),
-              ),
-              const SizedBox(height: 20),
-
-              // Section 3 : Films longs (>= 120 min)
-              const Text(
-                "Films longs",
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 10),
-              SizedBox(
-                height: 100,
-                child: Builder(
-                  builder: (context) {
-                    final longMovies = movieBox.values
-                        .where((m) => m.duration >= 120)
-                        .toList();
-                    return longMovies.isEmpty
-                        ? const Center(
-                            child: Text(
-                              'Aucun film long',
-                              style: TextStyle(color: Colors.white),
-                            ),
-                          )
-                        : ListView.builder(
-                            scrollDirection: Axis.horizontal,
-                            itemCount: longMovies.length > 5
-                                ? 5
-                                : longMovies.length,
-                            itemBuilder: (context, index) {
-                              final movie = longMovies[index];
-                              return Container(
-                                margin: const EdgeInsets.only(right: 10),
-                                width: 150,
-                                decoration: BoxDecoration(
-                                  color: Colors.purple,
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: Padding(
-                                  padding: const EdgeInsets.all(8.0),
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        movie.title,
-                                        maxLines: 2,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: const TextStyle(
-                                          color: Colors.white,
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 11,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        '${movie.duration.toInt()}min',
-                                        style: const TextStyle(
-                                          color: Colors.orange,
-                                          fontSize: 10,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 2),
-                                      Text(
-                                        movie.genre,
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: const TextStyle(
-                                          color: Colors.grey,
-                                          fontSize: 9,
+                                          color: Colors.lime,
+                                          fontSize: 12,
                                         ),
                                       ),
                                     ],
@@ -291,7 +258,7 @@ class FilmsPage extends StatelessWidget {
 
               const SizedBox(height: 30),
 
-              // Bouton Home intégré
+              // Bouton Home
               Center(
                 child: ElevatedButton(
                   onPressed: () {
@@ -300,7 +267,7 @@ class FilmsPage extends StatelessWidget {
                   style: ElevatedButton.styleFrom(
                     shape: const CircleBorder(),
                     padding: const EdgeInsets.all(20),
-                    backgroundColor: Colors.orange,
+                    backgroundColor: Colors.purple,
                   ),
                   child: const Icon(Icons.home, color: Colors.white, size: 30),
                 ),

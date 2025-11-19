@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hive/hive.dart';
-import 'models/movie.dart';
-import 'models/activity.dart';
-import 'models/board_game.dart';
-import 'models/user_profile.dart';
+import '../models/movie.dart';
+import '../models/activity.dart';
+import '../models/board_game.dart';
+import '../models/user_profile.dart';
 
 // Import pages
-import 'films.dart';
-import 'jeux.dart';
-import 'activites.dart';
+import 'films_page.dart';
+import 'jeux_page.dart';
+import 'activites_page.dart';
 
 class HomePage extends StatelessWidget {
   final Box<Movie> movieBox;

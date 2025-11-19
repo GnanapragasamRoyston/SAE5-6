@@ -10,8 +10,8 @@ import 'models/user_profile.dart';
 // Data loading
 import 'data/data_loader.dart';
 
-// Screens
-import 'home_page.dart';
+// Views
+import 'views/home_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();

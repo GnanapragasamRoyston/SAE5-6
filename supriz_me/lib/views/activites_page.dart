@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hive/hive.dart';
-import 'models/activity.dart';
+import '../models/activity.dart';
 
 class ActivitePage extends StatelessWidget {
   final Box<Activity> activityBox;
