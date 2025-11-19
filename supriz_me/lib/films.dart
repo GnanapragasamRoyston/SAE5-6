@@ -98,7 +98,7 @@ class FilmsPage extends StatelessWidget {
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              '${movie?.duration ?? 0}min',
+                              '⭐ ${movie?.rating.toStringAsFixed(1) ?? "0.0"}',
                               style: const TextStyle(
                                 color: Colors.orange,
                                 fontSize: 12,
@@ -113,9 +113,9 @@ class FilmsPage extends StatelessWidget {
               ),
               const SizedBox(height: 20),
 
-              // Section 2 : Films courts (< 2h)
+              // Section 2 : Films courts (< 120 min)
               const Text(
-                "Films courts (< 2h)",
+                "Films courts",
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 18,
@@ -148,7 +148,7 @@ class FilmsPage extends StatelessWidget {
                                 margin: const EdgeInsets.only(right: 10),
                                 width: 150,
                                 decoration: BoxDecoration(
-                                  color: Colors.blueGrey,
+                                  color: Colors.green,
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: Padding(
@@ -168,9 +168,9 @@ class FilmsPage extends StatelessWidget {
                                       ),
                                       const SizedBox(height: 4),
                                       Text(
-                                        '${movie.duration}min',
+                                        '${movie.duration.toInt()}min',
                                         style: const TextStyle(
-                                          color: Colors.green,
+                                          color: Colors.yellow,
                                           fontSize: 12,
                                         ),
                                       ),
@@ -185,9 +185,9 @@ class FilmsPage extends StatelessWidget {
               ),
               const SizedBox(height: 20),
 
-              // Section 3 : Films longs (> 2h)
+              // Section 3 : Films longs (>= 120 min)
               const Text(
-                "Films longs (> 2h)",
+                "Films longs",
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 18,
@@ -240,9 +240,9 @@ class FilmsPage extends StatelessWidget {
                                       ),
                                       const SizedBox(height: 4),
                                       Text(
-                                        '${movie.duration}min',
+                                        '${movie.duration.toInt()}min',
                                         style: const TextStyle(
-                                          color: Colors.red,
+                                          color: Colors.orange,
                                           fontSize: 12,
                                         ),
                                       ),

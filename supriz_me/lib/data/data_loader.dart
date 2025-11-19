@@ -26,7 +26,7 @@ class DataLoader {
             title: jsonData['names'] ?? 'Unknown',
             description: jsonData['overview'] ?? '',
             genre: jsonData['genre'] ?? 'Unknown',
-            duration: 0, // No duration data in JSON file
+            duration: (jsonData['duration'] as num?)?.toDouble() ?? 120.0,
             rating: _parseRating(jsonData['score']),
             tags: _parseTags(jsonData['genre']),
           );
