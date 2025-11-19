@@ -62,7 +62,9 @@ flutter:
   uses-material-design: true
 
   assets:
-    -  assets/images/logo_app.png
+    - assets/data/bd_movies.json
+    - assets/data/activite.json
+    - assets/data/bgg_dataset_clean.json
   # To add assets to your application, add an assets section, like this:
   # assets:
   #   - images/a_dot_burr.jpeg

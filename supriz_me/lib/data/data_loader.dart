@@ -9,8 +9,13 @@ class DataLoader {
   /// Charge les films depuis le fichier JSON
   static Future<List<Movie>> loadMovies() async {
     try {
-      final jsonString = await rootBundle.loadString('assets/data/bd_movies.json');
-      final lines = jsonString.split('\n').where((line) => line.trim().isNotEmpty).toList();
+      final jsonString = await rootBundle.loadString(
+        'assets/data/bd_movies.json',
+      );
+      final lines = jsonString
+          .split('\n')
+          .where((line) => line.trim().isNotEmpty)
+          .toList();
 
       final movies = <Movie>[];
       for (final line in lines) {
@@ -21,7 +26,7 @@ class DataLoader {
             title: jsonData['names'] ?? 'Unknown',
             description: jsonData['overview'] ?? '',
             genre: jsonData['genre'] ?? 'Unknown',
-            duration: _parseDuration(jsonData['budget_x']),
+            duration: 0, // No duration data in JSON file
             rating: _parseRating(jsonData['score']),
             tags: _parseTags(jsonData['genre']),
           );
@@ -39,7 +44,9 @@ class DataLoader {
   /// Charge les activités depuis le fichier JSON
   static Future<List<Activity>> loadActivities() async {
     try {
-      final jsonString = await rootBundle.loadString('assets/data/activite.json');
+      final jsonString = await rootBundle.loadString(
+        'assets/data/activite.json',
+      );
       final jsonData = jsonDecode(jsonString) as List;
 
       final activities = <Activity>[];
@@ -71,7 +78,9 @@ class DataLoader {
   /// Charge les jeux de société depuis le fichier JSON
   static Future<List<BoardGame>> loadBoardGames() async {
     try {
-      final jsonString = await rootBundle.loadString('assets/data/bgg_dataset_clean.json');
+      final jsonString = await rootBundle.loadString(
+        'assets/data/bgg_dataset_clean.json',
+      );
       final jsonData = jsonDecode(jsonString) as List;
 
       final games = <BoardGame>[];
@@ -85,7 +94,8 @@ class DataLoader {
             description: item['Mechanics']?.toString().substring(0, 100) ?? '',
             minPlayers: item['Min Players']?.toInt() ?? 1,
             maxPlayers: item['Max Players']?.toInt() ?? 4,
-            avgDuration: (item['Play Time (moyen)'] as num?)?.toDouble() ?? 60.0,
+            avgDuration:
+                (item['Play Time (moyen)'] as num?)?.toDouble() ?? 60.0,
             complexity: _parseComplexity(item['Difficulty']),
             rating: _parseRatingString(item['Rating']),
             tags: _parseGenres(item['Genre']),
@@ -128,22 +138,42 @@ class DataLoader {
   }
 
   // Helper methods
-  static double _parseDuration(dynamic value) {
-    if (value is num) return value.toDouble();
-    if (value is String) {
-      final parsed = double.tryParse(value);
-      return parsed ?? 90.0;
-    }
-    return 90.0;
-  }
-
   static double _parseDurationString(String? value) {
-    if (value == null) return 90.0;
-    if (value.contains('h')) {
-      final parts = value.split('h');
-      final hours = int.tryParse(parts[0].trim()) ?? 0;
-      return hours * 60.0;
+    if (value == null || value.isEmpty) return 90.0;
+
+    final cleanValue = value.toLowerCase().trim();
+
+    // Handle "2h" or "1h30" or "1h 30min" format (priority)
+    if (cleanValue.contains('h')) {
+      double totalMinutes = 0;
+
+      // Extract hours
+      final hourMatch = RegExp(r'(\d+)\s*h').firstMatch(cleanValue);
+      if (hourMatch != null) {
+        final hours = int.tryParse(hourMatch.group(1) ?? '0') ?? 0;
+        totalMinutes += hours * 60;
+      }
+
+      // Extract minutes after 'h' (if exists)
+      final minMatch = RegExp(r'h\s*(\d+)').firstMatch(cleanValue);
+      if (minMatch != null) {
+        final mins = int.tryParse(minMatch.group(1) ?? '0') ?? 0;
+        totalMinutes += mins;
+      }
+
+      if (totalMinutes > 0) return totalMinutes;
     }
+
+    // Handle "45min", "45 min", "10min" format
+    if (cleanValue.contains('min')) {
+      // Extract the number(s) before 'min'
+      final minMatch = RegExp(r'(\d+)\s*min').firstMatch(cleanValue);
+      if (minMatch != null) {
+        final mins = int.tryParse(minMatch.group(1) ?? '0');
+        if (mins != null && mins > 0) return mins.toDouble();
+      }
+    }
+
     return 90.0;
   }
 
@@ -183,5 +213,3 @@ class DataLoader {
     return value.split(',').map((genre) => genre.trim()).toList();
   }
 }
-
-

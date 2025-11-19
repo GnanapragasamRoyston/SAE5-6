@@ -23,27 +23,36 @@ void main() async {
   Hive.registerAdapter(BoardGameAdapter());
   Hive.registerAdapter(UserProfileAdapter());
 
+  // Clear old boxes to force reload with new parsing logic
+  try {
+    await Hive.deleteBoxFromDisk('activities');
+    await Hive.deleteBoxFromDisk('movies');
+    await Hive.deleteBoxFromDisk('board_games');
+  } catch (e) {
+    // Boxes might not exist yet
+  }
+
   // Open boxes
   final movieBox = await Hive.openBox<Movie>('movies');
   final activityBox = await Hive.openBox<Activity>('activities');
   final boardGameBox = await Hive.openBox<BoardGame>('board_games');
   final userBox = await Hive.openBox<UserProfile>('user_profiles');
 
-  // Load JSON datasets only if boxes are empty
-  if (movieBox.isEmpty) {
-    await DataLoader.loadAllData(
-      movieBox: movieBox,
-      activityBox: activityBox,
-      boardGameBox: boardGameBox,
-    );
-  }
-
-  runApp(SurprizMeApp(
+  // Load data
+  await DataLoader.loadAllData(
     movieBox: movieBox,
     activityBox: activityBox,
     boardGameBox: boardGameBox,
-    userBox: userBox,
-  ));
+  );
+
+  runApp(
+    SurprizMeApp(
+      movieBox: movieBox,
+      activityBox: activityBox,
+      boardGameBox: boardGameBox,
+      userBox: userBox,
+    ),
+  );
 }
 
 class SurprizMeApp extends StatelessWidget {
