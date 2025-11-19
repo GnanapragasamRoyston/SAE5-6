@@ -7,9 +7,9 @@ import '../models/board_game.dart';
 import '../models/user_profile.dart';
 
 // Import pages
-import 'films_page.dart';
-import 'jeux_page.dart';
-import 'activites_page.dart';
+import 'movies_page.dart';
+import 'games_page.dart';
+import 'activities_page.dart';
 
 class HomePage extends StatelessWidget {
   final Box<Movie> movieBox;
@@ -80,25 +80,25 @@ class HomePage extends StatelessWidget {
                   // BOUTONS
                   _buildCategoryBox(
                     context,
-                    "FILMS",
+                    "MOVIES",
                     Colors.orange,
-                    FilmsPage(movieBox: movieBox),
+                    MoviesPage(movieBox: movieBox),
                   ),
                   const SizedBox(height: 20),
 
                   _buildCategoryBox(
                     context,
-                    "JEUX",
+                    "GAMES",
                     Colors.purple,
-                    JeuxPage(boardGameBox: boardGameBox),
+                    GamesPage(boardGameBox: boardGameBox),
                   ),
                   const SizedBox(height: 20),
 
                   _buildCategoryBox(
                     context,
-                    "ACTIVITÉS",
+                    "ACTIVITIES",
                     Colors.blue,
-                    ActivitePage(activityBox: activityBox),
+                    ActivitiesPage(activityBox: activityBox),
                   ),
                 ],
               ),

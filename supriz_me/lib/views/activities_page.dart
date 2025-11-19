@@ -3,10 +3,10 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:hive/hive.dart';
 import '../models/activity.dart';
 
-class ActivitePage extends StatelessWidget {
+class ActivitiesPage extends StatelessWidget {
   final Box<Activity> activityBox;
 
-  const ActivitePage({super.key, required this.activityBox});
+  const ActivitiesPage({super.key, required this.activityBox});
 
   @override
   Widget build(BuildContext context) {
