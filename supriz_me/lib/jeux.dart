@@ -58,9 +58,9 @@ class JeuxPage extends StatelessWidget {
               ),
               const SizedBox(height: 30),
 
-              // Ligne 1 : Jeux par recommandation
+              // Section 1 : Tous les jeux
               const Text(
-                "Jeux par recommandation",
+                "Tous les jeux",
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 18,
@@ -69,22 +69,42 @@ class JeuxPage extends StatelessWidget {
               ),
               const SizedBox(height: 10),
               SizedBox(
-                height: 80,
+                height: 100,
                 child: ListView.builder(
                   scrollDirection: Axis.horizontal,
-                  itemCount: 10,
+                  itemCount: boardGameBox.length > 5 ? 5 : boardGameBox.length,
                   itemBuilder: (context, index) {
+                    final game = boardGameBox.getAt(index);
                     return Container(
                       margin: const EdgeInsets.only(right: 10),
-                      width: 120,
+                      width: 150,
                       decoration: BoxDecoration(
                         color: Colors.grey[800],
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      child: Center(
-                        child: Text(
-                          "Jeu ${index + 1}",
-                          style: const TextStyle(color: Colors.white),
+                      child: Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              game?.title ?? 'Jeu',
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              '${game?.minPlayers ?? 1}-${game?.maxPlayers ?? 0} joueurs',
+                              style: const TextStyle(
+                                color: Colors.yellow,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     );
@@ -93,9 +113,9 @@ class JeuxPage extends StatelessWidget {
               ),
               const SizedBox(height: 20),
 
-              // Ligne 2 : Jeux de stratégie
+              // Section 2 : Jeux pour 2 joueurs
               const Text(
-                "Jeux de stratégie",
+                "Jeux pour 2 joueurs",
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 18,
@@ -104,33 +124,70 @@ class JeuxPage extends StatelessWidget {
               ),
               const SizedBox(height: 10),
               SizedBox(
-                height: 80,
-                child: ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: 10,
-                  itemBuilder: (context, index) {
-                    return Container(
-                      margin: const EdgeInsets.only(right: 10),
-                      width: 120,
-                      decoration: BoxDecoration(
-                        color: Colors.blueGrey,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Center(
-                        child: Text(
-                          "Stratégie ${index + 1}",
-                          style: const TextStyle(color: Colors.white),
-                        ),
-                      ),
-                    );
+                height: 100,
+                child: Builder(
+                  builder: (context) {
+                    final twoPlayerGames = boardGameBox.values
+                        .where((g) => g.minPlayers <= 2 && g.maxPlayers >= 2)
+                        .toList();
+                    return twoPlayerGames.isEmpty
+                        ? const Center(
+                            child: Text(
+                              'Aucun jeu pour 2',
+                              style: TextStyle(color: Colors.white),
+                            ),
+                          )
+                        : ListView.builder(
+                            scrollDirection: Axis.horizontal,
+                            itemCount: twoPlayerGames.length > 5
+                                ? 5
+                                : twoPlayerGames.length,
+                            itemBuilder: (context, index) {
+                              final game = twoPlayerGames[index];
+                              return Container(
+                                margin: const EdgeInsets.only(right: 10),
+                                width: 150,
+                                decoration: BoxDecoration(
+                                  color: Colors.blueGrey,
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        game.title,
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        '${game.minPlayers}-${game.maxPlayers} joueurs',
+                                        style: const TextStyle(
+                                          color: Colors.cyan,
+                                          fontSize: 12,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            },
+                          );
                   },
                 ),
               ),
               const SizedBox(height: 20),
 
-              // Ligne 3 : Jeux familiaux
+              // Section 3 : Jeux pour groupes (4+ joueurs)
               const Text(
-                "Jeux familiaux",
+                "Jeux pour groupes (4+ joueurs)",
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 18,
@@ -139,25 +196,62 @@ class JeuxPage extends StatelessWidget {
               ),
               const SizedBox(height: 10),
               SizedBox(
-                height: 80,
-                child: ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: 10,
-                  itemBuilder: (context, index) {
-                    return Container(
-                      margin: const EdgeInsets.only(right: 10),
-                      width: 120,
-                      decoration: BoxDecoration(
-                        color: Colors.green,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Center(
-                        child: Text(
-                          "Familial ${index + 1}",
-                          style: const TextStyle(color: Colors.white),
-                        ),
-                      ),
-                    );
+                height: 100,
+                child: Builder(
+                  builder: (context) {
+                    final groupGames = boardGameBox.values
+                        .where((g) => g.maxPlayers >= 4)
+                        .toList();
+                    return groupGames.isEmpty
+                        ? const Center(
+                            child: Text(
+                              'Aucun jeu de groupe',
+                              style: TextStyle(color: Colors.white),
+                            ),
+                          )
+                        : ListView.builder(
+                            scrollDirection: Axis.horizontal,
+                            itemCount: groupGames.length > 5
+                                ? 5
+                                : groupGames.length,
+                            itemBuilder: (context, index) {
+                              final game = groupGames[index];
+                              return Container(
+                                margin: const EdgeInsets.only(right: 10),
+                                width: 150,
+                                decoration: BoxDecoration(
+                                  color: Colors.green,
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        game.title,
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        '${game.minPlayers}-${game.maxPlayers} joueurs',
+                                        style: const TextStyle(
+                                          color: Colors.lime,
+                                          fontSize: 12,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            },
+                          );
                   },
                 ),
               ),

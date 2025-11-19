@@ -58,9 +58,9 @@ class FilmsPage extends StatelessWidget {
               ),
               const SizedBox(height: 30),
 
-              // Ligne 1 : Film par recommandation
+              // Section 1 : Tous les films
               const Text(
-                "Film par recommandation",
+                "Tous les films",
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 18,
@@ -69,22 +69,42 @@ class FilmsPage extends StatelessWidget {
               ),
               const SizedBox(height: 10),
               SizedBox(
-                height: 80,
+                height: 100,
                 child: ListView.builder(
                   scrollDirection: Axis.horizontal,
-                  itemCount: 10,
+                  itemCount: movieBox.length > 5 ? 5 : movieBox.length,
                   itemBuilder: (context, index) {
+                    final movie = movieBox.getAt(index);
                     return Container(
                       margin: const EdgeInsets.only(right: 10),
-                      width: 120,
+                      width: 150,
                       decoration: BoxDecoration(
                         color: Colors.grey[800],
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      child: Center(
-                        child: Text(
-                          "Film ${index + 1}",
-                          style: const TextStyle(color: Colors.white),
+                      child: Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              movie?.title ?? 'Film',
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              '${movie?.duration ?? 0}min',
+                              style: const TextStyle(
+                                color: Colors.orange,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     );
@@ -93,9 +113,9 @@ class FilmsPage extends StatelessWidget {
               ),
               const SizedBox(height: 20),
 
-              // Ligne 2 : Film d'aventure
+              // Section 2 : Films courts (< 2h)
               const Text(
-                "Film d'aventure",
+                "Films courts (< 2h)",
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 18,
@@ -104,33 +124,70 @@ class FilmsPage extends StatelessWidget {
               ),
               const SizedBox(height: 10),
               SizedBox(
-                height: 80,
-                child: ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: 10,
-                  itemBuilder: (context, index) {
-                    return Container(
-                      margin: const EdgeInsets.only(right: 10),
-                      width: 120,
-                      decoration: BoxDecoration(
-                        color: Colors.blueGrey,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Center(
-                        child: Text(
-                          "Aventure ${index + 1}",
-                          style: const TextStyle(color: Colors.white),
-                        ),
-                      ),
-                    );
+                height: 100,
+                child: Builder(
+                  builder: (context) {
+                    final shortMovies = movieBox.values
+                        .where((m) => m.duration < 120)
+                        .toList();
+                    return shortMovies.isEmpty
+                        ? const Center(
+                            child: Text(
+                              'Aucun film court',
+                              style: TextStyle(color: Colors.white),
+                            ),
+                          )
+                        : ListView.builder(
+                            scrollDirection: Axis.horizontal,
+                            itemCount: shortMovies.length > 5
+                                ? 5
+                                : shortMovies.length,
+                            itemBuilder: (context, index) {
+                              final movie = shortMovies[index];
+                              return Container(
+                                margin: const EdgeInsets.only(right: 10),
+                                width: 150,
+                                decoration: BoxDecoration(
+                                  color: Colors.blueGrey,
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        movie.title,
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        '${movie.duration}min',
+                                        style: const TextStyle(
+                                          color: Colors.green,
+                                          fontSize: 12,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            },
+                          );
                   },
                 ),
               ),
               const SizedBox(height: 20),
 
-              // Ligne 3 : Film Horreur
+              // Section 3 : Films longs (> 2h)
               const Text(
-                "Film Horreur",
+                "Films longs (> 2h)",
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 18,
@@ -139,25 +196,62 @@ class FilmsPage extends StatelessWidget {
               ),
               const SizedBox(height: 10),
               SizedBox(
-                height: 80,
-                child: ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: 10,
-                  itemBuilder: (context, index) {
-                    return Container(
-                      margin: const EdgeInsets.only(right: 10),
-                      width: 120,
-                      decoration: BoxDecoration(
-                        color: Colors.redAccent,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Center(
-                        child: Text(
-                          "Horreur ${index + 1}",
-                          style: const TextStyle(color: Colors.white),
-                        ),
-                      ),
-                    );
+                height: 100,
+                child: Builder(
+                  builder: (context) {
+                    final longMovies = movieBox.values
+                        .where((m) => m.duration >= 120)
+                        .toList();
+                    return longMovies.isEmpty
+                        ? const Center(
+                            child: Text(
+                              'Aucun film long',
+                              style: TextStyle(color: Colors.white),
+                            ),
+                          )
+                        : ListView.builder(
+                            scrollDirection: Axis.horizontal,
+                            itemCount: longMovies.length > 5
+                                ? 5
+                                : longMovies.length,
+                            itemBuilder: (context, index) {
+                              final movie = longMovies[index];
+                              return Container(
+                                margin: const EdgeInsets.only(right: 10),
+                                width: 150,
+                                decoration: BoxDecoration(
+                                  color: Colors.purple,
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        movie.title,
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        '${movie.duration}min',
+                                        style: const TextStyle(
+                                          color: Colors.red,
+                                          fontSize: 12,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            },
+                          );
                   },
                 ),
               ),
