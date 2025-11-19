@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:hive/hive.dart';
+import 'models/activity.dart';
 
 class ActivitePage extends StatelessWidget {
-  const ActivitePage({super.key});
+  final Box<Activity> activityBox;
+
+  const ActivitePage({super.key, required this.activityBox});
 
   @override
   Widget build(BuildContext context) {
@@ -54,9 +58,9 @@ class ActivitePage extends StatelessWidget {
               ),
               const SizedBox(height: 30),
 
-              // Ligne 1 : Activité par recommandation
+              // Section 1 : Toutes les activités
               const Text(
-                "Activité par recommandation",
+                "Toutes les activités",
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 18,
@@ -65,22 +69,42 @@ class ActivitePage extends StatelessWidget {
               ),
               const SizedBox(height: 10),
               SizedBox(
-                height: 80,
+                height: 100,
                 child: ListView.builder(
                   scrollDirection: Axis.horizontal,
-                  itemCount: 10,
+                  itemCount: activityBox.length > 5 ? 5 : activityBox.length,
                   itemBuilder: (context, index) {
+                    final activity = activityBox.getAt(index);
                     return Container(
                       margin: const EdgeInsets.only(right: 10),
-                      width: 120,
+                      width: 150,
                       decoration: BoxDecoration(
                         color: Colors.grey[800],
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      child: Center(
-                        child: Text(
-                          "Activité ${index + 1}",
-                          style: const TextStyle(color: Colors.white),
+                      child: Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              activity?.title ?? 'Activité',
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              '${activity?.duration ?? 0}min',
+                              style: const TextStyle(
+                                color: Colors.orange,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     );
@@ -89,9 +113,9 @@ class ActivitePage extends StatelessWidget {
               ),
               const SizedBox(height: 20),
 
-              // Ligne 2 : Activité Physique
+              // Section 2 : Activités rapides (< 1h)
               const Text(
-                "Activité Physique",
+                "Activités rapides (< 1h)",
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 18,
@@ -100,33 +124,70 @@ class ActivitePage extends StatelessWidget {
               ),
               const SizedBox(height: 10),
               SizedBox(
-                height: 80,
-                child: ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: 10,
-                  itemBuilder: (context, index) {
-                    return Container(
-                      margin: const EdgeInsets.only(right: 10),
-                      width: 120,
-                      decoration: BoxDecoration(
-                        color: Colors.blueGrey,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Center(
-                        child: Text(
-                          "Physique ${index + 1}",
-                          style: const TextStyle(color: Colors.white),
-                        ),
-                      ),
-                    );
+                height: 100,
+                child: Builder(
+                  builder: (context) {
+                    final rapidActivities = activityBox.values
+                        .where((a) => a.duration < 60)
+                        .toList();
+                    return rapidActivities.isEmpty
+                        ? const Center(
+                            child: Text(
+                              'Aucune activité rapide',
+                              style: TextStyle(color: Colors.white),
+                            ),
+                          )
+                        : ListView.builder(
+                            scrollDirection: Axis.horizontal,
+                            itemCount: rapidActivities.length > 5
+                                ? 5
+                                : rapidActivities.length,
+                            itemBuilder: (context, index) {
+                              final activity = rapidActivities[index];
+                              return Container(
+                                margin: const EdgeInsets.only(right: 10),
+                                width: 150,
+                                decoration: BoxDecoration(
+                                  color: Colors.blueGrey,
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        activity.title,
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        '${activity.duration}min',
+                                        style: const TextStyle(
+                                          color: Colors.green,
+                                          fontSize: 12,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            },
+                          );
                   },
                 ),
               ),
               const SizedBox(height: 20),
 
-              // Ligne 3 : Activité Familiale
+              // Section 3 : Activités pour groupes
               const Text(
-                "Activité Familiale",
+                "Activités pour groupes",
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 18,
@@ -135,25 +196,62 @@ class ActivitePage extends StatelessWidget {
               ),
               const SizedBox(height: 10),
               SizedBox(
-                height: 80,
-                child: ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: 10,
-                  itemBuilder: (context, index) {
-                    return Container(
-                      margin: const EdgeInsets.only(right: 10),
-                      width: 120,
-                      decoration: BoxDecoration(
-                        color: Colors.green,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Center(
-                        child: Text(
-                          "Familiale ${index + 1}",
-                          style: const TextStyle(color: Colors.white),
-                        ),
-                      ),
-                    );
+                height: 100,
+                child: Builder(
+                  builder: (context) {
+                    final groupActivities = activityBox.values
+                        .where((a) => a.minParticipants > 1)
+                        .toList();
+                    return groupActivities.isEmpty
+                        ? const Center(
+                            child: Text(
+                              'Aucune activité de groupe',
+                              style: TextStyle(color: Colors.white),
+                            ),
+                          )
+                        : ListView.builder(
+                            scrollDirection: Axis.horizontal,
+                            itemCount: groupActivities.length > 5
+                                ? 5
+                                : groupActivities.length,
+                            itemBuilder: (context, index) {
+                              final activity = groupActivities[index];
+                              return Container(
+                                margin: const EdgeInsets.only(right: 10),
+                                width: 150,
+                                decoration: BoxDecoration(
+                                  color: Colors.green,
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        activity.title,
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        '${activity.minParticipants}-${activity.maxParticipants} pers.',
+                                        style: const TextStyle(
+                                          color: Colors.yellow,
+                                          fontSize: 12,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            },
+                          );
                   },
                 ),
               ),

@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:hive/hive.dart';
+import 'models/movie.dart';
 
 class FilmsPage extends StatelessWidget {
-  const FilmsPage({super.key});
+  final Box<Movie> movieBox;
+
+  const FilmsPage({super.key, required this.movieBox});
 
   @override
   Widget build(BuildContext context) {

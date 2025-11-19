@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:hive/hive.dart';
+import 'models/board_game.dart';
 
 class JeuxPage extends StatelessWidget {
-  const JeuxPage({super.key});
+  final Box<BoardGame> boardGameBox;
+
+  const JeuxPage({super.key, required this.boardGameBox});
 
   @override
   Widget build(BuildContext context) {

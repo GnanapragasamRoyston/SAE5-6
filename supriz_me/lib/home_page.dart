@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:hive/hive.dart';
+import 'models/movie.dart';
+import 'models/activity.dart';
+import 'models/board_game.dart';
+import 'models/user_profile.dart';
 
 // Import pages
 import 'films.dart';
@@ -7,7 +12,18 @@ import 'jeux.dart';
 import 'activites.dart';
 
 class HomePage extends StatelessWidget {
-  const HomePage({super.key});
+  final Box<Movie> movieBox;
+  final Box<Activity> activityBox;
+  final Box<BoardGame> boardGameBox;
+  final Box<UserProfile> userBox;
+
+  const HomePage({
+    super.key,
+    required this.movieBox,
+    required this.activityBox,
+    required this.boardGameBox,
+    required this.userBox,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -66,18 +82,23 @@ class HomePage extends StatelessWidget {
                     context,
                     "FILMS",
                     Colors.orange,
-                    FilmsPage(),
+                    FilmsPage(movieBox: movieBox),
                   ),
                   const SizedBox(height: 20),
 
-                  _buildCategoryBox(context, "JEUX", Colors.purple, JeuxPage()),
+                  _buildCategoryBox(
+                    context,
+                    "JEUX",
+                    Colors.purple,
+                    JeuxPage(boardGameBox: boardGameBox),
+                  ),
                   const SizedBox(height: 20),
 
                   _buildCategoryBox(
                     context,
                     "ACTIVITÉS",
                     Colors.blue,
-                    ActivitePage(),
+                    ActivitePage(activityBox: activityBox),
                   ),
                 ],
               ),
