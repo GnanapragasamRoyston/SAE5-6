@@ -5,7 +5,10 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'models/movie.dart';
 import 'models/activity.dart';
 import 'models/board_game.dart';
-import 'models/user_profile.dart';
+import 'models/activity_rating.dart';
+import 'models/activity_preferences.dart';
+import 'models/performance_metrics.dart';
+import 'models/performance_metrics_adapter.dart';
 
 // Data loading
 import 'data/data_loader.dart';
@@ -21,13 +24,18 @@ void main() async {
   Hive.registerAdapter(MovieAdapter());
   Hive.registerAdapter(ActivityAdapter());
   Hive.registerAdapter(BoardGameAdapter());
-  Hive.registerAdapter(UserProfileAdapter());
+  Hive.registerAdapter(ActivityRatingAdapter());
+  Hive.registerAdapter(ActivityPreferencesAdapter());
+  Hive.registerAdapter(PerformanceMetricsAdapter());
 
   // Clear old boxes to force reload with new parsing logic
   try {
     await Hive.deleteBoxFromDisk('activities');
     await Hive.deleteBoxFromDisk('movies');
     await Hive.deleteBoxFromDisk('board_games');
+    await Hive.deleteBoxFromDisk('activity_ratings');
+    await Hive.deleteBoxFromDisk('activity_preferences');
+    await Hive.deleteBoxFromDisk('performanceMetrics');
   } catch (e) {
     // Boxes might not exist yet
   }
@@ -36,7 +44,15 @@ void main() async {
   final movieBox = await Hive.openBox<Movie>('movies');
   final activityBox = await Hive.openBox<Activity>('activities');
   final boardGameBox = await Hive.openBox<BoardGame>('board_games');
-  final userBox = await Hive.openBox<UserProfile>('user_profiles');
+  final activityRatingBox = await Hive.openBox<ActivityRating>(
+    'activity_ratings',
+  );
+  final activityPreferencesBox = await Hive.openBox<ActivityPreferences>(
+    'activity_preferences',
+  );
+  final metricsBox = await Hive.openBox<PerformanceMetrics>(
+    'performanceMetrics',
+  );
 
   // Load data
   await DataLoader.loadAllData(
@@ -50,7 +66,9 @@ void main() async {
       movieBox: movieBox,
       activityBox: activityBox,
       boardGameBox: boardGameBox,
-      userBox: userBox,
+      activityRatingBox: activityRatingBox,
+      activityPreferencesBox: activityPreferencesBox,
+      metricsBox: metricsBox,
     ),
   );
 }
@@ -59,14 +77,18 @@ class SurprizMeApp extends StatelessWidget {
   final Box<Movie> movieBox;
   final Box<Activity> activityBox;
   final Box<BoardGame> boardGameBox;
-  final Box<UserProfile> userBox;
+  final Box<ActivityRating> activityRatingBox;
+  final Box<ActivityPreferences> activityPreferencesBox;
+  final Box<PerformanceMetrics> metricsBox;
 
   const SurprizMeApp({
     super.key,
     required this.movieBox,
     required this.activityBox,
     required this.boardGameBox,
-    required this.userBox,
+    required this.activityRatingBox,
+    required this.activityPreferencesBox,
+    required this.metricsBox,
   });
 
   @override
@@ -82,7 +104,9 @@ class SurprizMeApp extends StatelessWidget {
         movieBox: movieBox,
         activityBox: activityBox,
         boardGameBox: boardGameBox,
-        userBox: userBox,
+        activityRatingBox: activityRatingBox,
+        activityPreferencesBox: activityPreferencesBox,
+        metricsBox: metricsBox,
       ),
     );
   }

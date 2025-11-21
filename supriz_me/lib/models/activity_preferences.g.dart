@@ -1,50 +1,41 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'movie.dart';
+part of 'activity_preferences.dart';
 
 // **************************************************************************
 // TypeAdapterGenerator
 // **************************************************************************
 
-class MovieAdapter extends TypeAdapter<Movie> {
+class ActivityPreferencesAdapter extends TypeAdapter<ActivityPreferences> {
   @override
-  final int typeId = 0;
+  final int typeId = 5;
 
   @override
-  Movie read(BinaryReader reader) {
+  ActivityPreferences read(BinaryReader reader) {
     final numOfFields = reader.readByte();
     final fields = <int, dynamic>{
       for (int i = 0; i < numOfFields; i++) reader.readByte(): reader.read(),
     };
-    return Movie(
-      id: fields[0] as String,
-      title: fields[1] as String,
-      description: fields[2] as String,
-      genre: fields[3] as String,
-      duration: fields[4] as double,
-      rating: fields[5] as double,
-      tags: (fields[6] as List).cast<String>(),
+    return ActivityPreferences(
+      availableTime: fields[0] as int,
+      groupSize: fields[1] as int,
+      preferredCategories: (fields[2] as List).cast<String>(),
+      allowSurprise: fields[3] as bool,
     );
   }
 
   @override
-  void write(BinaryWriter writer, Movie obj) {
+  void write(BinaryWriter writer, ActivityPreferences obj) {
     writer
-      ..writeByte(7)
-      ..writeByte(0)
-      ..write(obj.id)
-      ..writeByte(1)
-      ..write(obj.title)
-      ..writeByte(2)
-      ..write(obj.description)
-      ..writeByte(3)
-      ..write(obj.genre)
       ..writeByte(4)
-      ..write(obj.duration)
-      ..writeByte(5)
-      ..write(obj.rating)
-      ..writeByte(6)
-      ..write(obj.tags);
+      ..writeByte(0)
+      ..write(obj.availableTime)
+      ..writeByte(1)
+      ..write(obj.groupSize)
+      ..writeByte(2)
+      ..write(obj.preferredCategories)
+      ..writeByte(3)
+      ..write(obj.allowSurprise);
   }
 
   @override
@@ -53,7 +44,7 @@ class MovieAdapter extends TypeAdapter<Movie> {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is MovieAdapter &&
+      other is ActivityPreferencesAdapter &&
           runtimeType == other.runtimeType &&
           typeId == other.typeId;
 }
