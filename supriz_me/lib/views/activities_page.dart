@@ -163,9 +163,23 @@ class _ActivitiesPageState extends State<ActivitiesPage>
       _bounceControllers[activityId]!.reverse();
     });
 
-    // Sauvegarder la note sans faire de setState
+    // Sauvegarder la note
     recommendationService.rateActivity(activityId, rating);
-    // Ne pas faire setState ici - ça cause des rebuilds bizarres
+
+    // Feedback visuel : SnackBar de confirmation
+    final message = rating >= 3 ? '✓ J\'aime !' : '✗ Je n\'aime pas';
+    final color = Colors.grey.shade700; // Gris unifié
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: color,
+        duration: const Duration(milliseconds: 800),
+      ),
+    );
+
+    // Recalculer les recommandations EN TEMPS RÉEL
+    setState(() {});
   }
 
   @override
@@ -241,8 +255,8 @@ class _ActivitiesPageState extends State<ActivitiesPage>
   }
 
   Widget _buildRecommendationsSection() {
-    return FutureBuilder<List<Activity>>(
-      future: recommendationService.getRecommendations(limit: 3),
+    return FutureBuilder<List<(Activity, double)>>(
+      future: recommendationService.getRecommendationsWithScores(limit: 3),
       builder: (context, snapshot) {
         // Récupérer la dernière métrique
         final metrics = recommendationService.getMetricsHistory();
@@ -344,7 +358,11 @@ class _ActivitiesPageState extends State<ActivitiesPage>
                   for (int i = 0; i < snapshot.data!.length; i++)
                     Padding(
                       padding: const EdgeInsets.only(bottom: 12),
-                      child: _buildRecommendationCard(snapshot.data![i], i),
+                      child: _buildRecommendationCard(
+                        snapshot.data![i].$1,
+                        i,
+                        snapshot.data![i].$2,
+                      ),
                     ),
                 ],
               ),
@@ -354,7 +372,7 @@ class _ActivitiesPageState extends State<ActivitiesPage>
     );
   }
 
-  Widget _buildRecommendationCard(Activity activity, int index) {
+  Widget _buildRecommendationCard(Activity activity, int index, double score) {
     final medals = ['🥇', '🥈', '🥉'];
     final colors = [
       const Color(0xFFFFD700), // Gold
@@ -459,34 +477,22 @@ class _ActivitiesPageState extends State<ActivitiesPage>
                     ),
                     Row(
                       children: [
-                        ScaleTransition(
-                          scale: Tween(begin: 1.0, end: 1.3).animate(
-                            _bounceControllers[activity.id] ??
-                                AlwaysStoppedAnimation(1.0),
-                          ),
-                          child: IconButton(
-                            onPressed: () => _rateActivity(activity.id, 3),
-                            icon: const Icon(Icons.thumb_up),
-                            color: Colors.grey,
-                            iconSize: 20,
-                            padding: EdgeInsets.zero,
-                            constraints: const BoxConstraints(),
-                          ),
+                        IconButton(
+                          onPressed: () => _rateActivity(activity.id, 3),
+                          icon: const Icon(Icons.thumb_up),
+                          color: Colors.grey,
+                          iconSize: 20,
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(),
                         ),
                         const SizedBox(width: 8),
-                        ScaleTransition(
-                          scale: Tween(begin: 1.0, end: 1.3).animate(
-                            _bounceControllers[activity.id] ??
-                                AlwaysStoppedAnimation(1.0),
-                          ),
-                          child: IconButton(
-                            onPressed: () => _rateActivity(activity.id, 1),
-                            icon: const Icon(Icons.thumb_down),
-                            color: Colors.grey,
-                            iconSize: 20,
-                            padding: EdgeInsets.zero,
-                            constraints: const BoxConstraints(),
-                          ),
+                        IconButton(
+                          onPressed: () => _rateActivity(activity.id, 1),
+                          icon: const Icon(Icons.thumb_down),
+                          color: Colors.grey,
+                          iconSize: 20,
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(),
                         ),
                       ],
                     ),
@@ -538,7 +544,7 @@ class _ActivitiesPageState extends State<ActivitiesPage>
                             Navigator.pop(context);
                           },
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.green,
+                            backgroundColor: Colors.grey,
                           ),
                           child: const Text('J\'aime'),
                         ),
@@ -548,7 +554,7 @@ class _ActivitiesPageState extends State<ActivitiesPage>
                             Navigator.pop(context);
                           },
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.red,
+                            backgroundColor: Colors.grey,
                           ),
                           child: const Text('Je n\'aime pas'),
                         ),

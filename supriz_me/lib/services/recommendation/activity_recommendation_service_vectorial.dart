@@ -88,72 +88,75 @@ class ActivityRecommendationServiceVectorial {
     }
   }
 
-  /// Retourne les recommandations basées sur la similarité vectorielle
-  /// Avec tracking complet des métriques
-  Future<List<Activity>> getRecommendations({int limit = 3}) async {
+  /// Retourne les recommandations AVEC leurs scores
+  /// Pour afficher pourquoi c'est recommandé
+  Future<List<(Activity, double)>> getRecommendationsWithScores({
+    int limit = 3,
+  }) async {
     final stopwatch = Stopwatch()..start();
 
     try {
-      // Étape 1 : Récupérer les activités aimées pour créer le profil utilisateur
       final likedActivities = _getLikedActivities();
 
       if (likedActivities.isEmpty) {
-        // Si aucune activité aimée, retourner les meilleures activités
-        return _getTopActivitiesByDifficulty(limit);
+        final activities = _getTopActivitiesByDifficulty(limit);
+        return activities.map((a) => (a, 0.0)).toList();
       }
 
-      // Étape 2 : Créer le vecteur profil utilisateur
       final userProfileVector = _createUserProfileVector(likedActivities);
 
-      // Étape 3 : Calculer la similarité pour chaque activité
+      final weightsVector = [
+        _adaptiveWeights['categoryWeight']!,
+        _adaptiveWeights['categoryWeight']!,
+        _adaptiveWeights['categoryWeight']!,
+        _adaptiveWeights['categoryWeight']!,
+        _adaptiveWeights['categoryWeight']!,
+        _adaptiveWeights['categoryWeight']!,
+        _adaptiveWeights['durationWeight']!,
+        _adaptiveWeights['groupWeight']!,
+        _adaptiveWeights['difficultyWeight']!,
+      ];
+
       final allActivities = activityBox.values.toList();
       final ratedIds = ratingBox.values.map((r) => r.activityId).toSet();
 
       final scored = <(Activity, double)>[];
 
       for (final activity in allActivities) {
-        // Ignorer les activités déjà notées
         if (ratedIds.contains(activity.id)) continue;
 
-        // Calculer le vecteur de l'activité avec poids adaptatifs
         final activityVector = activity.toNormalizedVector(
-          categoryWeight: _adaptiveWeights['categoryWeight']!,
-          durationWeight: _adaptiveWeights['durationWeight']!,
-          groupWeight: _adaptiveWeights['groupWeight']!,
-          difficultyWeight: _adaptiveWeights['difficultyWeight']!,
+          categoryWeight: 1.0,
+          durationWeight: 1.0,
+          groupWeight: 1.0,
+          difficultyWeight: 1.0,
         );
 
-        // Calcul similarité cosinus
-        final similarity = VectorUtils.cosineSimilarity(
-          userProfileVector,
+        final distance = VectorUtils.weightedEuclideanDistance(
           activityVector,
+          userProfileVector,
+          weightsVector,
         );
 
-        scored.add((activity, similarity));
+        scored.add((activity, distance));
       }
 
       stopwatch.stop();
 
-      // Étape 4 : Sauvegarder les métriques
-      final metrics = PerformanceMetrics.fromRaw(
-        tempsCalculMs: stopwatch.elapsedMilliseconds,
-        memoireUsageBytes: _estimateMemoryUsage(allActivities.length),
-        nbRecommandations: limit,
-        nbActiviteesTraitees: allActivities.length,
-        poidsAdaptatifs: _adaptiveWeights,
-        raison: 'Recommandation vectorielle',
-      );
-
-      await metricsBox.add(metrics);
-
-      // Étape 5 : Retourner les top N activités
-      scored.sort((a, b) => b.$2.compareTo(a.$2));
-      return scored.take(limit).map((s) => s.$1).toList();
+      scored.sort((a, b) => a.$2.compareTo(b.$2));
+      return scored.take(limit).toList();
     } catch (e) {
       stopwatch.stop();
-      // Erreur silencieuse en production
       return [];
     }
+  }
+
+  /// Retourne les recommandations basées sur distance euclidienne pondérée
+  /// Formule du prof : Score = ||A - U|| × W
+  /// Plus petit score = meilleur match
+  Future<List<Activity>> getRecommendations({int limit = 3}) async {
+    final withScores = await getRecommendationsWithScores(limit: limit);
+    return withScores.map((s) => s.$1).toList();
   }
 
   /// Crée le vecteur profil utilisateur à partir des activités aimées
@@ -289,6 +292,7 @@ class ActivityRecommendationServiceVectorial {
 
   /// Récupère une activité surprise intelligente (OPPOSÉE à tes préférences)
   /// Pour sortir de ta zone de confort
+  /// Utilise la distance euclidienne (plus grande distance = plus différent)
   Future<Activity?> getSurpriseActivity() async {
     if (userPreferences.allowSurprise == false) return null;
 
@@ -314,7 +318,20 @@ class ActivityRecommendationServiceVectorial {
       // Créer le vecteur profil utilisateur
       final userProfileVector = _createUserProfileVector(likedActivities);
 
-      // Calculer la DISTANCE (inverse de similarité) pour chaque activité
+      // Vecteur des poids
+      final weightsVector = [
+        _adaptiveWeights['categoryWeight']!,
+        _adaptiveWeights['categoryWeight']!,
+        _adaptiveWeights['categoryWeight']!,
+        _adaptiveWeights['categoryWeight']!,
+        _adaptiveWeights['categoryWeight']!,
+        _adaptiveWeights['categoryWeight']!,
+        _adaptiveWeights['durationWeight']!,
+        _adaptiveWeights['groupWeight']!,
+        _adaptiveWeights['difficultyWeight']!,
+      ];
+
+      // Calculer la DISTANCE pour chaque activité
       final scored = <(Activity, double)>[];
 
       for (final activity in allActivities) {
@@ -323,19 +340,18 @@ class ActivityRecommendationServiceVectorial {
 
         // Calculer le vecteur de l'activité
         final activityVector = activity.toNormalizedVector(
-          categoryWeight: _adaptiveWeights['categoryWeight']!,
-          durationWeight: _adaptiveWeights['durationWeight']!,
-          groupWeight: _adaptiveWeights['groupWeight']!,
-          difficultyWeight: _adaptiveWeights['difficultyWeight']!,
+          categoryWeight: 1.0,
+          durationWeight: 1.0,
+          groupWeight: 1.0,
+          difficultyWeight: 1.0,
         );
 
-        // Calcul de la DISTANCE (1 - similarité = différence maximale)
-        final similarity = VectorUtils.cosineSimilarity(
-          userProfileVector,
+        // Distance euclidienne pondérée
+        final distance = VectorUtils.weightedEuclideanDistance(
           activityVector,
+          userProfileVector,
+          weightsVector,
         );
-        final distance =
-            1.0 - similarity; // INVERSE : plus grand = plus différent
 
         scored.add((activity, distance));
       }
@@ -349,12 +365,12 @@ class ActivityRecommendationServiceVectorial {
         nbRecommandations: 1,
         nbActiviteesTraitees: allActivities.length,
         poidsAdaptatifs: _adaptiveWeights,
-        raison: 'Surprise - Sortir de sa zone',
+        raison: 'Surprise - Sortir de sa zone (distance max)',
       );
 
       await metricsBox.add(metrics);
 
-      // Retourner l'activité la plus différente
+      // Retourner l'activité la plus différente (plus grande distance)
       if (scored.isEmpty) return null;
       scored.sort((a, b) => b.$2.compareTo(a.$2)); // Tri décroissant
       return scored.first.$1;

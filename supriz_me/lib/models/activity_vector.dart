@@ -2,14 +2,14 @@ import 'dart:math';
 import 'activity.dart';
 
 /// Extension pour convertir une Activity en vecteur normalisé
-/// 
+///
 /// **Représentation vectorielle** :
 /// Chaque activité est représentée comme un vecteur dans un espace 4D :
 /// - dimension 0 : catégorie (encodée numériquement)
 /// - dimension 1 : durée (normalisée)
 /// - dimension 2 : taille groupe (normalisée)
 /// - dimension 3 : difficulté (normalisée)
-/// 
+///
 /// Cette représentation vectorielle permet :
 /// 1. Calcul de similarité via distance cosinus
 /// 2. Adaptabilité : poids peuvent être appliqués à chaque dimension
@@ -41,14 +41,16 @@ extension ActivityVector on Activity {
 
     // Dimension 1 : Durée normalisée (0-240 min = 0-1)
     // Justification : durée max typique ~4h
-    final normalizedDuration = (duration / 240.0).clamp(0.0, 1.0) * durationWeight;
+    final normalizedDuration =
+        (duration / 240.0).clamp(0.0, 1.0) * durationWeight;
 
     // Dimension 2 : Taille groupe normalisée (0-20 personnes = 0-1)
     final groupSize = ((minParticipants + maxParticipants) / 2).toDouble();
     final normalizedGroup = (groupSize / 20.0).clamp(0.0, 1.0) * groupWeight;
 
     // Dimension 3 : Difficulté normalisée (1-5 = 0-1)
-    final normalizedDifficulty = ((difficulty - 1) / 4.0).clamp(0.0, 1.0) * difficultyWeight;
+    final normalizedDifficulty =
+        ((difficulty - 1) / 4.0).clamp(0.0, 1.0) * difficultyWeight;
 
     // Combinaison : 6 (catégorie one-hot) + 3 autres = 9 dimensions
     return [
@@ -66,17 +68,36 @@ extension ActivityVector on Activity {
     categoryVector[categoryIdx] = 1.0;
 
     final groupSize = ((minParticipants + maxParticipants) / 2).toDouble();
-    return [
-      ...categoryVector,
-      duration,
-      groupSize,
-      difficulty.toDouble(),
-    ];
+    return [...categoryVector, duration, groupSize, difficulty.toDouble()];
   }
 }
 
 /// Utilitaires pour calculs vectoriels
 class VectorUtils {
+  /// **FORMULE DU PROF** : Distance euclidienne pondérée
+  /// Score = ||A - U|| × W
+  /// Plus petit score = meilleur match
+  static double weightedEuclideanDistance(
+    List<double> activity, // Vecteur activité A
+    List<double> userProfile, // Vecteur utilisateur U (profil)
+    List<double> weights, // Vecteur poids W
+  ) {
+    if (activity.length != userProfile.length ||
+        activity.length != weights.length) {
+      throw ArgumentError('Les vecteurs doivent avoir la même longueur');
+    }
+
+    // Calcul : ||A - U|| × W
+    double sumSquares = 0.0;
+    for (int i = 0; i < activity.length; i++) {
+      final diff = activity[i] - userProfile[i];
+      sumSquares += (diff * diff) * (weights[i] * weights[i]);
+    }
+
+    // Distance euclidienne = sqrt(somme des carrés)
+    return sqrt(sumSquares);
+  }
+
   /// Calcule la distance cosinus entre deux vecteurs
   /// Retourne un score de similarité entre 0 et 1
   /// 1 = très similaire, 0 = complètement différent
