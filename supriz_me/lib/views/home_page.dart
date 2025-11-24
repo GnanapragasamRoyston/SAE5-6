@@ -1,3 +1,5 @@
+// home_page.dart
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hive/hive.dart';
@@ -21,6 +23,7 @@ class HomePage extends StatelessWidget {
   final Box<ActivityRating> activityRatingBox;
   final Box<ActivityPreferences> activityPreferencesBox;
   final Box<PerformanceMetrics> metricsBox;
+  final Box settingsBox; 
 
   const HomePage({
     super.key,
@@ -30,6 +33,7 @@ class HomePage extends StatelessWidget {
     required this.activityRatingBox,
     required this.activityPreferencesBox,
     required this.metricsBox,
+    required this.settingsBox, 
   });
 
   @override
@@ -43,7 +47,7 @@ class HomePage extends StatelessWidget {
           Container(
             margin: const EdgeInsets.only(right: 12, top: 8, bottom: 8),
             decoration: BoxDecoration(
-              color: Colors.black.withValues(alpha: 0.2),
+              color: Colors.black.withOpacity(0.2),
               borderRadius: BorderRadius.circular(8),
             ),
             child: IconButton(
@@ -54,8 +58,8 @@ class HomePage extends StatelessWidget {
                   MaterialPageRoute(builder: (context) => const SettingsPage()),
                 );
               },
-              splashColor: Colors.white.withValues(alpha: 0.1),
-              highlightColor: Colors.white.withValues(alpha: 0.05),
+              splashColor: Colors.white.withOpacity(0.1),
+              highlightColor: Colors.white.withOpacity(0.05),
             ),
           ),
         ],
@@ -74,22 +78,31 @@ class HomePage extends StatelessWidget {
           ),
         ),
         child: SafeArea(
-          child: Center(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 30),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  // Nom application
-                  Text(
-                    "Surpriz'Me",
-                    style: GoogleFonts.bebasNeue(
-                      fontSize: 48,
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 2,
+          child: Column(
+            children: [
+              // Logo centré
+              Expanded(
+                child: Center(
+                  child: Image.asset(
+                    'assets/images/logo_app.png',
+                    height: 185,
+                    width: 185,
+                  ),
+<<<<<<< HEAD
+
+                  const SizedBox(height: 10),
+
+                  // NOUVEAU LOGO (Image.asset)
+                  ClipRRect( // Optionnel: pour appliquer des coins arrondis si l'image le nécessite
+                    borderRadius: BorderRadius.circular(15), 
+                    child: Image.asset(
+                      'assets/images/logo_app.png',
+                      height: 300, // Ajustez la taille au besoin
+                      width: 300,
+                      fit: BoxFit.cover,
                     ),
                   ),
+                
 
                   const SizedBox(height: 20),
 
@@ -121,7 +134,10 @@ class HomePage extends StatelessWidget {
                     context,
                     "JEUX",
                     Colors.purple,
-                    GamesPage(boardGameBox: boardGameBox),
+                    GamesPage(
+                      boardGameBox: boardGameBox,
+                      settingsBox: settingsBox, 
+                    ),
                   ),
                   const SizedBox(height: 20),
 
@@ -137,8 +153,62 @@ class HomePage extends StatelessWidget {
                     ),
                   ),
                 ],
+=======
+                ),
+>>>>>>> 0b2805b2e18cfa624b441cbf42e06dc3fffaf0cd
               ),
-            ),
+              // Description en bas du logo
+              Padding(
+                padding: const EdgeInsets.only(bottom: 16, left: 20, right: 20),
+                child: Text(
+                  "L'ennui vous gagne et vous ne savez pas quoi faire ?\n"
+                  "LAISSEZ-VOUS SURPRENDRE !",
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.poppins(
+                    color: Colors.white,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                    height: 1.3,
+                  ),
+                ),
+              ),
+              // Boutons en bas
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 16,
+                ),
+                child: Column(
+                  children: [
+                    _buildCategoryBox(
+                      context,
+                      "FILMS",
+                      Colors.orange,
+                      MoviesPage(movieBox: movieBox),
+                    ),
+                    const SizedBox(height: 12),
+                    _buildCategoryBox(
+                      context,
+                      "JEUX",
+                      Colors.purple,
+                      GamesPage(boardGameBox: boardGameBox),
+                    ),
+                    const SizedBox(height: 12),
+                    _buildCategoryBox(
+                      context,
+                      "ACTIVITÉS",
+                      Colors.blue,
+                      ActivitiesPage(
+                        activityBox: activityBox,
+                        activityRatingBox: activityRatingBox,
+                        activityPreferencesBox: activityPreferencesBox,
+                        metricsBox: metricsBox,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
         ),
       ),
@@ -157,7 +227,7 @@ class HomePage extends StatelessWidget {
       },
       child: Container(
         width: double.infinity,
-        height: 70,
+        height: 60,
         decoration: BoxDecoration(
           color: color,
           borderRadius: BorderRadius.circular(12),
@@ -168,7 +238,7 @@ class HomePage extends StatelessWidget {
             style: const TextStyle(
               color: Colors.white,
               fontWeight: FontWeight.bold,
-              fontSize: 24,
+              fontSize: 20,
               letterSpacing: 1,
             ),
           ),

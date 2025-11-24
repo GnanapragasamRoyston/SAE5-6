@@ -120,9 +120,9 @@ class _ActivitiesPageState extends State<ActivitiesPage>
       context: context,
       barrierDismissible: false,
       builder: (context) => AlertDialog(
-        title: const Text('Configurez vos préférences'),
+        title: const Text('Sélectionnez vos préférences'),
         content: const Text(
-          'Avant de continuer, veuillez configurer vos préférences d\'activités.',
+          'Avant de continuer, veuillez sélectionner vos préférences.',
         ),
         actions: [
           ElevatedButton(
@@ -142,7 +142,7 @@ class _ActivitiesPageState extends State<ActivitiesPage>
                 });
               });
             },
-            child: const Text('Configurer'),
+            child: const Text('Choisir'),
           ),
         ],
       ),
