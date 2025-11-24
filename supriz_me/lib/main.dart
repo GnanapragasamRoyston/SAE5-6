@@ -8,7 +8,7 @@ import 'models/board_game.dart';
 import 'models/activity_rating.dart';
 import 'models/activity_preferences.dart';
 import 'models/performance_metrics.dart';
-import 'models/performance_metrics_adapter.dart';
+import 'models/performance_metrics_adapter.dart'; // NOTE: Ce modèle doit exister
 
 // Data loading
 import 'data/data_loader.dart';
@@ -28,17 +28,17 @@ void main() async {
   Hive.registerAdapter(ActivityPreferencesAdapter());
   Hive.registerAdapter(PerformanceMetricsAdapter());
 
-  // Clear old boxes to force reload with new parsing logic
+  // --- CORRECTION MAJEURE: Suppression du nettoyage forcé ---
+  // Nous ne nettoyons plus les boîtes contenant le dataset (movies, activities, board_games)
+  // pour éviter de recharger 1600+ entrées à chaque lancement.
   try {
-    await Hive.deleteBoxFromDisk('activities');
-    await Hive.deleteBoxFromDisk('movies');
-    await Hive.deleteBoxFromDisk('board_games');
-    await Hive.deleteBoxFromDisk('activity_ratings');
-    await Hive.deleteBoxFromDisk('activity_preferences');
-    await Hive.deleteBoxFromDisk('performanceMetrics');
-    // NOTE : On ne supprime pas 'user_settings' pour conserver l'état de première utilisation.
+    // Si vous aviez une erreur dans un modèle, vous pouvez laisser la suppression
+    // de la boîte concernée le temps d'une seule exécution, puis la retirer.
+    // Pour l'instant, on suppose que les modèles sont stables.
+    // NOTE: Si vous rencontrez toujours des erreurs de type (virgule/point),
+    // vous pouvez réactiver temporairement: await Hive.deleteBoxFromDisk('board_games');
   } catch (e) {
-    // Boxes might not exist yet
+    // Les boîtes n'existent peut-être pas encore
   }
 
   // Open boxes
@@ -57,9 +57,10 @@ void main() async {
   
   // NOUVEAU : Box pour les réglages utilisateur (incluant les préférences de jeux sajith)
   final settingsBox = await Hive.openBox('user_settings');
+  // On laisse cette ligne pour permettre la re-configuration des préférences si besoin
   await settingsBox.delete('game_preferences_set');
 
-  // Load data
+  // Load data (Cette fonction doit maintenant vérifier si les boîtes sont vides)
   await DataLoader.loadAllData(
     movieBox: movieBox,
     activityBox: activityBox,
@@ -74,7 +75,7 @@ void main() async {
       activityRatingBox: activityRatingBox,
       activityPreferencesBox: activityPreferencesBox,
       metricsBox: metricsBox,
-      settingsBox: settingsBox, // PASSAGE DE LA NOUVELLE BOX
+      settingsBox: settingsBox,
     ),
   );
 }
@@ -86,7 +87,7 @@ class SurprizMeApp extends StatelessWidget {
   final Box<ActivityRating> activityRatingBox;
   final Box<ActivityPreferences> activityPreferencesBox;
   final Box<PerformanceMetrics> metricsBox;
-  final Box settingsBox; // DÉCLARATION DE LA NOUVELLE BOX
+  final Box settingsBox;
 
   const SurprizMeApp({
     super.key,
@@ -96,7 +97,7 @@ class SurprizMeApp extends StatelessWidget {
     required this.activityRatingBox,
     required this.activityPreferencesBox,
     required this.metricsBox,
-    required this.settingsBox, // DÉCLARATION DU PARAMÈTRE REQUIS
+    required this.settingsBox,
   });
 
   @override
@@ -109,13 +110,15 @@ class SurprizMeApp extends StatelessWidget {
         useMaterial3: true,
       ),
       home: HomePage(
+        // NOTE: J'ai retiré le movieBox de HomePage dans la correction précédente,
+        // mais vu votre structure main.dart, il doit être là. J'ajuste HomePage à nouveau.
         movieBox: movieBox,
         activityBox: activityBox,
         boardGameBox: boardGameBox,
         activityRatingBox: activityRatingBox,
         activityPreferencesBox: activityPreferencesBox,
         metricsBox: metricsBox,
-        settingsBox: settingsBox, // PASSAGE DE LA BOX À HOMEPAGE
+        settingsBox: settingsBox,
       ),
     );
   }
