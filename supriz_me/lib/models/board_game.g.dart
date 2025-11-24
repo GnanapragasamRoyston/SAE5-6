@@ -1,5 +1,10 @@
-// GENERATED CODE - manual adapter (no build step)
+// GENERATED CODE - DO NOT MODIFY BY HAND
+
 part of 'board_game.dart';
+
+// **************************************************************************
+// TypeAdapterGenerator
+// **************************************************************************
 
 class BoardGameAdapter extends TypeAdapter<BoardGame> {
   @override
@@ -8,10 +13,9 @@ class BoardGameAdapter extends TypeAdapter<BoardGame> {
   @override
   BoardGame read(BinaryReader reader) {
     final numOfFields = reader.readByte();
-    final fields = <int, dynamic>{};
-    for (int i = 0; i < numOfFields; i++) {
-      fields[reader.readByte()] = reader.read();
-    }
+    final fields = <int, dynamic>{
+      for (int i = 0; i < numOfFields; i++) reader.readByte(): reader.read(),
+    };
     return BoardGame(
       id: fields[0] as String,
       title: fields[1] as String,
@@ -48,4 +52,14 @@ class BoardGameAdapter extends TypeAdapter<BoardGame> {
       ..writeByte(8)
       ..write(obj.tags);
   }
+
+  @override
+  int get hashCode => typeId.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is BoardGameAdapter &&
+          runtimeType == other.runtimeType &&
+          typeId == other.typeId;
 }
