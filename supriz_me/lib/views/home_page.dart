@@ -1,3 +1,5 @@
+// home_page.dart
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hive/hive.dart';
@@ -21,6 +23,7 @@ class HomePage extends StatelessWidget {
   final Box<ActivityRating> activityRatingBox;
   final Box<ActivityPreferences> activityPreferencesBox;
   final Box<PerformanceMetrics> metricsBox;
+  final Box settingsBox; 
 
   const HomePage({
     super.key,
@@ -30,6 +33,7 @@ class HomePage extends StatelessWidget {
     required this.activityRatingBox,
     required this.activityPreferencesBox,
     required this.metricsBox,
+    required this.settingsBox, 
   });
 
   @override
@@ -43,7 +47,7 @@ class HomePage extends StatelessWidget {
           Container(
             margin: const EdgeInsets.only(right: 12, top: 8, bottom: 8),
             decoration: BoxDecoration(
-              color: Colors.black.withValues(alpha: 0.2),
+              color: Colors.black.withOpacity(0.2),
               borderRadius: BorderRadius.circular(8),
             ),
             child: IconButton(
@@ -54,8 +58,8 @@ class HomePage extends StatelessWidget {
                   MaterialPageRoute(builder: (context) => const SettingsPage()),
                 );
               },
-              splashColor: Colors.white.withValues(alpha: 0.1),
-              highlightColor: Colors.white.withValues(alpha: 0.05),
+              splashColor: Colors.white.withOpacity(0.1),
+              highlightColor: Colors.white.withOpacity(0.05),
             ),
           ),
         ],
@@ -91,6 +95,20 @@ class HomePage extends StatelessWidget {
                     ),
                   ),
 
+                  const SizedBox(height: 10),
+
+                  // NOUVEAU LOGO (Image.asset)
+                  ClipRRect( // Optionnel: pour appliquer des coins arrondis si l'image le nécessite
+                    borderRadius: BorderRadius.circular(15), 
+                    child: Image.asset(
+                      'assets/images/logo_app.png',
+                      height: 300, // Ajustez la taille au besoin
+                      width: 300,
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                
+
                   const SizedBox(height: 20),
 
                   // Description
@@ -121,7 +139,10 @@ class HomePage extends StatelessWidget {
                     context,
                     "JEUX",
                     Colors.purple,
-                    GamesPage(boardGameBox: boardGameBox),
+                    GamesPage(
+                      boardGameBox: boardGameBox,
+                      settingsBox: settingsBox, 
+                    ),
                   ),
                   const SizedBox(height: 20),
 

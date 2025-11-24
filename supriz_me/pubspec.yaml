@@ -1,4 +1,3 @@
-
 name: supriz_me
 description: "A new Flutter project."
 # The following line prevents the package from being accidentally published to
@@ -20,7 +19,9 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 version: 1.0.0+1
 
 environment:
-  sdk: ^3.9.2
+  # Ajusté pour être compatible avec les versions récentes de Dart/Flutter 
+  # (votre ancienne version ^3.9.2 n'est pas standard)
+  sdk: '>=3.0.0 <4.0.0'
 
 # Dependencies specify other packages that your package needs in order to work.
 # To automatically upgrade your package dependencies to the latest versions
@@ -32,9 +33,14 @@ dependencies:
   flutter:
     sdk: flutter
   http: ^1.1.0
-  shared_preferences: ^2.1.1
+  # NOTE: shared_preferences n'est plus nécessaire car la gestion de l'état
+  # de première utilisation se fait désormais via Hive.
+  # shared_preferences: ^2.1.1 
+  
+  # Packages Hive pour la base de données locale
   hive: ^2.2.3
   hive_flutter: ^1.1.0
+  
   path_provider: ^2.0.15
   google_fonts: ^6.1.0
 
@@ -46,9 +52,13 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
+    
+  # Outils requis pour la génération automatique des adaptateurs Hive (.g.dart)
   build_runner: ^2.4.13
   hive_generator: ^2.0.1
-  flutter_lints: 6.0.0
+  
+  # Correction : La version 6.0.0 de flutter_lints n'existe pas. On utilise la dernière série stable.
+  flutter_lints: ^3.0.0
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -65,7 +75,7 @@ flutter:
     - assets/data/bd_movies.json
     - assets/data/activite.json
     - assets/data/bgg_dataset_clean.json
-    - assets/images/
+    - assets/images/logo_app.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

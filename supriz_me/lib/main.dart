@@ -36,6 +36,7 @@ void main() async {
     await Hive.deleteBoxFromDisk('activity_ratings');
     await Hive.deleteBoxFromDisk('activity_preferences');
     await Hive.deleteBoxFromDisk('performanceMetrics');
+    // NOTE : On ne supprime pas 'user_settings' pour conserver l'état de première utilisation.
   } catch (e) {
     // Boxes might not exist yet
   }
@@ -53,6 +54,10 @@ void main() async {
   final metricsBox = await Hive.openBox<PerformanceMetrics>(
     'performanceMetrics',
   );
+  
+  // NOUVEAU : Box pour les réglages utilisateur (incluant les préférences de jeux)
+  final settingsBox = await Hive.openBox('user_settings');
+  await settingsBox.delete('game_preferences_set');
 
   // Load data
   await DataLoader.loadAllData(
@@ -69,6 +74,7 @@ void main() async {
       activityRatingBox: activityRatingBox,
       activityPreferencesBox: activityPreferencesBox,
       metricsBox: metricsBox,
+      settingsBox: settingsBox, // PASSAGE DE LA NOUVELLE BOX
     ),
   );
 }
@@ -80,6 +86,7 @@ class SurprizMeApp extends StatelessWidget {
   final Box<ActivityRating> activityRatingBox;
   final Box<ActivityPreferences> activityPreferencesBox;
   final Box<PerformanceMetrics> metricsBox;
+  final Box settingsBox; // DÉCLARATION DE LA NOUVELLE BOX
 
   const SurprizMeApp({
     super.key,
@@ -89,6 +96,7 @@ class SurprizMeApp extends StatelessWidget {
     required this.activityRatingBox,
     required this.activityPreferencesBox,
     required this.metricsBox,
+    required this.settingsBox, // DÉCLARATION DU PARAMÈTRE REQUIS
   });
 
   @override
@@ -107,6 +115,7 @@ class SurprizMeApp extends StatelessWidget {
         activityRatingBox: activityRatingBox,
         activityPreferencesBox: activityPreferencesBox,
         metricsBox: metricsBox,
+        settingsBox: settingsBox, // PASSAGE DE LA BOX À HOMEPAGE
       ),
     );
   }

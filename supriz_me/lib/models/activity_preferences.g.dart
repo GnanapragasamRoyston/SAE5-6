@@ -21,13 +21,17 @@ class ActivityPreferencesAdapter extends TypeAdapter<ActivityPreferences> {
       groupSize: fields[1] as int,
       preferredCategories: (fields[2] as List).cast<String>(),
       allowSurprise: fields[3] as bool,
+      categoryWeight: fields[4] as double?,
+      durationWeight: fields[5] as double?,
+      groupWeight: fields[6] as double?,
+      difficultyWeight: fields[7] as double?,
     );
   }
 
   @override
   void write(BinaryWriter writer, ActivityPreferences obj) {
     writer
-      ..writeByte(4)
+      ..writeByte(8)
       ..writeByte(0)
       ..write(obj.availableTime)
       ..writeByte(1)
@@ -35,7 +39,15 @@ class ActivityPreferencesAdapter extends TypeAdapter<ActivityPreferences> {
       ..writeByte(2)
       ..write(obj.preferredCategories)
       ..writeByte(3)
-      ..write(obj.allowSurprise);
+      ..write(obj.allowSurprise)
+      ..writeByte(4)
+      ..write(obj.categoryWeight)
+      ..writeByte(5)
+      ..write(obj.durationWeight)
+      ..writeByte(6)
+      ..write(obj.groupWeight)
+      ..writeByte(7)
+      ..write(obj.difficultyWeight);
   }
 
   @override
