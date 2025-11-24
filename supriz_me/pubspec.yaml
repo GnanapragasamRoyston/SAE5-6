@@ -56,9 +56,14 @@ dev_dependencies:
   # Outils requis pour la génération automatique des adaptateurs Hive (.g.dart)
   build_runner: ^2.4.13
   hive_generator: ^2.0.1
+<<<<<<< HEAD
   
   # Correction : La version 6.0.0 de flutter_lints n'existe pas. On utilise la dernière série stable.
   flutter_lints: ^3.0.0
+=======
+  flutter_lints: 6.0.0
+  flutter_launcher_icons: ^0.13.1
+>>>>>>> 0b2805b2e18cfa624b441cbf42e06dc3fffaf0cd
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

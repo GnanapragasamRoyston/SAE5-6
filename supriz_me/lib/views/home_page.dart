@@ -78,22 +78,17 @@ class HomePage extends StatelessWidget {
           ),
         ),
         child: SafeArea(
-          child: Center(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 30),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  // Nom application
-                  Text(
-                    "Surpriz'Me",
-                    style: GoogleFonts.bebasNeue(
-                      fontSize: 48,
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 2,
-                    ),
+          child: Column(
+            children: [
+              // Logo centré
+              Expanded(
+                child: Center(
+                  child: Image.asset(
+                    'assets/images/logo_app.png',
+                    height: 185,
+                    width: 185,
                   ),
+<<<<<<< HEAD
 
                   const SizedBox(height: 10),
 
@@ -158,8 +153,62 @@ class HomePage extends StatelessWidget {
                     ),
                   ),
                 ],
+=======
+                ),
+>>>>>>> 0b2805b2e18cfa624b441cbf42e06dc3fffaf0cd
               ),
-            ),
+              // Description en bas du logo
+              Padding(
+                padding: const EdgeInsets.only(bottom: 16, left: 20, right: 20),
+                child: Text(
+                  "L'ennui vous gagne et vous ne savez pas quoi faire ?\n"
+                  "LAISSEZ-VOUS SURPRENDRE !",
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.poppins(
+                    color: Colors.white,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                    height: 1.3,
+                  ),
+                ),
+              ),
+              // Boutons en bas
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 16,
+                ),
+                child: Column(
+                  children: [
+                    _buildCategoryBox(
+                      context,
+                      "FILMS",
+                      Colors.orange,
+                      MoviesPage(movieBox: movieBox),
+                    ),
+                    const SizedBox(height: 12),
+                    _buildCategoryBox(
+                      context,
+                      "JEUX",
+                      Colors.purple,
+                      GamesPage(boardGameBox: boardGameBox),
+                    ),
+                    const SizedBox(height: 12),
+                    _buildCategoryBox(
+                      context,
+                      "ACTIVITÉS",
+                      Colors.blue,
+                      ActivitiesPage(
+                        activityBox: activityBox,
+                        activityRatingBox: activityRatingBox,
+                        activityPreferencesBox: activityPreferencesBox,
+                        metricsBox: metricsBox,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
         ),
       ),
@@ -178,7 +227,7 @@ class HomePage extends StatelessWidget {
       },
       child: Container(
         width: double.infinity,
-        height: 70,
+        height: 60,
         decoration: BoxDecoration(
           color: color,
           borderRadius: BorderRadius.circular(12),
@@ -189,7 +238,7 @@ class HomePage extends StatelessWidget {
             style: const TextStyle(
               color: Colors.white,
               fontWeight: FontWeight.bold,
-              fontSize: 24,
+              fontSize: 20,
               letterSpacing: 1,
             ),
           ),
