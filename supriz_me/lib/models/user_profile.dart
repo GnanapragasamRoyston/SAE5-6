@@ -3,7 +3,7 @@ import 'package:hive/hive.dart';
 part 'user_profile.g.dart';
 
 @HiveType(typeId: 3)
-class UserProfile {
+class UserProfile extends HiveObject{
   @HiveField(0)
   final String id;
 
@@ -34,7 +34,7 @@ class UserProfile {
 
 
 
-  const UserProfile({
+  UserProfile({
     required this.id,
     required this.username,
     required this.age,

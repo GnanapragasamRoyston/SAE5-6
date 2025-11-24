@@ -45,6 +45,8 @@ void main() async {
     boardGameBox: boardGameBox,
   );
 
+  
+
   runApp(
     SurprizMeApp(
       movieBox: movieBox,
@@ -54,6 +56,7 @@ void main() async {
     ),
   );
 }
+
 
 class SurprizMeApp extends StatelessWidget {
   final Box<Movie> movieBox;
