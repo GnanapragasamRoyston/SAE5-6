@@ -3,7 +3,7 @@
 part of 'board_game.dart';
 
 // **************************************************************************
-// TypeAdapterGenerator
+// TypeAdapterGenerator sajith
 // **************************************************************************
 
 class BoardGameAdapter extends TypeAdapter<BoardGame> {

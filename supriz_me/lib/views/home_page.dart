@@ -102,8 +102,8 @@ class HomePage extends StatelessWidget {
                     borderRadius: BorderRadius.circular(15), 
                     child: Image.asset(
                       'assets/images/logo_app.png',
-                      height: 300, // Ajustez la taille au besoin
-                      width: 300,
+                      height: 200, // Ajustez la taille au besoin
+                      width: 200,
                       fit: BoxFit.cover,
                     ),
                   ),

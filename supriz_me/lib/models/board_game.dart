@@ -1,6 +1,6 @@
 import 'package:hive/hive.dart';
 
-// IMPORTANT: Assurez-vous d'exécuter la commande pour la génération de code 
+// IMPORTANT: Assurez-vous d'exécuter la commande pour la génération de code sajith
 // si vous modifiez la structure de la classe BoardGame pour Hive.
 part 'board_game.g.dart';
 

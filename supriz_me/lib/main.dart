@@ -55,7 +55,7 @@ void main() async {
     'performanceMetrics',
   );
   
-  // NOUVEAU : Box pour les réglages utilisateur (incluant les préférences de jeux)
+  // NOUVEAU : Box pour les réglages utilisateur (incluant les préférences de jeux sajith)
   final settingsBox = await Hive.openBox('user_settings');
   await settingsBox.delete('game_preferences_set');
 
