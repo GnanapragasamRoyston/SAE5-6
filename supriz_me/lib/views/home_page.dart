@@ -1,31 +1,29 @@
+// home_page.dart
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:hive_flutter/hive_flutter.dart';
-import 'games_page.dart';
-import 'app_config_page.dart'; 
-
-// Import des modèles pour les boîtes
-import '../models/board_game.dart';
+import 'package:hive/hive.dart';
 import '../models/movie.dart';
 import '../models/activity.dart';
+import '../models/board_game.dart';
 import '../models/activity_rating.dart';
 import '../models/activity_preferences.dart';
 import '../models/performance_metrics.dart';
 
-
-// =================================================================
-// 🏡 HomePage - La page d'accueil principale
-// =================================================================
+// Import pages
+import 'movies_page.dart';
+import 'games_page.dart';
+import 'activities_page.dart';
+import 'settings_page.dart';
 
 class HomePage extends StatelessWidget {
-  // Rétablissement de tous les paramètres requis par SurprizMeApp
   final Box<Movie> movieBox;
   final Box<Activity> activityBox;
   final Box<BoardGame> boardGameBox;
   final Box<ActivityRating> activityRatingBox;
   final Box<ActivityPreferences> activityPreferencesBox;
   final Box<PerformanceMetrics> metricsBox;
-  final Box settingsBox;
+  final Box settingsBox; 
 
   const HomePage({
     super.key,
@@ -35,133 +33,165 @@ class HomePage extends StatelessWidget {
     required this.activityRatingBox,
     required this.activityPreferencesBox,
     required this.metricsBox,
-    required this.settingsBox,
+    required this.settingsBox, 
   });
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.transparent,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        actions: [
+          Container(
+            margin: const EdgeInsets.only(right: 12, top: 8, bottom: 8),
+            decoration: BoxDecoration(
+              color: Colors.black.withOpacity(0.2),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: IconButton(
+              icon: const Icon(Icons.settings, color: Colors.white70, size: 22),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const SettingsPage()),
+                );
+              },
+              splashColor: Colors.white.withOpacity(0.1),
+              highlightColor: Colors.white.withOpacity(0.05),
+            ),
+          ),
+        ],
+      ),
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
             colors: [
-              Color(0xFF283593), // Indigo
-              Color(0xFF5C6BC0), // Indigo Light
+              Color(0xFFFF6F91), // rose
+              Color(0xFF845EC2), // violet
+              Color(0xFF2196F3), // bleu
+              Color(0xFF00C9A7), // turquoise
             ],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
           ),
         ),
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: <Widget>[
-              // Titre stylisé - Avec la bonne police
-              Text(
-                'Surpriz\'Me',
-                style: GoogleFonts.bungee(
-                  textStyle: const TextStyle(
-                    fontSize: 48,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                    shadows: [
-                      Shadow(
-                        blurRadius: 10.0,
-                        color: Colors.black45,
-                        offset: Offset(3.0, 3.0),
-                      ),
-                    ],
+        child: SafeArea(
+          child: Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 30),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  // Nom application
+                  Text(
+                    "Surpriz'Me",
+                    style: GoogleFonts.bebasNeue(
+                      fontSize: 48,
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 2,
+                    ),
                   ),
-                ),
-              ),
-              const SizedBox(height: 50),
 
-              // Bouton 1 : Jeux (GamesPage)
-              _buildFeatureButton(
-                context,
-                icon: Icons.casino,
-                label: 'Jeux',
-                color: Colors.deepOrangeAccent,
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => GamesPage(
-                        boardGameBox: boardGameBox,
-                        settingsBox: settingsBox, 
-                      ),
-                    ),
-                  );
-                },
-              ),
-              const SizedBox(height: 20),
+                  const SizedBox(height: 10),
 
-              // Bouton 2 : Configuration/Paramètres
-              _buildFeatureButton(
-                context,
-                icon: Icons.settings,
-                label: 'Configuration',
-                color: Colors.green,
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => AppConfigPage(), 
+                  // NOUVEAU LOGO (Image.asset)
+                  ClipRRect( // Optionnel: pour appliquer des coins arrondis si l'image le nécessite
+                    borderRadius: BorderRadius.circular(15), 
+                    child: Image.asset(
+                      'assets/images/logo_app.png',
+                      height: 200, // Ajustez la taille au besoin
+                      width: 200,
+                      fit: BoxFit.cover,
                     ),
-                  );
-                },
+                  ),
+                
+
+                  const SizedBox(height: 20),
+
+                  // Description
+                  Text(
+                    "L'ennui vous gagne et vous ne savez pas quoi faire ?\n"
+                    "LAISSEZ-VOUS SURPRENDRE !",
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.poppins(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w500,
+                      height: 1.5,
+                    ),
+                  ),
+
+                  const SizedBox(height: 40),
+
+                  // BOUTONS
+                  _buildCategoryBox(
+                    context,
+                    "FILMS",
+                    Colors.orange,
+                    MoviesPage(movieBox: movieBox),
+                  ),
+                  const SizedBox(height: 20),
+
+                  _buildCategoryBox(
+                    context,
+                    "JEUX",
+                    Colors.purple,
+                    GamesPage(
+                      boardGameBox: boardGameBox,
+                      settingsBox: settingsBox, 
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+
+                  _buildCategoryBox(
+                    context,
+                    "ACTIVITÉS",
+                    Colors.blue,
+                    ActivitiesPage(
+                      activityBox: activityBox,
+                      activityRatingBox: activityRatingBox,
+                      activityPreferencesBox: activityPreferencesBox,
+                      metricsBox: metricsBox,
+                    ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
         ),
       ),
     );
   }
 
-  // Widget utilitaire pour les boutons
-  Widget _buildFeatureButton(
-    BuildContext context, {
-    required IconData icon,
-    required String label,
-    required Color color,
-    required VoidCallback onPressed,
-  }) {
-    return Container(
-      width: 250,
-      height: 60,
-      decoration: BoxDecoration(
-        boxShadow: [
-          BoxShadow(
-            color: color.withOpacity(0.4),
-            blurRadius: 10,
-            offset: const Offset(0, 5),
-          ),
-        ],
-        borderRadius: BorderRadius.circular(30),
-        gradient: LinearGradient(
-          colors: [color.withOpacity(0.9), color],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
+  Widget _buildCategoryBox(
+    BuildContext context,
+    String title,
+    Color color,
+    Widget page,
+  ) {
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(context, MaterialPageRoute(builder: (context) => page));
+      },
+      child: Container(
+        width: double.infinity,
+        height: 70,
+        decoration: BoxDecoration(
+          color: color,
+          borderRadius: BorderRadius.circular(12),
         ),
-      ),
-      child: ElevatedButton.icon(
-        icon: Icon(icon, color: Colors.white),
-        label: Text(
-          label,
-          style: GoogleFonts.poppins(
-            textStyle: const TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
+        child: Center(
+          child: Text(
+            title,
+            style: const TextStyle(
               color: Colors.white,
+              fontWeight: FontWeight.bold,
+              fontSize: 24,
+              letterSpacing: 1,
             ),
-          ),
-        ),
-        onPressed: onPressed,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.transparent,
-          shadowColor: Colors.transparent,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(30),
           ),
         ),
       ),

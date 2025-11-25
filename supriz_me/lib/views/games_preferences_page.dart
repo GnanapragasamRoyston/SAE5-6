@@ -1,4 +1,4 @@
-// games_preferences_page.dart sajith
+// games_preferences_page.dart
 
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';

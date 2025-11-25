@@ -6,7 +6,7 @@ import 'games_preferences_page.dart';
 
 
 // =================================================================
-// 🎮 GamesPage - Le conteneur principal sajith
+// 🎮 GamesPage - Le conteneur principal
 // =================================================================
 
 class GamesPage extends StatefulWidget {
