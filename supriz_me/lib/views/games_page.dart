@@ -54,12 +54,14 @@ class _GamesPageState extends State<GamesPage> {
   }
   
   // Chargement des préférences de l'utilisateur (likes/dislikes)
-  void _loadFeedbackData() {
-     final savedLikes = widget.settingsBox.get(_likedGamesKey)?.cast<String>() ?? [];
-     final savedDislikes = widget.settingsBox.get(_dislikedGamesKey)?.cast<String>() ?? [];
-     
+void _loadFeedbackData() {
+     final savedLikes = List<String>.from(widget.settingsBox.get(_likedGamesKey) ?? []);
+     final savedDislikes = List<String>.from(widget.settingsBox.get(_dislikedGamesKey) ?? []);
+
+
      _likedGamesTitles = savedLikes.toSet();
-     _dislikedGamesTitles = savedDislikes.toSet();
+    _dislikedGamesTitles = savedDislikes.toSet();
+
   }
 
 
