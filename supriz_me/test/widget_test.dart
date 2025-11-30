@@ -15,6 +15,7 @@ import 'package:supriz_me/models/activity_rating.dart';
 import 'package:supriz_me/models/activity_preferences.dart';
 import 'package:supriz_me/models/performance_metrics.dart';
 import 'package:supriz_me/models/performance_metrics_adapter.dart';
+import 'package:supriz_me/models/movie_rating.dart';
 
 void main() {
   testWidgets('Supriz Me app launches', (WidgetTester tester) async {
@@ -39,9 +40,17 @@ void main() {
     final activityPreferencesBox = await Hive.openBox<ActivityPreferences>(
       'activity_preferences_test',
     );
+
+    final movieRatingBox = await Hive.openBox<MovieRating>(
+      // 🎯 NOUVEAU: Ouverture de la box
+      'movie_ratings_test',
+    );
+
     final metricsBox = await Hive.openBox<PerformanceMetrics>(
       'performanceMetrics_test',
     );
+
+    final settingsBox = await Hive.openBox('user_settings_test');
 
     // Build our app and trigger a frame.
     await tester.pumpWidget(
@@ -51,7 +60,9 @@ void main() {
         boardGameBox: boardGameBox,
         activityRatingBox: activityRatingBox,
         activityPreferencesBox: activityPreferencesBox,
+        movieRatingBox: movieRatingBox,
         metricsBox: metricsBox,
+        settingsBox: settingsBox,
       ),
     );
 

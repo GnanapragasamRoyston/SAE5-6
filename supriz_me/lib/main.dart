@@ -9,6 +9,7 @@ import 'models/activity_rating.dart';
 import 'models/activity_preferences.dart';
 import 'models/performance_metrics.dart';
 import 'models/performance_metrics_adapter.dart';
+import 'models/movie_rating.dart';
 
 // Data loading
 import 'data/data_loader.dart';
@@ -26,6 +27,7 @@ void main() async {
   Hive.registerAdapter(BoardGameAdapter());
   Hive.registerAdapter(ActivityRatingAdapter());
   Hive.registerAdapter(ActivityPreferencesAdapter());
+  Hive.registerAdapter(MovieRatingAdapter()); 
   Hive.registerAdapter(PerformanceMetricsAdapter());
 
   // Clear old boxes to force reload with new parsing logic
@@ -35,8 +37,8 @@ void main() async {
     await Hive.deleteBoxFromDisk('board_games');
     await Hive.deleteBoxFromDisk('activity_ratings');
     await Hive.deleteBoxFromDisk('activity_preferences');
+    await Hive.deleteBoxFromDisk('movie_ratings'); 
     await Hive.deleteBoxFromDisk('performanceMetrics');
-    // NOTE : On ne supprime pas 'user_settings' pour conserver l'état de première utilisation.
   } catch (e) {
     // Boxes might not exist yet
   }
@@ -45,25 +47,26 @@ void main() async {
   final movieBox = await Hive.openBox<Movie>('movies');
   final activityBox = await Hive.openBox<Activity>('activities');
   final boardGameBox = await Hive.openBox<BoardGame>('board_games');
-  final activityRatingBox = await Hive.openBox<ActivityRating>(
-    'activity_ratings',
-  );
-  final activityPreferencesBox = await Hive.openBox<ActivityPreferences>(
-    'activity_preferences',
-  );
-  final metricsBox = await Hive.openBox<PerformanceMetrics>(
-    'performanceMetrics',
-  );
-  
-  // NOUVEAU : Box pour les réglages utilisateur (incluant les préférences de jeux sajith)
+  final activityRatingBox =
+      await Hive.openBox<ActivityRating>('activity_ratings');
+  final activityPreferencesBox =
+      await Hive.openBox<ActivityPreferences>('activity_preferences');
+  final movieRatingBox =
+      await Hive.openBox<MovieRating>('movie_ratings'); 
+  final metricsBox =
+      await Hive.openBox<PerformanceMetrics>('performanceMetrics');
+
   final settingsBox = await Hive.openBox('user_settings');
+  // Clear preferences flags for fresh testing
   await settingsBox.delete('game_preferences_set');
+  await settingsBox.delete('movie_prefs_initialized');
 
   // Load data
   await DataLoader.loadAllData(
     movieBox: movieBox,
     activityBox: activityBox,
     boardGameBox: boardGameBox,
+    settingsBox: settingsBox, // 🎯 PASSAGE DE settingsBox au DataLoader
   );
 
   runApp(
@@ -73,8 +76,9 @@ void main() async {
       boardGameBox: boardGameBox,
       activityRatingBox: activityRatingBox,
       activityPreferencesBox: activityPreferencesBox,
+      movieRatingBox: movieRatingBox,
       metricsBox: metricsBox,
-      settingsBox: settingsBox, // PASSAGE DE LA NOUVELLE BOX
+      settingsBox: settingsBox,
     ),
   );
 }
@@ -85,8 +89,9 @@ class SurprizMeApp extends StatelessWidget {
   final Box<BoardGame> boardGameBox;
   final Box<ActivityRating> activityRatingBox;
   final Box<ActivityPreferences> activityPreferencesBox;
+  final Box<MovieRating> movieRatingBox; // 🎯 DÉCLARATION
   final Box<PerformanceMetrics> metricsBox;
-  final Box settingsBox; // DÉCLARATION DE LA NOUVELLE BOX
+  final Box settingsBox;
 
   const SurprizMeApp({
     super.key,
@@ -95,8 +100,9 @@ class SurprizMeApp extends StatelessWidget {
     required this.boardGameBox,
     required this.activityRatingBox,
     required this.activityPreferencesBox,
+    required this.movieRatingBox, // 🎯 REQUIS
     required this.metricsBox,
-    required this.settingsBox, // DÉCLARATION DU PARAMÈTRE REQUIS
+    required this.settingsBox,
   });
 
   @override
@@ -114,8 +120,9 @@ class SurprizMeApp extends StatelessWidget {
         boardGameBox: boardGameBox,
         activityRatingBox: activityRatingBox,
         activityPreferencesBox: activityPreferencesBox,
+        movieRatingBox: movieRatingBox,
         metricsBox: metricsBox,
-        settingsBox: settingsBox, // PASSAGE DE LA BOX À HOMEPAGE
+        settingsBox: settingsBox,
       ),
     );
   }

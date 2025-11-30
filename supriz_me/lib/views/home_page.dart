@@ -9,6 +9,7 @@ import '../models/board_game.dart';
 import '../models/activity_rating.dart';
 import '../models/activity_preferences.dart';
 import '../models/performance_metrics.dart';
+import '../models/movie_rating.dart'; 
 
 // Import pages
 import 'movies_page.dart';
@@ -23,7 +24,9 @@ class HomePage extends StatelessWidget {
   final Box<ActivityRating> activityRatingBox;
   final Box<ActivityPreferences> activityPreferencesBox;
   final Box<PerformanceMetrics> metricsBox;
-  final Box settingsBox; 
+  final Box settingsBox;
+  final Box<MovieRating>
+      movieRatingBox;
 
   const HomePage({
     super.key,
@@ -33,7 +36,8 @@ class HomePage extends StatelessWidget {
     required this.activityRatingBox,
     required this.activityPreferencesBox,
     required this.metricsBox,
-    required this.settingsBox, 
+    required this.settingsBox,
+    required this.movieRatingBox,
   });
 
   @override
@@ -53,6 +57,7 @@ class HomePage extends StatelessWidget {
             child: IconButton(
               icon: const Icon(Icons.settings, color: Colors.white70, size: 22),
               onPressed: () {
+                // NOTE: Si SettingsPage a besoin des boxes, il faut les passer ici aussi
                 Navigator.push(
                   context,
                   MaterialPageRoute(builder: (context) => const SettingsPage()),
@@ -98,8 +103,9 @@ class HomePage extends StatelessWidget {
                   const SizedBox(height: 10),
 
                   // NOUVEAU LOGO (Image.asset)
-                  ClipRRect( // Optionnel: pour appliquer des coins arrondis si l'image le nécessite
-                    borderRadius: BorderRadius.circular(15), 
+                  ClipRRect(
+                    // Optionnel: pour appliquer des coins arrondis si l'image le nécessite
+                    borderRadius: BorderRadius.circular(15),
                     child: Image.asset(
                       'assets/images/logo_app.png',
                       height: 200, // Ajustez la taille au besoin
@@ -107,7 +113,6 @@ class HomePage extends StatelessWidget {
                       fit: BoxFit.cover,
                     ),
                   ),
-                
 
                   const SizedBox(height: 20),
 
@@ -131,7 +136,12 @@ class HomePage extends StatelessWidget {
                     context,
                     "FILMS",
                     Colors.orange,
-                    MoviesPage(movieBox: movieBox),
+                    // 🎯 MISE À JOUR : Passez movieRatingBox à MoviesPage
+                    MoviesPage(
+                      movieBox: movieBox,
+                      movieRatingBox: movieRatingBox,
+                      settingsBox: settingsBox,
+                    ),
                   ),
                   const SizedBox(height: 20),
 
@@ -141,7 +151,7 @@ class HomePage extends StatelessWidget {
                     Colors.purple,
                     GamesPage(
                       boardGameBox: boardGameBox,
-                      settingsBox: settingsBox, 
+                      settingsBox: settingsBox,
                     ),
                   ),
                   const SizedBox(height: 20),
