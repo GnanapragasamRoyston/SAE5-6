@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+
 import '../models/movie.dart';
 import '../models/movie_rating.dart';
 import '../services/recommendation/movie_recommender.dart';
 import 'movie_preference_page.dart';
-
-// --- 1. MoviesPage (StatefulWidget) ---
 
 class MoviesPage extends StatefulWidget {
   final Box<Movie> movieBox;
@@ -25,7 +24,6 @@ class MoviesPage extends StatefulWidget {
 }
 
 class _MoviesPageState extends State<MoviesPage> {
-  // Set<String> _selectedGenres = {}; // ❌ PLUS BESOIN
   late MovieRecommender _recommender;
 
   @override
@@ -43,14 +41,12 @@ class _MoviesPageState extends State<MoviesPage> {
     });
   }
 
-  /// 🎯 Nouveau gestionnaire de navigation vers la page de préférences
   void _navigateToPreferencePage() {
     Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => MoviePreferencePage(
           settingsBox: widget.settingsBox,
-          // Le callback force le rafraîchissement de MoviesPage après la sauvegarde
           onPreferencesSaved: () {
             setState(() {});
           },
@@ -59,18 +55,15 @@ class _MoviesPageState extends State<MoviesPage> {
     );
   }
 
-  /// Vérifie si l'utilisateur a déjà initialisé ses préférences de films.
   void _checkAndPromptForMoviePreferences() {
     final hasPrefsBeenSet =
-        widget.settingsBox.get('movie_prefs_initialized', defaultValue: false);
+    widget.settingsBox.get('movie_prefs_initialized', defaultValue: false);
 
     if (!hasPrefsBeenSet) {
-      // 🎯 NAVIGUER VERS LA PAGE
       _navigateToPreferencePage();
     }
   }
 
-  /// 🎯 AJOUT DE LA RÉINITIALISATION (Appel au navigation pour resélectionner)
   Future<void> _resetAppPreferences() async {
     await widget.movieRatingBox.clear();
 
@@ -83,10 +76,10 @@ class _MoviesPageState extends State<MoviesPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text(
-              'Réinitialisation complète effectuée. Veuillez choisir de nouvelles préférences.'),
+            'Réinitialisation complète effectuée. Veuillez choisir de nouvelles préférences.',
+          ),
         ),
       );
-      // Forcer le re-check, ce qui naviguera vers la page de préférences
       setState(() {
         _navigateToPreferencePage();
       });
@@ -97,8 +90,8 @@ class _MoviesPageState extends State<MoviesPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Films"),
-        backgroundColor: Colors.black,
+        title: const Text('Films'),
+        backgroundColor: Colors.blue,
         elevation: 0,
         actions: [
           IconButton(
@@ -106,10 +99,9 @@ class _MoviesPageState extends State<MoviesPage> {
             onPressed: _resetAppPreferences,
             tooltip: 'Réinitialiser les préférences et les notes',
           ),
-          // 🎯 Bouton pour accéder aux préférences à tout moment
           IconButton(
             icon:
-                const Icon(Icons.settings_input_component, color: Colors.white),
+            const Icon(Icons.settings_input_component, color: Colors.white),
             onPressed: _navigateToPreferencePage,
             tooltip: 'Modifier les préférences initiales',
           ),
@@ -119,10 +111,8 @@ class _MoviesPageState extends State<MoviesPage> {
         decoration: const BoxDecoration(
           gradient: LinearGradient(
             colors: [
-              Color(0xFFFF6F91),
-              Color(0xFF845EC2),
-              Color(0xFF2196F3),
-              Color(0xFF00C9A7),
+              Color(0xFF1A3A52),
+              Color(0xFF2563EB),
             ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
@@ -133,65 +123,43 @@ class _MoviesPageState extends State<MoviesPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Cube orange avec "Film" (Code inchangé)
-              Center(
-                child: Container(
-                  width: 200,
-                  height: 100,
-                  decoration: BoxDecoration(
-                    color: Colors.orange,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Center(
-                    child: Text(
-                      "Film",
-                      style: GoogleFonts.bebasNeue(
-                        textStyle: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 45,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 30),
+              _buildHeader(),
+              const SizedBox(height: 24),
 
-              // 🌟 SECTION 1 : Recommandations pour vous 🌟 (Code inchangé)
-              const Text(
-                "Recommandations pour vous",
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
+              // Section 1 : Recommandations pour vous
+              _buildSectionTitle(
+                icon: Icons.favorite,
+                label: 'RECOMMANDATIONS POUR VOUS',
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 12),
               SizedBox(
-                height: 100,
+                height: 160,
                 child: ValueListenableBuilder<Box<MovieRating>>(
                   valueListenable: widget.movieRatingBox.listenable(),
                   builder: (context, box, child) {
                     final recommendedMovies =
-                        _recommender.getRecommendedMovies(count: 5);
+                    _recommender.getRecommendedMovies(count: 5);
 
-                    if (recommendedMovies.isEmpty &&
-                        !widget.settingsBox.get('movie_prefs_initialized',
-                            defaultValue: false)) {
-                      return const Center(
+                    final hasPrefsBeenSet = widget.settingsBox
+                        .get('movie_prefs_initialized', defaultValue: false);
+
+                    if (recommendedMovies.isEmpty && !hasPrefsBeenSet) {
+                      return Center(
                         child: Text(
-                          'Veuillez sélectionner vos genres favoris pour afficher les premières recommandations.',
-                          style: TextStyle(color: Colors.white70, fontSize: 12),
+                          'Sélectionnez vos genres favoris pour afficher vos premières recommandations.',
+                          style:
+                          GoogleFonts.poppins(color: Colors.white70, fontSize: 12),
                           textAlign: TextAlign.center,
                         ),
                       );
                     }
 
                     if (recommendedMovies.isEmpty) {
-                      return const Center(
+                      return Center(
                         child: Text(
                           'Aimez ou n\'aimez pas des films ci-dessous pour plus de recommandations !',
-                          style: TextStyle(color: Colors.white70, fontSize: 12),
+                          style:
+                          GoogleFonts.poppins(color: Colors.white70, fontSize: 12),
                           textAlign: TextAlign.center,
                         ),
                       );
@@ -205,34 +173,27 @@ class _MoviesPageState extends State<MoviesPage> {
                         return MovieTile(
                           movie: movie,
                           recommender: _recommender,
-                          tileColor: Colors.blueGrey,
+                          tileColor: Colors.redAccent,
                         );
                       },
                     );
                   },
                 ),
               ),
-              const SizedBox(height: 20),
-
-              // ... (Reste des sections [Tous les films, Courts, Longs] restent inchangées,
-              // elles utilisent déjà _recommender et widget.movieBox)
+              const SizedBox(height: 24),
 
               // Section 2 : Tous les films
-              const Text(
-                "Tous les films",
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
+              _buildSectionTitle(
+                icon: Icons.movie,
+                label: 'TOUS LES FILMS',
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 12),
               SizedBox(
-                height: 100,
+                height: 160,
                 child: ListView.builder(
                   scrollDirection: Axis.horizontal,
                   itemCount:
-                      widget.movieBox.length > 5 ? 5 : widget.movieBox.length,
+                  widget.movieBox.length > 5 ? 5 : widget.movieBox.length,
                   itemBuilder: (context, index) {
                     final movie = widget.movieBox.getAt(index);
                     if (movie == null) return const SizedBox.shrink();
@@ -240,25 +201,21 @@ class _MoviesPageState extends State<MoviesPage> {
                     return MovieTile(
                       movie: movie,
                       recommender: _recommender,
-                      tileColor: Colors.grey[800]!,
+                      tileColor: Colors.blueGrey,
                     );
                   },
                 ),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 24),
 
               // Section 3 : Films courts (< 120 min)
-              const Text(
-                "Films courts",
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
+              _buildSectionTitle(
+                icon: Icons.timer,
+                label: 'FILMS COURTS (< 120 MIN)',
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 12),
               SizedBox(
-                height: 100,
+                height: 160,
                 child: Builder(
                   builder: (context) {
                     final shortMovies = widget.movieBox.values
@@ -267,10 +224,10 @@ class _MoviesPageState extends State<MoviesPage> {
                         .toList();
 
                     if (shortMovies.isEmpty) {
-                      return const Center(
+                      return Center(
                         child: Text(
                           'Aucun film court',
-                          style: TextStyle(color: Colors.white),
+                          style: GoogleFonts.poppins(color: Colors.white),
                         ),
                       );
                     }
@@ -290,20 +247,16 @@ class _MoviesPageState extends State<MoviesPage> {
                   },
                 ),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 24),
 
               // Section 4 : Films longs (>= 120 min)
-              const Text(
-                "Films longs",
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
+              _buildSectionTitle(
+                icon: Icons.timelapse,
+                label: 'FILMS LONGS (≥ 120 MIN)',
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 12),
               SizedBox(
-                height: 100,
+                height: 160,
                 child: Builder(
                   builder: (context) {
                     final longMovies = widget.movieBox.values
@@ -312,10 +265,10 @@ class _MoviesPageState extends State<MoviesPage> {
                         .toList();
 
                     if (longMovies.isEmpty) {
-                      return const Center(
+                      return Center(
                         child: Text(
                           'Aucun film long',
-                          style: TextStyle(color: Colors.white),
+                          style: GoogleFonts.poppins(color: Colors.white),
                         ),
                       );
                     }
@@ -336,9 +289,9 @@ class _MoviesPageState extends State<MoviesPage> {
                 ),
               ),
 
-              const SizedBox(height: 30),
+              const SizedBox(height: 32),
 
-              // Bouton Home intégré
+              // Bouton Home
               Center(
                 child: ElevatedButton(
                   onPressed: () {
@@ -347,7 +300,7 @@ class _MoviesPageState extends State<MoviesPage> {
                   style: ElevatedButton.styleFrom(
                     shape: const CircleBorder(),
                     padding: const EdgeInsets.all(20),
-                    backgroundColor: Colors.orange,
+                    backgroundColor: Colors.grey.shade700,
                   ),
                   child: const Icon(Icons.home, color: Colors.white, size: 30),
                 ),
@@ -358,14 +311,74 @@ class _MoviesPageState extends State<MoviesPage> {
       ),
     );
   }
+
+  Widget _buildHeader() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.3),
+          width: 1,
+        ),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.local_movies, color: Colors.orangeAccent, size: 24),
+          const SizedBox(width: 8),
+          Text(
+            'FILMS',
+            style: GoogleFonts.bebasNeue(
+              fontSize: 18,
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+              letterSpacing: 1.5,
+            ),
+          ),
+          const Spacer(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSectionTitle({
+    required IconData icon,
+    required String label,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.25),
+        ),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: Colors.white, size: 20),
+          const SizedBox(width: 8),
+          Text(
+            label,
+            style: GoogleFonts.bebasNeue(
+              fontSize: 15,
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+              letterSpacing: 1.5,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 // =========================================================================
-// WIDGETS MovieTile et MovieDetailPage sont inchangés, mais restent dans ce fichier
+// MovieTile
 // =========================================================================
 
 class MovieTile extends StatelessWidget {
-// ... (reste inchangé)
   final Movie movie;
   final MovieRecommender recommender;
   final Color tileColor;
@@ -393,55 +406,67 @@ class MovieTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       margin: const EdgeInsets.only(right: 10),
-      width: 150,
+      width: 170,
       decoration: BoxDecoration(
-        color: tileColor,
-        borderRadius: BorderRadius.circular(8),
+        gradient: LinearGradient(
+          colors: [
+            tileColor.withOpacity(0.9),
+            tileColor.withOpacity(0.6),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: Colors.white.withOpacity(0.2),
+          width: 1.5,
+        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.2),
-            spreadRadius: 1,
-            blurRadius: 3,
-            offset: const Offset(0, 2),
+            color: Colors.black.withOpacity(0.3),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
       child: InkWell(
+        borderRadius: BorderRadius.circular(12),
         onTap: () => _navigateToMovieDetail(context),
         child: Padding(
-          padding: const EdgeInsets.all(8.0),
+          padding: const EdgeInsets.all(10.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
                 movie.title,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
+                style: GoogleFonts.poppins(
                   color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 13,
                 ),
               ),
               const SizedBox(height: 4),
               Row(
                 children: [
-                  const Icon(Icons.star, color: Colors.yellow, size: 10),
+                  const Icon(Icons.star, color: Colors.yellow, size: 12),
+                  const SizedBox(width: 2),
                   Text(
                     '${movie.rating.toStringAsFixed(1)} / 5',
-                    style: const TextStyle(
+                    style: GoogleFonts.poppins(
                       color: Colors.yellow,
-                      fontSize: 10,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w500,
                     ),
                   ),
                   const Spacer(),
                   Text(
-                    '${movie.duration.toInt()}min',
-                    style: TextStyle(
-                      color: tileColor.computeLuminance() > 0.5
-                          ? Colors.black
-                          : Colors.white,
-                      fontSize: 10,
+                    '${movie.duration.toInt()} min',
+                    style: GoogleFonts.poppins(
+                      color: Colors.white,
+                      fontSize: 11,
                     ),
                   ),
                 ],
@@ -451,9 +476,9 @@ class MovieTile extends StatelessWidget {
                 movie.genre,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  color: Colors.grey,
-                  fontSize: 9,
+                style: GoogleFonts.poppins(
+                  color: Colors.white70,
+                  fontSize: 10,
                 ),
               ),
             ],
@@ -463,6 +488,10 @@ class MovieTile extends StatelessWidget {
     );
   }
 }
+
+// =========================================================================
+// MovieDetailPage (reprend ton code existant, juste légère harmonisation)
+// =========================================================================
 
 class MovieDetailPage extends StatelessWidget {
   final Movie movie;
@@ -486,15 +515,15 @@ class MovieDetailPage extends StatelessWidget {
         return Scaffold(
           appBar: AppBar(
             title: Text(movie.title),
-            backgroundColor: Colors.black,
+            backgroundColor: Colors.blue,
             elevation: 0,
           ),
           body: Container(
             decoration: const BoxDecoration(
               gradient: LinearGradient(
                 colors: [
-                  Color(0xFF845EC2),
-                  Color(0xFF2196F3),
+                  Color(0xFF1A3A52),
+                  Color(0xFF2563EB),
                 ],
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
@@ -505,7 +534,6 @@ class MovieDetailPage extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Titre et Note
                   Text(
                     movie.title,
                     style: GoogleFonts.bebasNeue(
@@ -522,8 +550,11 @@ class MovieDetailPage extends StatelessWidget {
                       const SizedBox(width: 4),
                       Text(
                         '${movie.rating.toStringAsFixed(1)} / 5',
-                        style:
-                            const TextStyle(color: Colors.white, fontSize: 18),
+                        style: GoogleFonts.poppins(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
                       const SizedBox(width: 20),
                       const Icon(Icons.access_time,
@@ -531,86 +562,109 @@ class MovieDetailPage extends StatelessWidget {
                       const SizedBox(width: 4),
                       Text(
                         '${movie.duration.toInt()} min',
-                        style:
-                            const TextStyle(color: Colors.white, fontSize: 18),
+                        style: GoogleFonts.poppins(
+                          color: Colors.white,
+                          fontSize: 18,
+                        ),
                       ),
                     ],
                   ),
                   const SizedBox(height: 20),
 
-                  // Tags (Affichage des tags individuels sans redondance)
                   Wrap(
                     spacing: 8.0,
                     runSpacing: 4.0,
                     children: [
-                      ...movie.tags.map((tag) => Chip(
-                            label: Text(tag,
-                                style: TextStyle(color: Colors.black)),
-                            backgroundColor: Colors.grey[300],
-                          )),
+                      ...movie.tags.map(
+                            (tag) => Chip(
+                          label: Text(
+                            tag,
+                            style: GoogleFonts.poppins(
+                              color: Colors.black,
+                              fontSize: 12,
+                            ),
+                          ),
+                          backgroundColor: Colors.grey[300],
+                        ),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 20),
 
-                  // Description
-                  const Text(
-                    "Synopsis",
-                    style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold),
+                  Text(
+                    'Synopsis',
+                    style: GoogleFonts.poppins(
+                      color: Colors.white,
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   const SizedBox(height: 8),
                   Text(
                     movie.description.isNotEmpty
                         ? movie.description
-                        : "Description non disponible.",
-                    style: const TextStyle(
-                        color: Colors.white70, fontSize: 16, height: 1.4),
+                        : 'Description non disponible.',
+                    style: GoogleFonts.poppins(
+                      color: Colors.white70,
+                      fontSize: 16,
+                      height: 1.4,
+                    ),
                   ),
                   const SizedBox(height: 40),
 
-                  // Boutons Like/Dislike
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
-                      // Bouton Dislike
                       ElevatedButton.icon(
                         onPressed: () {
                           recommender.saveRating(movie.id, false);
                           ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                  content: Text('Dislike enregistré !')));
+                            const SnackBar(
+                              content: Text('Dislike enregistré !'),
+                            ),
+                          );
                         },
-                        icon: Icon(Icons.thumb_down,
-                            color: isDisliked ? Colors.white : Colors.red),
-                        label: const Text("Dislike",
-                            style: TextStyle(color: Colors.white)),
+                        icon: Icon(
+                          Icons.thumb_down,
+                          color: isDisliked ? Colors.white : Colors.red,
+                        ),
+                        label: const Text(
+                          'Dislike',
+                          style: TextStyle(color: Colors.white),
+                        ),
                         style: ElevatedButton.styleFrom(
                           backgroundColor:
-                              isDisliked ? Colors.red : Colors.grey[800],
+                          isDisliked ? Colors.red : Colors.grey[800],
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 30, vertical: 15),
+                            horizontal: 30,
+                            vertical: 15,
+                          ),
                         ),
                       ),
-
-                      // Bouton Like
                       ElevatedButton.icon(
                         onPressed: () {
                           recommender.saveRating(movie.id, true);
                           ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                  content: Text('Like enregistré !')));
+                            const SnackBar(
+                              content: Text('Like enregistré !'),
+                            ),
+                          );
                         },
-                        icon: Icon(Icons.thumb_up,
-                            color: isLiked ? Colors.white : Colors.green),
-                        label: const Text("Like",
-                            style: TextStyle(color: Colors.white)),
+                        icon: Icon(
+                          Icons.thumb_up,
+                          color: isLiked ? Colors.white : Colors.green,
+                        ),
+                        label: const Text(
+                          'Like',
+                          style: TextStyle(color: Colors.white),
+                        ),
                         style: ElevatedButton.styleFrom(
                           backgroundColor:
-                              isLiked ? Colors.green : Colors.grey[800],
+                          isLiked ? Colors.green : Colors.grey[800],
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 30, vertical: 15),
+                            horizontal: 30,
+                            vertical: 15,
+                          ),
                         ),
                       ),
                     ],
