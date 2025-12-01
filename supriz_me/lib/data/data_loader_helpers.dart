@@ -32,7 +32,7 @@ List<BoardGame> parseBoardGamesJson(String jsonString) {
         complexity: _parseComplexity(item['Difficulty']),
         rating: _parseRatingString(item['Rating']),
         genres : item['Genre'],
-        mechanics : item['Mechanics']
+        mechanics : item['Mechanics'],
         releaseYear: (item['Release Year'] as num?)?.toInt() ?? 0, 
         minAge: (item['Min Age'] as num?)?.toInt() ?? 8, 
       );
