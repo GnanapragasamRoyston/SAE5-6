@@ -15,6 +15,21 @@ final List<String> availableGenres = [
   "Children's Games"
 ];
 
+// --- Constantes des mécanismes (Top 10 les plus généraux) ---
+final List<String> availableMechanics = [
+  'Dice Rolling',
+  'Card Drafting',
+  'Tile Placement',
+  'Worker Placement',
+  'Set Collection',
+  'Hand Management',
+  'Area Majority / Influence',
+  'Point to Point Movement',
+  'Variable Player Powers',
+  'Deck Bag and Pool Building',
+];
+
+
 class GamesPreferencesPage extends StatefulWidget {
   final Box settingsBox;
   // CORRECTION: Ajout du paramètre isEditing au constructeur
@@ -32,6 +47,8 @@ class GamesPreferencesPage extends StatefulWidget {
 
 class _GamesPreferencesPageState extends State<GamesPreferencesPage> {
   Set<String> _selectedGenres = {};
+  // AJOUT : Variable d'état pour les mécanismes sélectionnés
+  Set<String> _selectedMechanics = {}; 
   
   // Variable d'état pour le nombre de joueurs unique (par défaut 4)
   double _playersCount = 4; 
@@ -39,6 +56,8 @@ class _GamesPreferencesPageState extends State<GamesPreferencesPage> {
   // Clés utilisées pour stocker dans la Hive Box
   static const String _preferencesSetKey = 'game_preferences_set';
   static const String _userGenresKey = 'user_game_genres';
+  // AJOUT : Clé pour les mécanismes
+  static const String _userMechanicsKey = 'user_game_mechanics'; 
   static const String _playersCountKey = 'player_count_preference';
 
 
@@ -48,10 +67,14 @@ class _GamesPreferencesPageState extends State<GamesPreferencesPage> {
     // NOUVEAU: Si on est en mode édition, on charge les valeurs existantes
     if (widget.isEditing) {
       final savedGenres = widget.settingsBox.get(_userGenresKey)?.cast<String>() ?? [];
+      // Chargement des mécanismes
+      final savedMechanics = widget.settingsBox.get(_userMechanicsKey)?.cast<String>() ?? [];
       // Si la clé de joueur existe, on la charge, sinon on utilise la valeur par défaut
       final savedPlayers = widget.settingsBox.get(_playersCountKey) ?? 4; 
 
       _selectedGenres = savedGenres.toSet();
+      // Initialisation des mécanismes
+      _selectedMechanics = savedMechanics.toSet();
       _playersCount = savedPlayers.toDouble();
     }
   }
@@ -61,6 +84,8 @@ class _GamesPreferencesPageState extends State<GamesPreferencesPage> {
   void _savePreferencesAndNavigate() async {
     // 1. Sauvegarder les genres sélectionnés dans la Box Hive
     await widget.settingsBox.put(_userGenresKey, _selectedGenres.toList());
+    // Sauvegarder les mécanismes sélectionnés
+    await widget.settingsBox.put(_userMechanicsKey, _selectedMechanics.toList());
     
     // 2. Sauvegarder le nombre de joueurs unique
     await widget.settingsBox.put(_playersCountKey, _playersCount.round());
@@ -108,7 +133,7 @@ class _GamesPreferencesPageState extends State<GamesPreferencesPage> {
                 ),
                 const SizedBox(height: 25),
                 
-                // --- SLIDER POUR LE NOMBRE DE JOUEURS (UNIQUE) ---
+                // --- SLIDER POUR LE NOMBRE DE JOUEURS ---
                 Container(
                   padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 10),
                   decoration: BoxDecoration(
@@ -149,7 +174,7 @@ class _GamesPreferencesPageState extends State<GamesPreferencesPage> {
                 ),
                 const SizedBox(height: 30),
                 
-                // --- CHIPS DE GENRES (GARDÉ) ---
+                // --- CHIPS DE GENRES ---
                 const Text(
                   "✨ Genres préférés :",
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
@@ -177,6 +202,39 @@ class _GamesPreferencesPageState extends State<GamesPreferencesPage> {
                     );
                   }).toList(),
                 ),
+                
+                const SizedBox(height: 30), // Espacement après les genres
+
+                // --- AJOUT DU FILTRE DES MÉCANISMES (Front-End) ---
+                const Text(
+                  "⚙️ Mécanismes préférés : (Facultatif)",
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+                  textAlign: TextAlign.left,
+                ),
+                const SizedBox(height: 10),
+                Wrap(
+                  spacing: 8.0, 
+                  runSpacing: 8.0,
+                  children: availableMechanics.map((mechanic) {
+                    return ChoiceChip(
+                      label: Text(mechanic, style: TextStyle(color: _selectedMechanics.contains(mechanic) ? Colors.white : Colors.black87)),
+                      selected: _selectedMechanics.contains(mechanic),
+                      selectedColor: Colors.teal[600], // Nouvelle couleur pour les mécanismes
+                      backgroundColor: Colors.white,
+                      onSelected: (bool selected) {
+                        setState(() {
+                          if (selected) {
+                            _selectedMechanics.add(mechanic);
+                          } else {
+                            _selectedMechanics.remove(mechanic);
+                          }
+                        });
+                      },
+                    );
+                  }).toList(),
+                ),
+                // --- FIN DE L'AJOUT ---
+
                 const SizedBox(height: 40),
                 
                 // Bouton de validation
