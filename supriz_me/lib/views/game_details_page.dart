@@ -98,46 +98,6 @@ class _GameDetailsPageState extends State<GameDetailsPage> {
     final isLiked = _likedGamesTitles.contains(game.title);
     final isDisliked = _dislikedGamesTitles.contains(game.title);
 
-    Widget _buildTagList(String title, List<String> tags) {
-      final cleanedTags = tags.where((tag) => tag.isNotEmpty).toList();
-      if (cleanedTags.isEmpty) return const SizedBox.shrink();
-
-      return Padding(
-        padding: const EdgeInsets.symmetric(vertical: 8.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              title,
-              style: GoogleFonts.poppins(
-                color: Colors.pinkAccent,
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Wrap(
-              spacing: 8.0,
-              runSpacing: 4.0,
-              children: cleanedTags
-                  .map(
-                    (tag) => Chip(
-                      label: Text(tag, style: GoogleFonts.poppins(fontSize: 12)),
-                      backgroundColor: Colors.pink.shade900.withOpacity(0.2),
-                      labelStyle: TextStyle(color: Colors.pink.shade300),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        side: BorderSide(color: Colors.pink.shade400),
-                      ),
-                    ),
-                  )
-                  .toList(),
-            ),
-          ],
-        ),
-      );
-    }
-
     return Scaffold(
       appBar: AppBar(
         title: Text(game.title, maxLines: 2, overflow: TextOverflow.ellipsis),
@@ -243,16 +203,18 @@ class _GameDetailsPageState extends State<GameDetailsPage> {
                 color: Colors.redAccent,
               ),
 
-              const SizedBox(height: 30),
+              // NOUVEAU : Affichage séparé des Genres
+              _buildTagDetailRow(
+                'Genres',
+                game.genres,
+                Colors.amberAccent,
+              ),
 
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.pink.shade900.withOpacity(0.4),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.pink.shade700, width: 1),
-                ),
-                child: _buildTagList('Tags (Genres & Mécanismes)', game.tags),
+              // NOUVEAU : Affichage séparé des Mécanismes
+              _buildTagDetailRow(
+                'Mécanismes',
+                game.mechanics,
+                Colors.limeAccent,
               ),
 
               const SizedBox(height: 30),
@@ -263,7 +225,57 @@ class _GameDetailsPageState extends State<GameDetailsPage> {
     );
   }
 
-  /// 🔥 VERSION COMPACTE DU DETAIL ROW (Valeur proche du label)
+  /// 🔥 NOUVELLE FONCTION : Affiche la liste de tags avec le style des détails (Couleurs Rose/Beige)
+  Widget _buildTagDetailRow(String title, List<String> tags, Color color) {
+    if (tags.isEmpty) return const SizedBox.shrink();
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 12.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.category_rounded, color: Colors.pinkAccent, size: 18),
+              const SizedBox(width: 6),
+              Text(
+                '$title : ',
+                style: GoogleFonts.poppins(
+                  color: Colors.pink.shade50, // Beige/Rose clair
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8.0,
+            runSpacing: 4.0,
+            children: tags
+                .where((tag) => tag.isNotEmpty)
+                .map(
+                  (tag) => Chip(
+                    label: Text(tag, style: GoogleFonts.poppins(fontSize: 12)),
+                    // 🔥 Fond du chip : Beige/Rose très clair
+                    backgroundColor: Colors.pink.shade50.withOpacity(0.1),
+                    // 🔥 Couleur du texte : Rose plus soutenu
+                    labelStyle: TextStyle(color: Colors.pink.shade300),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      // 🔥 Bordure : Rose clair
+                      side: BorderSide(color: Colors.pink.shade300.withOpacity(0.5)),
+                    ),
+                  ),
+                )
+                .toList(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// VERSION COMPACTE DU DETAIL ROW (Valeur proche du label)
   Widget _buildDetailRow({
     required IconData icon,
     required String label,

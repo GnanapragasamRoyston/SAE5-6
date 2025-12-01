@@ -1,4 +1,4 @@
-// games_page.dart (MODIFIÉ)
+// games_page.dart (CORRIGÉ)
 
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -27,6 +27,8 @@ class _GamesPageState extends State<GamesPage> {
   List<BoardGame> _recommendedGames = [];
 
   int? _preferredPlayers;
+  // AJOUT : Variable d'état pour la durée maximale de jeu (en minutes)
+  int? _maxDuration; 
 
   Set<String> _likedGamesTitles = {};
   Set<String> _dislikedGamesTitles = {};
@@ -34,12 +36,13 @@ class _GamesPageState extends State<GamesPage> {
   // NOUVELLE LOGIQUE : Profil de goût basé sur les tags
   Map<String, double> _tagProfileScores = {};
   List<String>? _initialGenres;
-  List<String>? _initialMechanics;
+  // SUPPRIMÉ : List<String>? _initialMechanics;
 
   static const String _preferencesSetKey = 'game_preferences_set';
   static const String _userGenresKey = 'user_game_genres';
   static const String _playersCountKey = 'player_count_preference';
-  static const String _userMechanicsKey = 'user_game_mechanics';
+  // AJOUT : Clé pour la durée maximale
+  static const String _maxDurationKey = 'max_duration_preference'; 
 
   static const String _likedGamesKey = 'liked_games_titles';
   static const String _dislikedGamesKey = 'disliked_games_titles';
@@ -55,9 +58,9 @@ class _GamesPageState extends State<GamesPage> {
 
   void _loadFeedbackData() {
     final savedLikes =
-    List<String>.from(widget.settingsBox.get(_likedGamesKey) ?? []);
+        List<String>.from(widget.settingsBox.get(_likedGamesKey) ?? []);
     final savedDislikes =
-    List<String>.from(widget.settingsBox.get(_dislikedGamesKey) ?? []);
+        List<String>.from(widget.settingsBox.get(_dislikedGamesKey) ?? []);
     _likedGamesTitles = savedLikes.toSet();
     _dislikedGamesTitles = savedDislikes.toSet();
   }
@@ -67,20 +70,22 @@ class _GamesPageState extends State<GamesPage> {
 
     if (preferencesSet) {
       final List<String>? savedGenres =
-      widget.settingsBox.get(_userGenresKey)?.cast<String>();
-      final List<String>? savedMechanics =
-      widget.settingsBox.get(_userMechanicsKey)?.cast<String>();
+          widget.settingsBox.get(_userGenresKey)?.cast<String>();
+      // SUPPRIMÉ : final List<String>? savedMechanics = ...
 
       _initialGenres = savedGenres;
-      _initialMechanics = savedMechanics;
+      // SUPPRIMÉ : _initialMechanics = savedMechanics;
 
       _preferredPlayers = widget.settingsBox.get(_playersCountKey);
+      // AJOUT : Chargement de la durée maximale
+      _maxDuration = widget.settingsBox.get(_maxDurationKey);
 
       _buildTagProfile();
 
       _loadRecommendations(
         genres: savedGenres,
         playerCount: _preferredPlayers,
+        maxDuration: _maxDuration, // Passage du nouveau filtre
       );
     } else {
       _navigateToPreferences(canGoBack: false);
@@ -99,20 +104,22 @@ class _GamesPageState extends State<GamesPage> {
 
     if (result != null) {
       _preferredPlayers = widget.settingsBox.get(_playersCountKey);
+      // AJOUT : Rechargement de la durée maximale après modification
+      _maxDuration = widget.settingsBox.get(_maxDurationKey); 
 
       final List<String>? savedGenres =
-      widget.settingsBox.get(_userGenresKey)?.cast<String>();
-      final List<String>? savedMechanics = 
-      widget.settingsBox.get(_userMechanicsKey)?.cast<String>();
+          widget.settingsBox.get(_userGenresKey)?.cast<String>();
+      // SUPPRIMÉ : final List<String>? savedMechanics = ...
 
       _initialGenres = savedGenres;
-      _initialMechanics = savedMechanics;
-      
+      // SUPPRIMÉ : _initialMechanics = savedMechanics;
+
       _buildTagProfile();
 
       _loadRecommendations(
         genres: savedGenres,
         playerCount: _preferredPlayers,
+        maxDuration: _maxDuration, // Passage du nouveau filtre
       );
     } else {
       if (!canGoBack && !_isContentLoaded) {
@@ -133,6 +140,7 @@ class _GamesPageState extends State<GamesPage> {
         _loadRecommendations( // 3. Recharger et trier les recommandations
           genres: widget.settingsBox.get(_userGenresKey)?.cast<String>(),
           playerCount: _preferredPlayers,
+          maxDuration: _maxDuration, // Passage du filtre de durée
         );
       });
     }
@@ -140,7 +148,7 @@ class _GamesPageState extends State<GamesPage> {
 
   void _buildTagProfile() {
     Map<String, double> profile = {};
-    
+
     bool hasUserFeedback = _likedGamesTitles.isNotEmpty || _dislikedGamesTitles.isNotEmpty;
 
     if (hasUserFeedback) {
@@ -151,9 +159,11 @@ class _GamesPageState extends State<GamesPage> {
           orElse: () => BoardGame.empty(),
         );
         if (game.title.isNotEmpty) {
-          for (var tag in game.tags) {
+          // Utiliser les genres
+          for (var tag in game.genres) {
             profile[tag] = (profile[tag] ?? 0.0) + 1.0;
           }
+          // SUPPRIMÉ : Logique d'ajout des mécanismes
         }
       }
 
@@ -163,9 +173,11 @@ class _GamesPageState extends State<GamesPage> {
           orElse: () => BoardGame.empty(),
         );
         if (game.title.isNotEmpty) {
-          for (var tag in game.tags) {
+          // Utiliser les genres
+          for (var tag in game.genres) {
             profile[tag] = (profile[tag] ?? 0.0) - 1.0;
           }
+          // SUPPRIMÉ : Logique de pénalisation des mécanismes
         }
       }
     } else {
@@ -175,6 +187,7 @@ class _GamesPageState extends State<GamesPage> {
           profile[genre] = (profile[genre] ?? 0.0) + 20.0;
         }
       }
+      // SUPPRIMÉ : Logique d'initialisation des mécanismes
     }
 
     _tagProfileScores = profile;
@@ -187,9 +200,11 @@ class _GamesPageState extends State<GamesPage> {
 
     double tagScoreSum = 0.0;
     
-    for (var tag in game.tags) {
+    // Utiliser uniquement les genres pour le score
+    for (var tag in game.genres) {
       tagScoreSum += _tagProfileScores[tag] ?? 0.0;
     }
+    // SUPPRIMÉ : Logique de calcul du score pour les mécanismes
 
     final affinityScore = tagScoreSum * 5.0;
     final popularityScore = game.rating * 0.5;
@@ -226,11 +241,11 @@ class _GamesPageState extends State<GamesPage> {
 
     final message = isLiked
         ? (_likedGamesTitles.contains(game.title)
-        ? '✓ Jeu favori enregistré'
-        : 'Like annulé')
+            ? '✓ Jeu favori enregistré'
+            : 'Like annulé')
         : (_dislikedGamesTitles.contains(game.title)
-        ? '✗ Jeu pénalisé'
-        : 'Dislike annulé');
+            ? '✗ Jeu pénalisé'
+            : 'Dislike annulé');
 
     final color = Colors.grey.shade700;
 
@@ -248,6 +263,8 @@ class _GamesPageState extends State<GamesPage> {
   void _loadRecommendations({
     List<String>? genres,
     int? playerCount,
+    // AJOUT : Paramètre pour la durée maximale
+    int? maxDuration, 
   }) {
     List<BoardGame> initialRecs = [];
     final allGames = widget.boardGameBox.values.toList();
@@ -256,13 +273,26 @@ class _GamesPageState extends State<GamesPage> {
 
     if (genres != null && genres.isNotEmpty) {
       filteredGames = filteredGames.where((game) {
-        return game.tags.any((tag) => genres.contains(tag));
+        return game.genres.any((tag) => genres.contains(tag));
       });
     }
 
+    // SUPPRIMÉ : Logique de filtrage par mécanismes
+    /*
     if (_initialMechanics != null && _initialMechanics!.isNotEmpty) {
       filteredGames = filteredGames.where((game) {
-        return game.tags.any((tag) => _initialMechanics!.contains(tag));
+        return game.mechanics.any((tag) => _initialMechanics!.contains(tag));
+      });
+    }
+    */
+
+    // AJOUT : Logique de filtrage par durée maximale
+    if (maxDuration != null && maxDuration > 0) {
+      filteredGames = filteredGames.where((game) {
+        // Le jeu doit avoir une durée moyenne inférieure ou égale à la durée max.
+        // On convertit la durée en double pour la comparaison si nécessaire, 
+        // ou on s'assure que BoardGame.avgDuration est bien en 'min'.
+        return game.avgDuration <= maxDuration;
       });
     }
 
@@ -272,6 +302,7 @@ class _GamesPageState extends State<GamesPage> {
             playerCount <= game.maxPlayers;
       });
     }
+    
 
     if (filteredGames.isNotEmpty) {
       initialRecs = filteredGames.toList();
@@ -282,11 +313,11 @@ class _GamesPageState extends State<GamesPage> {
         return scoreB.compareTo(scoreA);
       });
 
-      initialRecs = initialRecs.take(10).toList();
+      initialRecs = initialRecs.take(20).toList(); // Montrer plus de recommandations
     } else {
       initialRecs = allGames.toList();
       initialRecs.sort((a, b) => b.rating.compareTo(a.rating));
-      initialRecs = initialRecs.take(5).toList();
+      initialRecs = initialRecs.take(10).toList(); // Montrer les 10 mieux notés par défaut
     }
 
     setState(() {
@@ -323,114 +354,118 @@ class _GamesPageState extends State<GamesPage> {
         ),
         child: !_isContentLoaded
             ? const Center(
-          child: CircularProgressIndicator(color: Colors.white),
-        )
+                child: CircularProgressIndicator(color: Colors.white),
+              )
             : SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildHeader(),
-              const SizedBox(height: 24),
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildHeader(),
+                    const SizedBox(height: 24),
 
-              if (_preferredPlayers != null)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 10.0),
-                  child: Text(
-                    'Filtre actif : $_preferredPlayers joueurs '
-                        '(modifier dans les paramètres ⚙️)',
-                    style: const TextStyle(
-                      color: Colors.white70,
-                      fontSize: 14,
+                    // Mise à jour de l'affichage des filtres actifs
+                    if (_preferredPlayers != null || _maxDuration != null)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 10.0),
+                        child: Text(
+                          'Filtres actifs : ${_preferredPlayers != null ? '👤 $_preferredPlayers joueurs' : ''} ${
+                            _maxDuration != null ? ' | ⏱️ max ${_maxDuration} min' : ''
+                          }'
+                          ' (modifier dans les paramètres ⚙️)',
+                          style: const TextStyle(
+                            color: Colors.white70,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ),
+                    // Fin de la mise à jour de l'affichage des filtres
+
+                    _buildRecommendationsSection(),
+                    const SizedBox(height: 24),
+
+                    if (_dislikedGamesTitles.isNotEmpty ||
+                        _likedGamesTitles.isNotEmpty)
+                      Text(
+                        'Votre feedback influence les scores. '
+                        '${_dislikedGamesTitles.length} jeu(x) sont pénalisés, '
+                        '${_likedGamesTitles.length} sont favorisés.',
+                        style: const TextStyle(
+                          color: Colors.white70,
+                          fontSize: 12,
+                        ),
+                      ),
+
+                    if (_dislikedGamesTitles.isNotEmpty ||
+                        _likedGamesTitles.isNotEmpty)
+                      const SizedBox(height: 24),
+
+                    _buildSectionTitle(
+                      icon: Icons.star,
+                      label: 'MIEUX NOTÉS',
                     ),
-                  ),
-                ),
+                    const SizedBox(height: 12),
+                    _buildHorizontalGameList(
+                      _topRatedGames(),
+                      Colors.yellow[700],
+                      showFeedback: true,
+                      showDynamicScore: false,
+                      infoType: _GameInfoType.rating,
+                    ),
 
-              _buildRecommendationsSection(),
-              const SizedBox(height: 24),
+                    const SizedBox(height: 24),
 
-              if (_dislikedGamesTitles.isNotEmpty ||
-                  _likedGamesTitles.isNotEmpty)
-                Text(
-                  'Votre feedback influence les scores. '
-                      '${_dislikedGamesTitles.length} jeu(x) sont pénalisés, '
-                      '${_likedGamesTitles.length} sont favorisés.',
-                  style: const TextStyle(
-                    color: Colors.white70,
-                    fontSize: 12,
-                  ),
-                ),
+                    _buildSectionTitle(
+                      icon: Icons.psychology,
+                      label: 'PLUS DIFFICILES',
+                    ),
+                    const SizedBox(height: 12),
+                    _buildHorizontalGameList(
+                      _mostComplexGames(),
+                      Colors.deepPurple[400],
+                      showFeedback: true,
+                      showDynamicScore: false,
+                      infoType: _GameInfoType.complexity,
+                    ),
 
-              if (_dislikedGamesTitles.isNotEmpty ||
-                  _likedGamesTitles.isNotEmpty)
-                const SizedBox(height: 24),
+                    const SizedBox(height: 24),
 
-              _buildSectionTitle(
-                icon: Icons.star,
-                label: 'MIEUX NOTÉS',
-              ),
-              const SizedBox(height: 12),
-              _buildHorizontalGameList(
-                _topRatedGames(),
-                Colors.yellow[700],
-                showFeedback: true,
-                showDynamicScore: false,
-                infoType: _GameInfoType.rating,
-              ),
+                    _buildSectionTitle(
+                      icon: Icons.new_releases,
+                      label: 'PLUS RÉCENTS',
+                    ),
+                    const SizedBox(height: 12),
+                    _buildHorizontalGameList(
+                      _mostRecentGames(),
+                      Colors.blueGrey,
+                      showFeedback: true,
+                      showDynamicScore: false,
+                      infoType: _GameInfoType.year,
+                    ),
 
-              const SizedBox(height: 24),
+                    const SizedBox(height: 32),
 
-              _buildSectionTitle(
-                icon: Icons.psychology,
-                label: 'PLUS DIFFICILES',
-              ),
-              const SizedBox(height: 12),
-              _buildHorizontalGameList(
-                _mostComplexGames(),
-                Colors.deepPurple[400],
-                showFeedback: true,
-                showDynamicScore: false,
-                infoType: _GameInfoType.complexity,
-              ),
-
-              const SizedBox(height: 24),
-
-              _buildSectionTitle(
-                icon: Icons.new_releases,
-                label: 'PLUS RÉCENTS',
-              ),
-              const SizedBox(height: 12),
-              _buildHorizontalGameList(
-                _mostRecentGames(),
-                Colors.blueGrey,
-                showFeedback: true,
-                showDynamicScore: false,
-                infoType: _GameInfoType.year,
-              ),
-
-              const SizedBox(height: 32),
-
-              Center(
-                child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.popUntil(
-                        context, (route) => route.isFirst);
-                  },
-                  style: ElevatedButton.styleFrom(
-                    shape: const CircleBorder(),
-                    padding: const EdgeInsets.all(20),
-                    backgroundColor: Colors.grey.shade700,
-                  ),
-                  child: const Icon(
-                    Icons.home,
-                    color: Colors.white,
-                    size: 28,
-                  ),
+                    Center(
+                      child: ElevatedButton(
+                        onPressed: () {
+                          Navigator.popUntil(
+                              context, (route) => route.isFirst);
+                        },
+                        style: ElevatedButton.styleFrom(
+                          shape: const CircleBorder(),
+                          padding: const EdgeInsets.all(20),
+                          backgroundColor: Colors.grey.shade700,
+                        ),
+                        child: const Icon(
+                          Icons.home,
+                          color: Colors.white,
+                          size: 28,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            ],
-          ),
-        ),
       ),
     );
   }
@@ -514,7 +549,7 @@ class _GamesPageState extends State<GamesPage> {
               borderRadius: BorderRadius.circular(12),
             ),
             child: Text(
-              'Aucune recommandation disponible pour le moment.',
+              'Aucune recommandation disponible pour le moment. Veuillez vérifier vos filtres ou vos préférences.',
               style: GoogleFonts.poppins(color: Colors.grey),
             ),
           ),
@@ -549,14 +584,14 @@ class _GamesPageState extends State<GamesPage> {
 
   List<BoardGame> _mostComplexGames() {
     final games =
-    widget.boardGameBox.values.where((g) => g.complexity > 0.0).toList();
+        widget.boardGameBox.values.where((g) => g.complexity > 0.0).toList();
     games.sort((a, b) => b.complexity.compareTo(a.complexity));
     return games.take(20).toList();
   }
 
   List<BoardGame> _mostRecentGames() {
     final games =
-    widget.boardGameBox.values.where((g) => g.releaseYear >= 1900).toList();
+        widget.boardGameBox.values.where((g) => g.releaseYear >= 1900).toList();
     games.sort((a, b) => b.releaseYear.compareTo(a.releaseYear));
     return games.take(20).toList();
   }
@@ -594,7 +629,7 @@ class _GamesPageState extends State<GamesPage> {
           if (showDynamicScore && infoType == _GameInfoType.dynamicScore) {
             final dynamicScore = _calculateRecommendationScore(game);
             extraInfoWidget = Text(
-              'Score: ${dynamicScore.toStringAsFixed(2)}', 
+              'Score: ${dynamicScore.toStringAsFixed(2)}',
               style: GoogleFonts.poppins(
                 color: Colors.white,
                 fontSize: 11,
@@ -633,6 +668,15 @@ class _GamesPageState extends State<GamesPage> {
                   ),
                 );
                 break;
+              case _GameInfoType.duration: // Ajout de l'affichage de la durée pour un cas par défaut
+                extraInfoWidget = Text(
+                  'Durée: ${game.avgDuration.toStringAsFixed(0)} min',
+                  style: GoogleFonts.poppins(
+                    color: Colors.white70,
+                    fontSize: 11,
+                  ),
+                );
+                break;
               default:
                 extraInfoWidget = Text(
                   'Durée: ${game.avgDuration.toStringAsFixed(0)} min',
@@ -654,7 +698,7 @@ class _GamesPageState extends State<GamesPage> {
                     game: game,
                     settingsBox: widget.settingsBox,
                     // Passage du callback pour mettre à jour la GamesPage
-                    onFeedbackGiven: _reloadRecommendationSystem, 
+                    onFeedbackGiven: _reloadRecommendationSystem,
                   ),
                 ),
               );
@@ -675,11 +719,11 @@ class _GamesPageState extends State<GamesPage> {
                 border: isLiked
                     ? Border.all(color: Colors.greenAccent, width: 2.5)
                     : isDisliked
-                    ? Border.all(color: Colors.pinkAccent, width: 2.5)
-                    : Border.all(
-                  color: Colors.white.withOpacity(0.2),
-                  width: 1.5,
-                ),
+                        ? Border.all(color: Colors.pinkAccent, width: 2.5)
+                        : Border.all(
+                            color: Colors.white.withOpacity(0.2),
+                            width: 1.5,
+                          ),
                 boxShadow: [
                   BoxShadow(
                     color: Colors.black.withOpacity(0.3),

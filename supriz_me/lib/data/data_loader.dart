@@ -7,8 +7,6 @@ import '../models/activity.dart';
 import '../models/board_game.dart';
 
 class DataLoader {
-  // ... (loadMovies, loadActivities, loadBoardGames restent inchangés)
-
   /// Charge les films depuis le fichier JSON (Logiciel géré par les collègues)
   static Future<List<Movie>> loadMovies() async {
     try {
@@ -46,7 +44,6 @@ class DataLoader {
 
   /// Charge les activités depuis le fichier JSON (Logiciel géré par les collègues)
   static Future<List<Activity>> loadActivities() async {
-    // ... (Logique loadActivities inchangée)
     try {
       final jsonString = await rootBundle.loadString(
         'assets/data/activite.json',
@@ -82,7 +79,6 @@ class DataLoader {
 
   /// Charge les jeux de société depuis le fichier JSON (Focus sur les jeux)
   static Future<List<BoardGame>> loadBoardGames() async {
-    // ... (Logique loadBoardGames inchangée)
     try {
       final jsonString = await rootBundle.loadString(
         'assets/data/bgg_dataset_clean.json',
@@ -94,21 +90,27 @@ class DataLoader {
         try {
           final item = jsonData[i] as Map<String, dynamic>;
 
-          final mechanics = item['Mechanics']?.toString() ?? '';
-          final description =
-              mechanics.length > 100 ? mechanics.substring(0, 100) : mechanics;
+          final mechanicsString = item['Mechanics']?.toString() ?? '';
+          final shortDescription =
+              mechanicsString.length > 100 ? mechanicsString.substring(0, 100) : mechanicsString;
 
           final game = BoardGame(
             id: '${item['Title']}_$i',
             title: item['Title'] ?? 'Unknown',
-            description: description,
+            description: shortDescription, // Utilise la description courte
             minPlayers: item['Min Players']?.toInt() ?? 1,
             maxPlayers: item['Max Players']?.toInt() ?? 4,
             avgDuration:
                 (item['Play Time (moyen)'] as num?)?.toDouble() ?? 60.0,
             complexity: _parseComplexity(item['Difficulty']),
             rating: _parseRatingString(item['Rating']),
-            tags: _parseGenres(item['Genre']),
+            
+            // ✅ CORRECTION BoardGame: 'tags' devient 'genres'
+            genres: _parseGenres(item['Genre']), 
+            
+            // ✅ CORRECTION BoardGame: Ajout de 'mechanics'
+            mechanics: _parseGenres(item['Mechanics']), 
+            
             releaseYear: (item['Release Year'] as num?)?.toInt() ?? 0,
             minAge: (item['Min Age'] as num?)?.toInt() ?? 8,
           );
@@ -186,7 +188,7 @@ class DataLoader {
         .toList();
   }
 
-  // ... (Autres helpers restent inchangés)
+  // --- Helpers des Activités (Dataset 2) ---
 
   static double _parseDurationString(String? value) {
     if (value == null || value.isEmpty) return 90.0;
@@ -306,6 +308,7 @@ class DataLoader {
   }
 
   static List<String> _parseGenres(String? value) {
+    // NOTE: Ce helper est utilisé pour parser à la fois 'Genre' et 'Mechanics' du JSON BGG
     if (value == null || value.isEmpty) return [];
     return value.split(',').map((genre) => genre.trim()).toList();
   }
