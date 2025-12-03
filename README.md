@@ -103,21 +103,9 @@ Assurez-vous d’être dans le répertoire supriz_me afin que le fichier pubspec
 
 ```
    cd supriz_me
-
 ```
    flutter run
-```
-
-## Équipe du projet
-- **[Rania Bousfiha](https://github.com/rania212)**
-- **[Royston Gnanapragasam](https://github.com/GnanapragasamRoyston)**
-- **[Sajith Abdoul](https://github.com/GnanapragasamRoyston)**
-- **[Inès Marcisz](https://github.com/inesmrcz)**
-- **[Lucas Férard](https://github.com/Lucas93t)**
-- **[Dhanoush Kessavane](https://github.com/dkessavane)**
-
-  
-
+   
 ## Technologies utilisées
 - Flutter : Framework principal pour le développement mobile multiplateforme (Android/iOS).
 
@@ -130,7 +118,10 @@ Assurez-vous d’être dans le répertoire supriz_me afin que le fichier pubspec
 - Android Studio / Visual Studio Code : IDEs recommandés pour le développement Flutter
 
 
-
-
-
-
+## Équipe du projet
+- **[Rania Bousfiha](https://github.com/rania212)**
+- **[Royston Gnanapragasam](https://github.com/GnanapragasamRoyston)**
+- **[Sajith Abdoul](https://github.com/GnanapragasamRoyston)**
+- **[Inès Marcisz](https://github.com/inesmrcz)**
+- **[Lucas Férard](https://github.com/Lucas93t)**
+- **[Dhanoush Kessavane](https://github.com/dkessavane)**
