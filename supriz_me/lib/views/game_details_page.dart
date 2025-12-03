@@ -137,7 +137,7 @@ class _GameDetailsPageState extends State<GameDetailsPage> {
                         const SizedBox(height: 8),
                         _buildDetailRow(
                           icon: Icons.star_rate_rounded,
-                          label: 'Note BGG',
+                          label: 'Note',
                           value: '${game.rating.toStringAsFixed(2)} / 10',
                           color: Colors.yellow,
                         ),

@@ -42,18 +42,18 @@ class _MoviesPageState extends State<MoviesPage> {
   }
 
   void _navigateToPreferencePage() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => MoviePreferencePage(
-          settingsBox: widget.settingsBox,
-          onPreferencesSaved: () {
-            setState(() {});
-          },
-        ),
+  Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (context) => MoviePreferencePage(
+        settingsBox: widget.settingsBox,
       ),
-    );
-  }
+    ),
+  ).then((_) {
+    setState(() {}); // recharge l'écran après retour
+  });
+}
+
 
   void _checkAndPromptForMoviePreferences() {
     final hasPrefsBeenSet =

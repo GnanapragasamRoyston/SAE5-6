@@ -1,12 +1,13 @@
-// games_page.dart (CORRIGÉ)
+// games_page.dart
 
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hive/hive.dart';
+import 'dart:math';
 
 import '../models/board_game.dart';
 import 'games_preferences_page.dart';
-import 'game_details_page.dart'; // NOUVEL IMPORT
+import 'game_details_page.dart';
 
 class GamesPage extends StatefulWidget {
   final Box<BoardGame> boardGameBox;
@@ -27,22 +28,18 @@ class _GamesPageState extends State<GamesPage> {
   List<BoardGame> _recommendedGames = [];
 
   int? _preferredPlayers;
-  // AJOUT : Variable d'état pour la durée maximale de jeu (en minutes)
-  int? _maxDuration; 
+  int? _maxDuration;
 
   Set<String> _likedGamesTitles = {};
   Set<String> _dislikedGamesTitles = {};
 
-  // NOUVELLE LOGIQUE : Profil de goût basé sur les tags
   Map<String, double> _tagProfileScores = {};
   List<String>? _initialGenres;
-  // SUPPRIMÉ : List<String>? _initialMechanics;
 
   static const String _preferencesSetKey = 'game_preferences_set';
   static const String _userGenresKey = 'user_game_genres';
   static const String _playersCountKey = 'player_count_preference';
-  // AJOUT : Clé pour la durée maximale
-  static const String _maxDurationKey = 'max_duration_preference'; 
+  static const String _maxDurationKey = 'max_duration_preference';
 
   static const String _likedGamesKey = 'liked_games_titles';
   static const String _dislikedGamesKey = 'disliked_games_titles';
@@ -71,13 +68,10 @@ class _GamesPageState extends State<GamesPage> {
     if (preferencesSet) {
       final List<String>? savedGenres =
           widget.settingsBox.get(_userGenresKey)?.cast<String>();
-      // SUPPRIMÉ : final List<String>? savedMechanics = ...
 
       _initialGenres = savedGenres;
-      // SUPPRIMÉ : _initialMechanics = savedMechanics;
 
       _preferredPlayers = widget.settingsBox.get(_playersCountKey);
-      // AJOUT : Chargement de la durée maximale
       _maxDuration = widget.settingsBox.get(_maxDurationKey);
 
       _buildTagProfile();
@@ -85,7 +79,7 @@ class _GamesPageState extends State<GamesPage> {
       _loadRecommendations(
         genres: savedGenres,
         playerCount: _preferredPlayers,
-        maxDuration: _maxDuration, // Passage du nouveau filtre
+        maxDuration: _maxDuration,
       );
     } else {
       _navigateToPreferences(canGoBack: false);
@@ -104,22 +98,19 @@ class _GamesPageState extends State<GamesPage> {
 
     if (result != null) {
       _preferredPlayers = widget.settingsBox.get(_playersCountKey);
-      // AJOUT : Rechargement de la durée maximale après modification
-      _maxDuration = widget.settingsBox.get(_maxDurationKey); 
+      _maxDuration = widget.settingsBox.get(_maxDurationKey);
 
       final List<String>? savedGenres =
           widget.settingsBox.get(_userGenresKey)?.cast<String>();
-      // SUPPRIMÉ : final List<String>? savedMechanics = ...
 
       _initialGenres = savedGenres;
-      // SUPPRIMÉ : _initialMechanics = savedMechanics;
 
       _buildTagProfile();
 
       _loadRecommendations(
         genres: savedGenres,
         playerCount: _preferredPlayers,
-        maxDuration: _maxDuration, // Passage du nouveau filtre
+        maxDuration: _maxDuration,
       );
     } else {
       if (!canGoBack && !_isContentLoaded) {
@@ -130,17 +121,100 @@ class _GamesPageState extends State<GamesPage> {
     }
   }
 
-  // NOUVELLE FONCTION: Gère le rechargement complet du système
+  void _navigateToSurpriseGame() {
+    final recommendedTitles = _recommendedGames.map((g) => g.title).toSet();
+    final allGames = widget.boardGameBox.values.toList();
+
+    final availableSurpriseGames = allGames.where((game) {
+      return !recommendedTitles.contains(game.title) &&
+          !_likedGamesTitles.contains(game.title) &&
+          !_dislikedGamesTitles.contains(game.title);
+    }).toList();
+
+    if (availableSurpriseGames.isNotEmpty) {
+      final random = Random();
+      final surpriseGame = availableSurpriseGames[random.nextInt(availableSurpriseGames.length)];
+
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (context) => GameDetailsPage(
+            game: surpriseGame,
+            settingsBox: widget.settingsBox,
+            onFeedbackGiven: _reloadRecommendationSystem,
+          ),
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Zut ! Tous les jeux restants sont déjà dans vos recommandations ou vous avez déjà donné un feedback.',
+            style: GoogleFonts.poppins(),
+          ),
+          backgroundColor: Colors.amber,
+          duration: const Duration(seconds: 2),
+        ),
+      );
+    }
+  }
+
+  Widget _buildSurpriseMeButton() {
+    return Column(
+      children: [
+        // Phrase d'accroche stylée
+        Text(
+          "🚀 Envie de découvrir des jeux totalement différents de vos goûts ?\nLaissez-vous Supriz'Me!",
+          textAlign: TextAlign.center,
+          style: GoogleFonts.bebasNeue(
+            color: Colors.white,
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            letterSpacing: 1.0,
+          ),
+        ),
+        const SizedBox(height: 12),
+        Center(
+          child: Tooltip(
+            message: "Un petit coup de pouce du destin?",
+            child: ElevatedButton.icon(
+              onPressed: _navigateToSurpriseGame,
+              icon: const Icon(Icons.casino, color: Colors.white),
+              label: Text(
+                "Supriz'Me",
+                style: GoogleFonts.bebasNeue(
+                  fontSize: 20,
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 2.0,
+                ),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.purple.shade700,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  side: BorderSide(color: Colors.purple.shade300, width: 2),
+                ),
+                elevation: 8,
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 24),
+      ],
+    );
+  }
+
   void _reloadRecommendationSystem() {
-    // S'assurer d'être dans le bon contexte pour setState
     if (mounted) {
       setState(() {
-        _loadFeedbackData(); // 1. Recharger les likes/dislikes (mis à jour par GameDetailsPage)
-        _buildTagProfile(); // 2. Reconstruire le profil de tags
-        _loadRecommendations( // 3. Recharger et trier les recommandations
+        _loadFeedbackData();
+        _buildTagProfile();
+        _loadRecommendations(
           genres: widget.settingsBox.get(_userGenresKey)?.cast<String>(),
           playerCount: _preferredPlayers,
-          maxDuration: _maxDuration, // Passage du filtre de durée
+          maxDuration: _maxDuration,
         );
       });
     }
@@ -152,18 +226,15 @@ class _GamesPageState extends State<GamesPage> {
     bool hasUserFeedback = _likedGamesTitles.isNotEmpty || _dislikedGamesTitles.isNotEmpty;
 
     if (hasUserFeedback) {
-      // 1.A. Mode Apprentissage (Basé sur vos Notes)
       for (var title in _likedGamesTitles) {
         final game = widget.boardGameBox.values.firstWhere(
           (g) => g.title == title,
           orElse: () => BoardGame.empty(),
         );
         if (game.title.isNotEmpty) {
-          // Utiliser les genres
           for (var tag in game.genres) {
             profile[tag] = (profile[tag] ?? 0.0) + 1.0;
           }
-          // SUPPRIMÉ : Logique d'ajout des mécanismes
         }
       }
 
@@ -173,21 +244,17 @@ class _GamesPageState extends State<GamesPage> {
           orElse: () => BoardGame.empty(),
         );
         if (game.title.isNotEmpty) {
-          // Utiliser les genres
           for (var tag in game.genres) {
             profile[tag] = (profile[tag] ?? 0.0) - 1.0;
           }
-          // SUPPRIMÉ : Logique de pénalisation des mécanismes
         }
       }
     } else {
-      // 1.B. Mode Initialisation (Première Utilisation)
       if (_initialGenres != null) {
         for (var genre in _initialGenres!) {
           profile[genre] = (profile[genre] ?? 0.0) + 20.0;
         }
       }
-      // SUPPRIMÉ : Logique d'initialisation des mécanismes
     }
 
     _tagProfileScores = profile;
@@ -199,12 +266,10 @@ class _GamesPageState extends State<GamesPage> {
     }
 
     double tagScoreSum = 0.0;
-    
-    // Utiliser uniquement les genres pour le score
+
     for (var tag in game.genres) {
       tagScoreSum += _tagProfileScores[tag] ?? 0.0;
     }
-    // SUPPRIMÉ : Logique de calcul du score pour les mécanismes
 
     final affinityScore = tagScoreSum * 5.0;
     final popularityScore = game.rating * 0.5;
@@ -237,7 +302,7 @@ class _GamesPageState extends State<GamesPage> {
     await widget.settingsBox
         .put(_dislikedGamesKey, _dislikedGamesTitles.toList());
 
-    _reloadRecommendationSystem(); // Appel à la fonction de rechargement
+    _reloadRecommendationSystem();
 
     final message = isLiked
         ? (_likedGamesTitles.contains(game.title)
@@ -263,8 +328,7 @@ class _GamesPageState extends State<GamesPage> {
   void _loadRecommendations({
     List<String>? genres,
     int? playerCount,
-    // AJOUT : Paramètre pour la durée maximale
-    int? maxDuration, 
+    int? maxDuration,
   }) {
     List<BoardGame> initialRecs = [];
     final allGames = widget.boardGameBox.values.toList();
@@ -277,21 +341,8 @@ class _GamesPageState extends State<GamesPage> {
       });
     }
 
-    // SUPPRIMÉ : Logique de filtrage par mécanismes
-    /*
-    if (_initialMechanics != null && _initialMechanics!.isNotEmpty) {
-      filteredGames = filteredGames.where((game) {
-        return game.mechanics.any((tag) => _initialMechanics!.contains(tag));
-      });
-    }
-    */
-
-    // AJOUT : Logique de filtrage par durée maximale
     if (maxDuration != null && maxDuration > 0) {
       filteredGames = filteredGames.where((game) {
-        // Le jeu doit avoir une durée moyenne inférieure ou égale à la durée max.
-        // On convertit la durée en double pour la comparaison si nécessaire, 
-        // ou on s'assure que BoardGame.avgDuration est bien en 'min'.
         return game.avgDuration <= maxDuration;
       });
     }
@@ -302,7 +353,7 @@ class _GamesPageState extends State<GamesPage> {
             playerCount <= game.maxPlayers;
       });
     }
-    
+
 
     if (filteredGames.isNotEmpty) {
       initialRecs = filteredGames.toList();
@@ -313,11 +364,11 @@ class _GamesPageState extends State<GamesPage> {
         return scoreB.compareTo(scoreA);
       });
 
-      initialRecs = initialRecs.take(20).toList(); // Montrer plus de recommandations
+      initialRecs = initialRecs.take(20).toList();
     } else {
       initialRecs = allGames.toList();
       initialRecs.sort((a, b) => b.rating.compareTo(a.rating));
-      initialRecs = initialRecs.take(10).toList(); // Montrer les 10 mieux notés par défaut
+      initialRecs = initialRecs.take(10).toList();
     }
 
     setState(() {
@@ -364,7 +415,14 @@ class _GamesPageState extends State<GamesPage> {
                     _buildHeader(),
                     const SizedBox(height: 24),
 
-                    // Mise à jour de l'affichage des filtres actifs
+                    // BOUTON SUPRIZ'ME (Incluant l'accroche)
+                    _buildSurpriseMeButton(),
+
+                    // SECTION DE RECOMMANDATION
+                    _buildRecommendationsSection(),
+                    const SizedBox(height: 12),
+
+                    // AFFICHAGE DES FILTRES ACTIFS (maintenant après les recommandations)
                     if (_preferredPlayers != null || _maxDuration != null)
                       Padding(
                         padding: const EdgeInsets.only(bottom: 10.0),
@@ -379,26 +437,10 @@ class _GamesPageState extends State<GamesPage> {
                           ),
                         ),
                       ),
-                    // Fin de la mise à jour de l'affichage des filtres
+                    
+                    // Suppression de l'ancien texte de feedback ici
 
-                    _buildRecommendationsSection(),
                     const SizedBox(height: 24),
-
-                    if (_dislikedGamesTitles.isNotEmpty ||
-                        _likedGamesTitles.isNotEmpty)
-                      Text(
-                        'Votre feedback influence les scores. '
-                        '${_dislikedGamesTitles.length} jeu(x) sont pénalisés, '
-                        '${_likedGamesTitles.length} sont favorisés.',
-                        style: const TextStyle(
-                          color: Colors.white70,
-                          fontSize: 12,
-                        ),
-                      ),
-
-                    if (_dislikedGamesTitles.isNotEmpty ||
-                        _likedGamesTitles.isNotEmpty)
-                      const SizedBox(height: 24),
 
                     _buildSectionTitle(
                       icon: Icons.star,
@@ -668,7 +710,7 @@ class _GamesPageState extends State<GamesPage> {
                   ),
                 );
                 break;
-              case _GameInfoType.duration: // Ajout de l'affichage de la durée pour un cas par défaut
+              case _GameInfoType.duration:
                 extraInfoWidget = Text(
                   'Durée: ${game.avgDuration.toStringAsFixed(0)} min',
                   style: GoogleFonts.poppins(
@@ -689,7 +731,6 @@ class _GamesPageState extends State<GamesPage> {
             }
           }
 
-          // AJOUT DU GESTURE DETECTOR POUR LA NAVIGATION
           return GestureDetector(
             onTap: () {
               Navigator.of(context).push(
@@ -697,7 +738,6 @@ class _GamesPageState extends State<GamesPage> {
                   builder: (context) => GameDetailsPage(
                     game: game,
                     settingsBox: widget.settingsBox,
-                    // Passage du callback pour mettre à jour la GamesPage
                     onFeedbackGiven: _reloadRecommendationSystem,
                   ),
                 ),
