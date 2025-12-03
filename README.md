@@ -107,7 +107,9 @@ Assurez-vous d’être dans le répertoire supriz_me afin que le fichier pubspec
 ```
    cd supriz_me
 ```
+```
    flutter run
+```
    
 ## Technologies utilisées
 - Flutter : Framework principal pour le développement mobile multiplateforme (Android/iOS).
@@ -128,4 +130,5 @@ Assurez-vous d’être dans le répertoire supriz_me afin que le fichier pubspec
 - **[Inès Marcisz](https://github.com/inesmrcz)**
 - **[Lucas Férard](https://github.com/Lucas93t)**
 - **[Dhanoush Kessavane](https://github.com/dkessavane)**
+
 
