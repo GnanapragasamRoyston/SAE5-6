@@ -34,16 +34,18 @@ class BoardGame {
   @HiveField(7)
   final double rating;
 
-  // Tags / Genres BGG (liste de chaînes)
-  @HiveField(8)
-  final List<String> tags; 
+  @HiveField(8) 
+  final List<String> genres; 
+
+  @HiveField(9) 
+  final List<String> mechanics;
   
   // Année de sortie (Ajouté pour la section "Les Plus Récents")
-  @HiveField(9)
+  @HiveField(10)
   final int releaseYear; 
   
   // NOUVEAU: Age minimum (ajouté car il est dans GamesPreferencesPage)
-  @HiveField(10) 
+  @HiveField(11) 
   final int minAge; // On ajoute minAge, essentiel pour les préférences
 
   const BoardGame({
@@ -55,7 +57,8 @@ class BoardGame {
     required this.avgDuration,
     required this.complexity,
     required this.rating,
-    required this.tags,
+    required this.genres,
+    required this.mechanics,
     required this.releaseYear, 
     required this.minAge, // Ajout de minAge
   });
@@ -72,7 +75,8 @@ class BoardGame {
       avgDuration: 0,
       complexity: 0.0,
       rating: 0.0,
-      tags: [],
+      genres: [],
+      mechanics: [],
       releaseYear: 0,
       minAge: 0, 
     );

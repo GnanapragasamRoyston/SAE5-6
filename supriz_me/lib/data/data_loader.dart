@@ -80,50 +80,50 @@ class DataLoader {
   }
 
   /// Charge les jeux de société depuis le fichier JSON (Focus sur les jeux)
-  /// Inclut maintenant l'année de sortie (releaseYear) et l'âge minimum (minAge).
   static Future<List<BoardGame>> loadBoardGames() async {
     try {
-      // Chargement du fichier JSON contenant les données des jeux de société.
       final jsonString = await rootBundle.loadString(
         'assets/data/bgg_dataset_clean.json',
       );
       final jsonData = jsonDecode(jsonString) as List;
 
       final games = <BoardGame>[];
-      // Limité à 500 entrées pour des raisons de performance.
       for (int i = 0; i < jsonData.length && i < 500; i++) {
         try {
           final item = jsonData[i] as Map<String, dynamic>;
 
-          // Tronquage de la description pour l'enregistrement
-          final mechanics = item['Mechanics']?.toString() ?? '';
-          final description = mechanics.length > 100 
-              ? mechanics.substring(0, 100) 
-              : mechanics;
+          final mechanicsString = item['Mechanics']?.toString() ?? '';
+          final shortDescription =
+              mechanicsString.length > 100 ? mechanicsString.substring(0, 100) : mechanicsString;
 
           final game = BoardGame(
             id: '${item['Title']}_$i',
             title: item['Title'] ?? 'Unknown',
-            description: description,
+            description: shortDescription, // Utilise la description courte
             minPlayers: item['Min Players']?.toInt() ?? 1,
             maxPlayers: item['Max Players']?.toInt() ?? 4,
             avgDuration:
                 (item['Play Time (moyen)'] as num?)?.toDouble() ?? 60.0,
             complexity: _parseComplexity(item['Difficulty']),
             rating: _parseRatingString(item['Rating']),
-            tags: _parseGenres(item['Genre']),
-            // Extraction de l'année de sortie.
-            releaseYear: (item['Release Year'] as num?)?.toInt() ?? 0, 
-            // CORRECTION: AJOUTÉ l'âge minimum qui manquait dans l'appel du constructeur.
-            minAge: (item['Min Age'] as num?)?.toInt() ?? 8, 
+            
+            // ✅ CORRECTION BoardGame: 'tags' devient 'genres'
+            genres: _parseGenres(item['Genre']), 
+            
+            // ✅ CORRECTION BoardGame: Ajout de 'mechanics'
+            mechanics: _parseGenres(item['Mechanics']), 
+            
+            releaseYear: (item['Release Year'] as num?)?.toInt() ?? 0,
+            minAge: (item['Min Age'] as num?)?.toInt() ?? 8,
           );
           games.add(game);
         } catch (e) {
-          // Log pour les entrées mal formées (utile pour le débogage)
-          // On suppose que item['Title'] existe ou est null ici
-          final title = (i < jsonData.length) ? (jsonData[i] as Map<String, dynamic>)['Title'] ?? 'Unknown Index $i' : 'Unknown';
+          final title = (i < jsonData.length)
+              ? (jsonData[i] as Map<String, dynamic>)['Title'] ??
+                  'Unknown Index $i'
+              : 'Unknown';
           print('Erreur lors du parsing du jeu "$title": $e');
-          continue; 
+          continue;
         }
       }
       return games;
@@ -138,6 +138,7 @@ class DataLoader {
     required Box<Movie> movieBox,
     required Box<Activity> activityBox,
     required Box<BoardGame> boardGameBox,
+    required Box settingsBox, // 🎯 settingsBox ajouté pour la cohérence
   }) async {
     try {
       // Chargement des Films
@@ -157,6 +158,8 @@ class DataLoader {
       for (final game in games) {
         await boardGameBox.put(game.id, game);
       }
+
+      // Note: Pas de loadAndSaveUniqueMovieTags ici car la liste est hardcodée
     } catch (e) {
       print('Erreur lors du chargement ou de la sauvegarde des données: $e');
     }
@@ -169,7 +172,6 @@ class DataLoader {
   // --- Helpers des Films (Dataset 1) ---
 
   static double _parseRating(dynamic value) {
-    // Note sur 10 (Movie) convertie à 0-5
     if (value is num) return (value.toDouble() / 10).clamp(0.0, 5.0);
     if (value is String) {
       final parsed = double.tryParse(value);
@@ -179,9 +181,13 @@ class DataLoader {
   }
 
   static List<String> _parseTags(String? value) {
-    // Tags des Films
+    // Tags des Films : Normalisation en MAJUSCULE pour le matching
     if (value == null || value.isEmpty) return [];
-    return value.split(',').map((tag) => tag.trim()).toList();
+    return value
+        .split(',')
+        .map((tag) => tag.trim().toUpperCase())
+        .where((tag) => tag.isNotEmpty)
+        .toList();
   }
 
   // --- Helpers des Activités (Dataset 2) ---
@@ -206,9 +212,7 @@ class DataLoader {
     final cleanValue = value.toLowerCase().trim();
     double totalMinutes = 0;
 
-    // 1. Handle "2h" or "1h30" or "1h 30min" format (priority)
     if (cleanValue.contains('h')) {
-      // Extract hours
       final hourMatch = RegExp(r'(\d+)\s*h').firstMatch(cleanValue);
       if (hourMatch != null) {
         final hours = int.tryParse(hourMatch.group(1) ?? '0') ?? 0;
@@ -225,7 +229,6 @@ class DataLoader {
       if (totalMinutes > 0) return totalMinutes;
     }
 
-    // 2. Handle "45min", "45 min", "10min" format
     if (cleanValue.contains('min')) {
       final minMatch = RegExp(r'(\d+)\s*min').firstMatch(cleanValue);
       if (minMatch != null) {
@@ -239,32 +242,25 @@ class DataLoader {
 
   // --- Helpers des Jeux de Société (Dataset 3 - Votre Focus) ---
 
-  /// Analyse la chaîne de caractères de la note et la convertit en double 0-5.
-  /// Le dataset utilise une échelle 0-10, séparateur décimal ','
   static double _parseRatingString(String? value) {
     if (value == null) return 3.0;
-    // Remplace la virgule par un point pour le parsing
     final cleanedValue = value.replaceAll(',', '.');
     final parsed = double.tryParse(cleanedValue);
-    // Convertit de 0-10 à 0-5
-    return (parsed ?? 0).clamp(0.0, 10.0) / 2; 
+    return (parsed ?? 0).clamp(0.0, 10.0) / 2;
   }
 
-  /// Analyse la valeur de complexité et la convertit en double 0-5.
-  /// Le dataset utilise une échelle 0-5, séparateur décimal ','
   static double _parseComplexity(dynamic value) {
     if (value is num) return (value.toDouble()).clamp(0.0, 5.0);
     if (value is String) {
-      // Remplace la virgule par un point pour le parsing
-      final cleanedValue = value.replaceAll(',', '.'); 
+      final cleanedValue = value.replaceAll(',', '.');
       final parsed = double.tryParse(cleanedValue);
       return (parsed ?? 0).clamp(0.0, 5.0);
     }
     return 2.5;
   }
 
-  /// Convertit une chaîne de genres séparés par des virgules en List<String>.
   static List<String> _parseGenres(String? value) {
+    // NOTE: Ce helper est utilisé pour parser à la fois 'Genre' et 'Mechanics' du JSON BGG
     if (value == null || value.isEmpty) return [];
     return value.split(',').map((genre) => genre.trim()).toList();
   }

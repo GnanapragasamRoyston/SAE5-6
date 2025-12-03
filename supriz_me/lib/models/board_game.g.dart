@@ -25,16 +25,17 @@ class BoardGameAdapter extends TypeAdapter<BoardGame> {
       avgDuration: fields[5] as double,
       complexity: fields[6] as double,
       rating: fields[7] as double,
-      tags: (fields[8] as List).cast<String>(),
-      releaseYear: fields[9] as int,
-      minAge: fields[10] as int,
+      genres: (fields[8] as List).cast<String>(),
+      mechanics: (fields[9] as List).cast<String>(),
+      releaseYear: fields[10] as int,
+      minAge: fields[11] as int,
     );
   }
 
   @override
   void write(BinaryWriter writer, BoardGame obj) {
     writer
-      ..writeByte(11)
+      ..writeByte(12)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -52,10 +53,12 @@ class BoardGameAdapter extends TypeAdapter<BoardGame> {
       ..writeByte(7)
       ..write(obj.rating)
       ..writeByte(8)
-      ..write(obj.tags)
+      ..write(obj.genres)
       ..writeByte(9)
-      ..write(obj.releaseYear)
+      ..write(obj.mechanics)
       ..writeByte(10)
+      ..write(obj.releaseYear)
+      ..writeByte(11)
       ..write(obj.minAge);
   }
 

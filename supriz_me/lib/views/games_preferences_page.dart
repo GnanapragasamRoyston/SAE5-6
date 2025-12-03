@@ -1,5 +1,3 @@
-// games_preferences_page.dart
-
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 
@@ -15,9 +13,10 @@ final List<String> availableGenres = [
   "Children's Games"
 ];
 
+// --- Constantes des mécanismes (SUPPRIMÉES : Plus utilisées) ---
+
 class GamesPreferencesPage extends StatefulWidget {
   final Box settingsBox;
-  // CORRECTION: Ajout du paramètre isEditing au constructeur
   final bool isEditing; 
   
   const GamesPreferencesPage({
@@ -33,26 +32,45 @@ class GamesPreferencesPage extends StatefulWidget {
 class _GamesPreferencesPageState extends State<GamesPreferencesPage> {
   Set<String> _selectedGenres = {};
   
+  // SUPPRIMÉ : Set<String> _selectedMechanics = {}; 
+  
   // Variable d'état pour le nombre de joueurs unique (par défaut 4)
   double _playersCount = 4; 
+  
+  // AJOUT : Variable d'état pour la durée maximale (par défaut 90 minutes)
+  double _maxDuration = 90; 
   
   // Clés utilisées pour stocker dans la Hive Box
   static const String _preferencesSetKey = 'game_preferences_set';
   static const String _userGenresKey = 'user_game_genres';
+  
+  // SUPPRIMÉ : static const String _userMechanicsKey = 'user_game_mechanics'; 
+  
   static const String _playersCountKey = 'player_count_preference';
-
+  
+  // AJOUT : Clé pour la durée maximale
+  static const String _maxDurationKey = 'max_duration_preference'; 
 
   @override
   void initState() {
     super.initState();
-    // NOUVEAU: Si on est en mode édition, on charge les valeurs existantes
     if (widget.isEditing) {
       final savedGenres = widget.settingsBox.get(_userGenresKey)?.cast<String>() ?? [];
-      // Si la clé de joueur existe, on la charge, sinon on utilise la valeur par défaut
+      
+      // SUPPRIMÉ : Chargement des mécanismes
+      
+      // Chargement du nombre de joueurs
       final savedPlayers = widget.settingsBox.get(_playersCountKey) ?? 4; 
+      
+      // AJOUT : Chargement de la durée maximale (par défaut 90 si non trouvée)
+      final savedDuration = widget.settingsBox.get(_maxDurationKey) ?? 90; 
 
       _selectedGenres = savedGenres.toSet();
+      
+      // SUPPRIMÉ : Initialisation des mécanismes
+      
       _playersCount = savedPlayers.toDouble();
+      _maxDuration = savedDuration.toDouble(); // Initialisation de la durée
     }
   }
 
@@ -62,13 +80,18 @@ class _GamesPreferencesPageState extends State<GamesPreferencesPage> {
     // 1. Sauvegarder les genres sélectionnés dans la Box Hive
     await widget.settingsBox.put(_userGenresKey, _selectedGenres.toList());
     
+    // SUPPRIMÉ : Sauvegarder les mécanismes sélectionnés
+    
     // 2. Sauvegarder le nombre de joueurs unique
     await widget.settingsBox.put(_playersCountKey, _playersCount.round());
     
-    // 3. Marquer que les préférences ont été définies (au cas où c'est le premier lancement)
+    // AJOUT : Sauvegarder la durée maximale de jeu
+    await widget.settingsBox.put(_maxDurationKey, _maxDuration.round());
+    
+    // 3. Marquer que les préférences ont été définies
     await widget.settingsBox.put(_preferencesSetKey, true);
     
-    // 4. Retourner à GamesPage avec un indicateur de succès (par exemple, la liste des genres)
+    // 4. Retourner à GamesPage avec un indicateur de succès
     Navigator.of(context).pop(_selectedGenres.toList());
   }
 
@@ -78,7 +101,7 @@ class _GamesPreferencesPageState extends State<GamesPreferencesPage> {
       appBar: AppBar(
         title: const Text("Vos Préférences de Jeux"),
         backgroundColor: Colors.purple,
-        // CORRECTION: Autorise le bouton retour si l'on est en mode édition
+        // Autorise le bouton retour si l'on est en mode édition
         automaticallyImplyLeading: widget.isEditing, 
       ),
       body: Container(
@@ -108,7 +131,7 @@ class _GamesPreferencesPageState extends State<GamesPreferencesPage> {
                 ),
                 const SizedBox(height: 25),
                 
-                // --- SLIDER POUR LE NOMBRE DE JOUEURS (UNIQUE) ---
+                // --- SLIDER POUR LE NOMBRE DE JOUEURS ---
                 Container(
                   padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 10),
                   decoration: BoxDecoration(
@@ -147,9 +170,54 @@ class _GamesPreferencesPageState extends State<GamesPreferencesPage> {
                     ],
                   ),
                 ),
+                
                 const SizedBox(height: 30),
                 
-                // --- CHIPS DE GENRES (GARDÉ) ---
+                // --- SLIDER POUR LA DURÉE MOYENNE (REMPLACE LES MÉCANISMES) ---
+                Container(
+                  padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 10),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.9),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "⏱️ Durée max. souhaitée : ${_maxDuration.round()} min",
+                        style: TextStyle(
+                          fontSize: 16, 
+                          fontWeight: FontWeight.bold, 
+                          color: Colors.pink[800] // Nouvelle couleur pour la durée
+                        ),
+                      ),
+                      Slider(
+                        value: _maxDuration,
+                        min: 30, // Minimum 30 minutes
+                        max: 180, // Maximum 180 minutes (3 heures)
+                        divisions: 5, // 30, 60, 90, 120, 150, 180
+                        label: '${_maxDuration.round()} min',
+                        activeColor: Colors.pink[600],
+                        inactiveColor: Colors.pink[100],
+                        onChanged: (double newValue) {
+                          setState(() {
+                            // Assurez-vous que la valeur est un multiple de 30 pour les divisions
+                            _maxDuration = (newValue / 30).round() * 30.0;
+                          });
+                        },
+                      ),
+                      const Text(
+                        "(Nous privilégierons les jeux plus courts que cette durée.)",
+                        style: TextStyle(fontSize: 12, color: Colors.black54),
+                      ),
+                    ],
+                  ),
+                ),
+                // --- FIN DU SLIDER DURÉE ---
+                
+                const SizedBox(height: 30), // Espacement après la durée
+
+                // --- CHIPS DE GENRES ---
                 const Text(
                   "✨ Genres préférés :",
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
@@ -177,6 +245,9 @@ class _GamesPreferencesPageState extends State<GamesPreferencesPage> {
                     );
                   }).toList(),
                 ),
+                
+                // --- SUPPRESSION DU CODE POUR LES MÉCANISMES ICI ---
+
                 const SizedBox(height: 40),
                 
                 // Bouton de validation
