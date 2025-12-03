@@ -22,19 +22,19 @@ class BoardGameAdapter extends TypeAdapter<BoardGame> {
       description: fields[2] as String,
       minPlayers: fields[3] as int,
       maxPlayers: fields[4] as int,
-      avgDuration: fields[5] as double, 
-      complexity: fields[6] as double, 
+      avgDuration: fields[5] as double,
+      complexity: fields[6] as double,
       rating: fields[7] as double,
       tags: (fields[8] as List).cast<String>(),
-      releaseYear: fields[9] as int, 
-      minAge: fields[10] as int, // AJOUTÉ : Champ 10 pour minAge
+      releaseYear: fields[9] as int,
+      minAge: fields[10] as int,
     );
   }
 
   @override
   void write(BinaryWriter writer, BoardGame obj) {
     writer
-      ..writeByte(11) // CORRIGÉ : Le nombre total de champs est 11 (0 à 10)
+      ..writeByte(11)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -46,16 +46,16 @@ class BoardGameAdapter extends TypeAdapter<BoardGame> {
       ..writeByte(4)
       ..write(obj.maxPlayers)
       ..writeByte(5)
-      ..write(obj.avgDuration) 
+      ..write(obj.avgDuration)
       ..writeByte(6)
-      ..write(obj.complexity) 
+      ..write(obj.complexity)
       ..writeByte(7)
       ..write(obj.rating)
       ..writeByte(8)
       ..write(obj.tags)
       ..writeByte(9)
       ..write(obj.releaseYear)
-      ..writeByte(10) // AJOUTÉ : Champ 10 pour minAge
+      ..writeByte(10)
       ..write(obj.minAge);
   }
 

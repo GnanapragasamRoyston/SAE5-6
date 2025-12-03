@@ -6,6 +6,7 @@ import '../../models/activity_rating.dart';
 import '../../models/activity_preferences.dart';
 import '../../models/activity_vector.dart';
 import '../../models/performance_metrics.dart';
+import '../../models/activity_score.dart';
 
 /// Service de recommandation vectoriel avec metrics de performance
 ///
@@ -74,15 +75,17 @@ class ActivityRecommendationServiceVectorial {
         _totalLikes++;
         final activity = activityBox.get(rating.activityId);
         if (activity != null) {
-          _categoryLikes[activity.category] =
-              (_categoryLikes[activity.category] ?? 0) + 1;
+          final categoryName = activity.category.toString().split('.').last;
+          _categoryLikes[categoryName] =
+              (_categoryLikes[categoryName] ?? 0) + 1;
         }
       } else {
         _totalDislikes++;
         final activity = activityBox.get(rating.activityId);
         if (activity != null) {
-          _categoryDislikes[activity.category] =
-              (_categoryDislikes[activity.category] ?? 0) + 1;
+          final categoryName = activity.category.toString().split('.').last;
+          _categoryDislikes[categoryName] =
+              (_categoryDislikes[categoryName] ?? 0) + 1;
         }
       }
     }
@@ -90,7 +93,7 @@ class ActivityRecommendationServiceVectorial {
 
   /// Retourne les recommandations AVEC leurs scores
   /// Pour afficher pourquoi c'est recommandé
-  Future<List<(Activity, double)>> getRecommendationsWithScores({
+  Future<List<ActivityScore>> getRecommendationsWithScores({
     int limit = 3,
   }) async {
     final stopwatch = Stopwatch()..start();
@@ -100,7 +103,7 @@ class ActivityRecommendationServiceVectorial {
 
       if (likedActivities.isEmpty) {
         final activities = _getTopActivitiesByDifficulty(limit);
-        return activities.map((a) => (a, 0.0)).toList();
+        return activities.map((a) => ActivityScore(activity: a, score: 0.0)).toList();
       }
 
       final userProfileVector = _createUserProfileVector(likedActivities);
@@ -120,7 +123,7 @@ class ActivityRecommendationServiceVectorial {
       final allActivities = activityBox.values.toList();
       final ratedIds = ratingBox.values.map((r) => r.activityId).toSet();
 
-      final scored = <(Activity, double)>[];
+      final scored = <ActivityScore>[];
 
       for (final activity in allActivities) {
         if (ratedIds.contains(activity.id)) continue;
@@ -138,12 +141,12 @@ class ActivityRecommendationServiceVectorial {
           weightsVector,
         );
 
-        scored.add((activity, distance));
+        scored.add(ActivityScore(activity: activity, score: distance));
       }
 
       stopwatch.stop();
 
-      scored.sort((a, b) => a.$2.compareTo(b.$2));
+      scored.sort((a, b) => a.score.compareTo(b.score));
       return scored.take(limit).toList();
     } catch (e) {
       stopwatch.stop();
@@ -156,7 +159,7 @@ class ActivityRecommendationServiceVectorial {
   /// Plus petit score = meilleur match
   Future<List<Activity>> getRecommendations({int limit = 3}) async {
     final withScores = await getRecommendationsWithScores(limit: limit);
-    return withScores.map((s) => s.$1).toList();
+    return withScores.map((s) => s.activity).toList();
   }
 
   /// Crée le vecteur profil utilisateur à partir des activités aimées
@@ -225,15 +228,17 @@ class ActivityRecommendationServiceVectorial {
       // Like détecté : augmenter les poids des caractéristiques similaires
       _adaptiveWeights['categoryWeight'] =
           (_adaptiveWeights['categoryWeight']! + 0.05).clamp(0.5, 2.0);
-      _categoryLikes[activity.category] =
-          (_categoryLikes[activity.category] ?? 0) + 1;
+      final categoryName = activity.category.toString().split('.').last;
+      _categoryLikes[categoryName] =
+          (_categoryLikes[categoryName] ?? 0) + 1;
       _totalLikes++;
     } else {
       // Dislike détecté : diminuer les poids
       _adaptiveWeights['categoryWeight'] =
           (_adaptiveWeights['categoryWeight']! - 0.03).clamp(0.5, 2.0);
-      _categoryDislikes[activity.category] =
-          (_categoryDislikes[activity.category] ?? 0) + 1;
+      final categoryName = activity.category.toString().split('.').last;
+      _categoryDislikes[categoryName] =
+          (_categoryDislikes[categoryName] ?? 0) + 1;
       _totalDislikes++;
     }
 
@@ -332,7 +337,7 @@ class ActivityRecommendationServiceVectorial {
       ];
 
       // Calculer la DISTANCE pour chaque activité
-      final scored = <(Activity, double)>[];
+      final scored = <ActivityScore>[];
 
       for (final activity in allActivities) {
         // Ignorer les activités déjà notées
@@ -353,7 +358,7 @@ class ActivityRecommendationServiceVectorial {
           weightsVector,
         );
 
-        scored.add((activity, distance));
+        scored.add(ActivityScore(activity: activity, score: distance));
       }
 
       stopwatch.stop();
@@ -372,8 +377,8 @@ class ActivityRecommendationServiceVectorial {
 
       // Retourner l'activité la plus différente (plus grande distance)
       if (scored.isEmpty) return null;
-      scored.sort((a, b) => b.$2.compareTo(a.$2)); // Tri décroissant
-      return scored.first.$1;
+      scored.sort((a, b) => b.score.compareTo(a.score)); // Tri décroissant
+      return scored.first.activity;
     } catch (e) {
       stopwatch.stop();
       return null;

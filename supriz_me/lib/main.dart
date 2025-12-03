@@ -21,6 +21,7 @@ void main() async {
   await Hive.initFlutter();
 
   // Register adapters
+  Hive.registerAdapter(ActivityCategoryAdapter());
   Hive.registerAdapter(MovieAdapter());
   Hive.registerAdapter(ActivityAdapter());
   Hive.registerAdapter(BoardGameAdapter());

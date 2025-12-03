@@ -26,13 +26,14 @@ class UserProfileAdapter extends TypeAdapter<UserProfile> {
       groupSize: fields[6] as int,
       filmScores: (fields[7] as Map).cast<String, int>(),
       genreScores: (fields[8] as Map).cast<String, int>(),
+      setupDone: fields[9] as bool,
     );
   }
 
   @override
   void write(BinaryWriter writer, UserProfile obj) {
     writer
-      ..writeByte(9)
+      ..writeByte(10)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -50,7 +51,9 @@ class UserProfileAdapter extends TypeAdapter<UserProfile> {
       ..writeByte(7)
       ..write(obj.filmScores)
       ..writeByte(8)
-      ..write(obj.genreScores);
+      ..write(obj.genreScores)
+      ..writeByte(9)
+      ..write(obj.setupDone);
   }
 
   @override

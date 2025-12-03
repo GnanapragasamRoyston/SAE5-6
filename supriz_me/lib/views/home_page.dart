@@ -88,74 +88,7 @@ class HomePage extends StatelessWidget {
                     height: 185,
                     width: 185,
                   ),
-<<<<<<< HEAD
-
-                  const SizedBox(height: 10),
-
-                  // NOUVEAU LOGO (Image.asset)
-                  ClipRRect( // Optionnel: pour appliquer des coins arrondis si l'image le nécessite
-                    borderRadius: BorderRadius.circular(15), 
-                    child: Image.asset(
-                      'assets/images/logo_app.png',
-                      height: 300, // Ajustez la taille au besoin
-                      width: 300,
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-                
-
-                  const SizedBox(height: 20),
-
-                  // Description
-                  Text(
-                    "L'ennui vous gagne et vous ne savez pas quoi faire ?\n"
-                    "LAISSEZ-VOUS SURPRENDRE !",
-                    textAlign: TextAlign.center,
-                    style: GoogleFonts.poppins(
-                      color: Colors.white,
-                      fontSize: 18,
-                      fontWeight: FontWeight.w500,
-                      height: 1.5,
-                    ),
-                  ),
-
-                  const SizedBox(height: 40),
-
-                  // BOUTONS
-                  _buildCategoryBox(
-                    context,
-                    "FILMS",
-                    Colors.orange,
-                    MoviesPage(movieBox: movieBox),
-                  ),
-                  const SizedBox(height: 20),
-
-                  _buildCategoryBox(
-                    context,
-                    "JEUX",
-                    Colors.purple,
-                    GamesPage(
-                      boardGameBox: boardGameBox,
-                      settingsBox: settingsBox, 
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-
-                  _buildCategoryBox(
-                    context,
-                    "ACTIVITÉS",
-                    Colors.blue,
-                    ActivitiesPage(
-                      activityBox: activityBox,
-                      activityRatingBox: activityRatingBox,
-                      activityPreferencesBox: activityPreferencesBox,
-                      metricsBox: metricsBox,
-                    ),
-                  ),
-                ],
-=======
                 ),
->>>>>>> 0b2805b2e18cfa624b441cbf42e06dc3fffaf0cd
               ),
               // Description en bas du logo
               Padding(
@@ -191,7 +124,10 @@ class HomePage extends StatelessWidget {
                       context,
                       "JEUX",
                       Colors.purple,
-                      GamesPage(boardGameBox: boardGameBox),
+                      GamesPage(
+                        boardGameBox: boardGameBox,
+                        settingsBox: settingsBox,
+                      ),
                     ),
                     const SizedBox(height: 12),
                     _buildCategoryBox(

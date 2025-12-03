@@ -3,6 +3,23 @@ import 'package:hive/hive.dart';
 part 'activity.g.dart';
 
 @HiveType(typeId: 1)
+enum ActivityCategory {
+  @HiveField(0)
+  calme,
+  @HiveField(1)
+  jeu,
+  @HiveField(2)
+  sport,
+  @HiveField(3)
+  social,
+  @HiveField(4)
+  creatif,
+  @HiveField(5)
+  detente,
+  @HiveField(6)
+  outdoor,
+}
+@HiveType(typeId: 6)
 class Activity {
   @HiveField(0)
   final String id;
@@ -14,7 +31,7 @@ class Activity {
   final String description;
 
   @HiveField(3)
-  final String category; // ex: "sports", "art", "outdoor"
+  final ActivityCategory category; 
 
   @HiveField(4)
   final double duration; // en minutes
