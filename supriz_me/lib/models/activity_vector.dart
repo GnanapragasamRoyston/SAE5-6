@@ -18,7 +18,7 @@ extension ActivityVector on Activity {
   /// Catégories d'activités mappées à des indices numériques
   static const Map<String, int> categoryIndex = {
     'Sport': 0,
-    'Culturel': 1,
+    'jeu': 1,
     'Social': 2,
     'Créatif': 3,
     'Relaxation': 4,
