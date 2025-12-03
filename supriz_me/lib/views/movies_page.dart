@@ -7,6 +7,9 @@ import '../models/movie.dart';
 import '../models/movie_rating.dart';
 import '../services/recommendation/movie_recommender.dart';
 import 'movie_preference_page.dart';
+// Assurez-vous d'avoir MovieDetailPage disponible, il est dans votre code
+
+// Le reste des imports...
 
 class MoviesPage extends StatefulWidget {
   final Box<Movie> movieBox;
@@ -26,7 +29,7 @@ class MoviesPage extends StatefulWidget {
 
 class _MoviesPageState extends State<MoviesPage> {
   late MovieRecommender _recommender;
-  Movie? _surprizmeMovie; // Variable d'état pour le film Surprizme
+  // Movie? _surprizmeMovie; // Retire la variable d'état car on navigue directement
 
   @override
   void initState() {
@@ -38,15 +41,12 @@ class _MoviesPageState extends State<MoviesPage> {
       settingsBox: widget.settingsBox,
     );
 
-    // Cette méthode assure que la page de préférences est ouverte
-    // UNIQUEMENT si 'movie_prefs_initialized' est false (première fois).
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _checkAndPromptForMoviePreferences();
     });
   }
 
   void _navigateToPreferencePage() {
-    // La navigation vers la page de préférences est celle qui doit être utilisée.
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -55,18 +55,14 @@ class _MoviesPageState extends State<MoviesPage> {
         ),
       ),
     ).then((_) {
-      // Recharge l'écran après retour de MoviePreferencePage pour actualiser les reco.
       setState(() {});
     });
   }
 
-
   void _checkAndPromptForMoviePreferences() {
-    // Vérifie la clé enregistrée dans MoviePreferencePage.
     final hasPrefsBeenSet =
-    widget.settingsBox.get('movie_prefs_initialized', defaultValue: false);
+        widget.settingsBox.get('movie_prefs_initialized', defaultValue: false);
 
-    // Si la clé n'est pas définie (première fois), on navigue vers la page de préférences.
     if (!hasPrefsBeenSet) {
       _navigateToPreferencePage();
     }
@@ -94,27 +90,45 @@ class _MoviesPageState extends State<MoviesPage> {
     }
   }
 
-  // Méthode pour obtenir un film aléatoire non recommandé
-  void _getRandomNonRecommendedMovie() {
-    final recommendedIds = _recommender.getRecommendedMovies(count: 5).map((m) => m.id).toSet();
+  // NOUVELLE MÉTHODE : Navigue directement vers MovieDetailPage avec le film Surprizme
+  void _navigateToSurprizmeMovie() {
+    final recommendedIds =
+        _recommender.getRecommendedMovies(count: 5).map((m) => m.id).toSet();
     final allMovies = widget.movieBox.values.toList();
 
-    final nonRecommendedMovies = allMovies
-        .where((m) => !recommendedIds.contains(m.id))
-        .toList();
+    final nonRecommendedMovies =
+        allMovies.where((m) => !recommendedIds.contains(m.id)).toList();
 
     if (nonRecommendedMovies.isNotEmpty) {
       final random = Random();
       final randomIndex = random.nextInt(nonRecommendedMovies.length);
-      setState(() {
-        _surprizmeMovie = nonRecommendedMovies[randomIndex];
+      final surprizmeMovie = nonRecommendedMovies[randomIndex];
+
+      // NAVIGUE DIRECTEMENT VERS MOVIEDETAILPAGE
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => MovieDetailPage(
+            movie: surprizmeMovie,
+            recommender: _recommender,
+          ),
+        ),
+      ).then((_) {
+        // Optionnel : Recharger l'écran si nécessaire après le retour
+        setState(() {});
       });
     } else {
-      setState(() {
-        _surprizmeMovie = null; // Aucun film non recommandé disponible
-      });
+      // Aucun film non recommandé disponible
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Aucun film "Surprizme" disponible pour le moment.'),
+        ),
+      );
     }
   }
+
+  // L'ancienne méthode _getRandomNonRecommendedMovie est obsolète,
+  // la nouvelle est _navigateToSurprizmeMovie.
 
   @override
   Widget build(BuildContext context) {
@@ -131,7 +145,7 @@ class _MoviesPageState extends State<MoviesPage> {
           ),
           IconButton(
             icon:
-            const Icon(Icons.settings_input_component, color: Colors.white),
+                const Icon(Icons.settings_input_component, color: Colors.white),
             onPressed: _navigateToPreferencePage,
             tooltip: 'Modifier les préférences initiales',
           ),
@@ -156,8 +170,9 @@ class _MoviesPageState extends State<MoviesPage> {
               _buildHeader(),
               const SizedBox(height: 24),
 
-              // Nouvelle Section : Surprizme
+              // Section : Surprizme (Bouton uniquement)
               _buildSurprizmeSection(),
+              // L'affichage du film surprizme a été retiré de cette page
               const SizedBox(height: 24),
 
               // Section 1 : Recommandations pour vous
@@ -172,7 +187,7 @@ class _MoviesPageState extends State<MoviesPage> {
                   valueListenable: widget.movieRatingBox.listenable(),
                   builder: (context, box, child) {
                     final recommendedMovies =
-                    _recommender.getRecommendedMovies(count: 5);
+                        _recommender.getRecommendedMovies(count: 5);
 
                     final hasPrefsBeenSet = widget.settingsBox
                         .get('movie_prefs_initialized', defaultValue: false);
@@ -181,8 +196,8 @@ class _MoviesPageState extends State<MoviesPage> {
                       return Center(
                         child: Text(
                           'Sélectionnez vos genres favoris pour afficher vos premières recommandations.',
-                          style:
-                          GoogleFonts.poppins(color: Colors.white70, fontSize: 12),
+                          style: GoogleFonts.poppins(
+                              color: Colors.white70, fontSize: 12),
                           textAlign: TextAlign.center,
                         ),
                       );
@@ -192,8 +207,8 @@ class _MoviesPageState extends State<MoviesPage> {
                       return Center(
                         child: Text(
                           'Aimez ou n\'aimez pas des films ci-dessous pour plus de recommandations !',
-                          style:
-                          GoogleFonts.poppins(color: Colors.white70, fontSize: 12),
+                          style: GoogleFonts.poppins(
+                              color: Colors.white70, fontSize: 12),
                           textAlign: TextAlign.center,
                         ),
                       );
@@ -216,6 +231,8 @@ class _MoviesPageState extends State<MoviesPage> {
               ),
               const SizedBox(height: 24),
 
+              // Le reste de votre code (Sections 2, 3, 4 et Bouton Home)
+              // ...
               // Section 2 : Tous les films
               _buildSectionTitle(
                 icon: Icons.movie,
@@ -227,7 +244,7 @@ class _MoviesPageState extends State<MoviesPage> {
                 child: ListView.builder(
                   scrollDirection: Axis.horizontal,
                   itemCount:
-                  widget.movieBox.length > 5 ? 5 : widget.movieBox.length,
+                      widget.movieBox.length > 5 ? 5 : widget.movieBox.length,
                   itemBuilder: (context, index) {
                     final movie = widget.movieBox.getAt(index);
                     if (movie == null) return const SizedBox.shrink();
@@ -350,11 +367,9 @@ class _MoviesPageState extends State<MoviesPage> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        // Correction: Remplacé withValues par withOpacity
         color: Colors.white.withOpacity(0.15),
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
-          // Correction: Remplacé withValues par withOpacity
           color: Colors.white.withOpacity(0.3),
           width: 1,
         ),
@@ -385,11 +400,9 @@ class _MoviesPageState extends State<MoviesPage> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        // Correction: Remplacé withValues par withOpacity
         color: Colors.white.withOpacity(0.12),
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
-          // Correction: Remplacé withValues par withOpacity
           color: Colors.white.withOpacity(0.25),
         ),
       ),
@@ -411,7 +424,7 @@ class _MoviesPageState extends State<MoviesPage> {
     );
   }
 
-  // Widget pour la section Surprizme
+  // Widget pour la section Surprizme (MODIFIÉE)
   Widget _buildSurprizmeSection() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -433,10 +446,10 @@ class _MoviesPageState extends State<MoviesPage> {
           ),
         ),
 
-        // Bouton Surprizme
+        // Bouton Surprizme (appelle la nouvelle méthode de navigation)
         Center(
           child: ElevatedButton.icon(
-            onPressed: _getRandomNonRecommendedMovie,
+            onPressed: _navigateToSurprizmeMovie, // Appel mis à jour
             icon: const Icon(Icons.casino, color: Colors.white),
             label: Text(
               'SURPRIZME !',
@@ -457,50 +470,27 @@ class _MoviesPageState extends State<MoviesPage> {
           ),
         ),
         const SizedBox(height: 16),
-
-        // Affichage du film Surprizme
-        if (_surprizmeMovie != null)
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildSectionTitle(
-                icon: Icons.shuffle,
-                label: 'VOTRE SURPRIZME DU JOUR',
-              ),
-              const SizedBox(height: 12),
-              SizedBox(
-                height: 160,
-                child: ListView(
-                  scrollDirection: Axis.horizontal,
-                  children: [
-                    MovieTile(
-                      movie: _surprizmeMovie!,
-                      recommender: _recommender,
-                      tileColor: const Color(0xFF00C4CC), // Couleur Surprizme
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          )
-        else
-          Center(
-            child: Text(
-              'Appuyez sur "SURPRIZME !" pour une suggestion aléatoire qui vous fera découvrir un autre horizon !',
-              style: GoogleFonts.poppins(color: Colors.white70, fontSize: 12),
-              textAlign: TextAlign.center,
-            ),
+        // Le bloc d'affichage du film surprizme a été retiré ici.
+        Center(
+          child: Text(
+            'Appuyez sur "SURPRIZME !" pour une suggestion aléatoire qui vous fera découvrir un autre horizon !',
+            style: GoogleFonts.poppins(color: Colors.white70, fontSize: 12),
+            textAlign: TextAlign.center,
           ),
+        ),
       ],
     );
   }
 }
+
+// Le code pour MovieTile et MovieDetailPage reste le même.
 
 // =========================================================================
 // MovieTile
 // =========================================================================
 
 class MovieTile extends StatelessWidget {
+// ... votre code MovieTile ...
   final Movie movie;
   final MovieRecommender recommender;
   final Color tileColor;
@@ -612,10 +602,11 @@ class MovieTile extends StatelessWidget {
 }
 
 // =========================================================================
-// MovieDetailPage (Mis à jour pour couvrir toute la page)
+// MovieDetailPage
 // =========================================================================
 
 class MovieDetailPage extends StatelessWidget {
+// ... votre code MovieDetailPage ...
   final Movie movie;
   final MovieRecommender recommender;
 
@@ -655,7 +646,7 @@ class MovieDetailPage extends StatelessWidget {
                 SliverAppBar(
                   title: Text(movie.title),
                   // Rendre l'AppBar transparente pour voir le dégradé en dessous
-                  backgroundColor: Colors.transparent, 
+                  backgroundColor: Colors.transparent,
                   elevation: 0,
                   pinned: true,
                 ),
@@ -674,10 +665,10 @@ class MovieDetailPage extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(height: 8),
-
                         Row(
                           children: [
-                            const Icon(Icons.star, color: Colors.yellow, size: 20),
+                            const Icon(Icons.star,
+                                color: Colors.yellow, size: 20),
                             const SizedBox(width: 4),
                             Text(
                               '${movie.rating.toStringAsFixed(1)} / 5',
@@ -701,13 +692,12 @@ class MovieDetailPage extends StatelessWidget {
                           ],
                         ),
                         const SizedBox(height: 20),
-
                         Wrap(
                           spacing: 8.0,
                           runSpacing: 4.0,
                           children: [
                             ...movie.tags.map(
-                                  (tag) => Chip(
+                              (tag) => Chip(
                                 label: Text(
                                   tag,
                                   style: GoogleFonts.poppins(
@@ -721,7 +711,6 @@ class MovieDetailPage extends StatelessWidget {
                           ],
                         ),
                         const SizedBox(height: 20),
-
                         Text(
                           'Synopsis',
                           style: GoogleFonts.poppins(
@@ -742,7 +731,6 @@ class MovieDetailPage extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(height: 40),
-
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceAround,
                           children: [
@@ -765,7 +753,7 @@ class MovieDetailPage extends StatelessWidget {
                               ),
                               style: ElevatedButton.styleFrom(
                                 backgroundColor:
-                                isDisliked ? Colors.red : Colors.grey[800],
+                                    isDisliked ? Colors.red : Colors.grey[800],
                                 padding: const EdgeInsets.symmetric(
                                   horizontal: 30,
                                   vertical: 15,
@@ -791,7 +779,7 @@ class MovieDetailPage extends StatelessWidget {
                               ),
                               style: ElevatedButton.styleFrom(
                                 backgroundColor:
-                                isLiked ? Colors.green : Colors.grey[800],
+                                    isLiked ? Colors.green : Colors.grey[800],
                                 padding: const EdgeInsets.symmetric(
                                   horizontal: 30,
                                   vertical: 15,
