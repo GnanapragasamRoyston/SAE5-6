@@ -62,11 +62,13 @@ Décompressez ou placez le projet dans un répertoire local.
 - **[Sajith Abdoul](https://github.com/GnanapragasamRoyston)**
 - **[Inès Marcisz](https://github.com/inesmrcz)**
 - **[Lucas Férard](https://github.com/Lucas93t)**
+- **[Dhanoush Kessavane](https://github.com/dkessavane)**
 
   
 
 ## Technologies utilisées
 - Flutter
+
 
 
 
