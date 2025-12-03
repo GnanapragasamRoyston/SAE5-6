@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'dart:math'; // Importation ajoutée pour Random
 
 import '../models/movie.dart';
 import '../models/movie_rating.dart';
@@ -25,6 +26,7 @@ class MoviesPage extends StatefulWidget {
 
 class _MoviesPageState extends State<MoviesPage> {
   late MovieRecommender _recommender;
+  Movie? _surprizmeMovie; // Variable d'état pour le film Surprizme
 
   @override
   void initState() {
@@ -36,29 +38,35 @@ class _MoviesPageState extends State<MoviesPage> {
       settingsBox: widget.settingsBox,
     );
 
+    // Cette méthode assure que la page de préférences est ouverte
+    // UNIQUEMENT si 'movie_prefs_initialized' est false (première fois).
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _checkAndPromptForMoviePreferences();
     });
   }
 
   void _navigateToPreferencePage() {
-  Navigator.push(
-    context,
-    MaterialPageRoute(
-      builder: (context) => MoviePreferencePage(
-        settingsBox: widget.settingsBox,
+    // La navigation vers la page de préférences est celle qui doit être utilisée.
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => MoviePreferencePage(
+          settingsBox: widget.settingsBox,
+        ),
       ),
-    ),
-  ).then((_) {
-    setState(() {}); // recharge l'écran après retour
-  });
-}
+    ).then((_) {
+      // Recharge l'écran après retour de MoviePreferencePage pour actualiser les reco.
+      setState(() {});
+    });
+  }
 
 
   void _checkAndPromptForMoviePreferences() {
+    // Vérifie la clé enregistrée dans MoviePreferencePage.
     final hasPrefsBeenSet =
     widget.settingsBox.get('movie_prefs_initialized', defaultValue: false);
 
+    // Si la clé n'est pas définie (première fois), on navigue vers la page de préférences.
     if (!hasPrefsBeenSet) {
       _navigateToPreferencePage();
     }
@@ -82,6 +90,28 @@ class _MoviesPageState extends State<MoviesPage> {
       );
       setState(() {
         _navigateToPreferencePage();
+      });
+    }
+  }
+
+  // Méthode pour obtenir un film aléatoire non recommandé
+  void _getRandomNonRecommendedMovie() {
+    final recommendedIds = _recommender.getRecommendedMovies(count: 5).map((m) => m.id).toSet();
+    final allMovies = widget.movieBox.values.toList();
+
+    final nonRecommendedMovies = allMovies
+        .where((m) => !recommendedIds.contains(m.id))
+        .toList();
+
+    if (nonRecommendedMovies.isNotEmpty) {
+      final random = Random();
+      final randomIndex = random.nextInt(nonRecommendedMovies.length);
+      setState(() {
+        _surprizmeMovie = nonRecommendedMovies[randomIndex];
+      });
+    } else {
+      setState(() {
+        _surprizmeMovie = null; // Aucun film non recommandé disponible
       });
     }
   }
@@ -124,6 +154,10 @@ class _MoviesPageState extends State<MoviesPage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _buildHeader(),
+              const SizedBox(height: 24),
+
+              // Nouvelle Section : Surprizme
+              _buildSurprizmeSection(),
               const SizedBox(height: 24),
 
               // Section 1 : Recommandations pour vous
@@ -316,10 +350,12 @@ class _MoviesPageState extends State<MoviesPage> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.15),
+        // Correction: Remplacé withValues par withOpacity
+        color: Colors.white.withOpacity(0.15),
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
-          color: Colors.white.withValues(alpha: 0.3),
+          // Correction: Remplacé withValues par withOpacity
+          color: Colors.white.withOpacity(0.3),
           width: 1,
         ),
       ),
@@ -349,10 +385,12 @@ class _MoviesPageState extends State<MoviesPage> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.12),
+        // Correction: Remplacé withValues par withOpacity
+        color: Colors.white.withOpacity(0.12),
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
-          color: Colors.white.withValues(alpha: 0.25),
+          // Correction: Remplacé withValues par withOpacity
+          color: Colors.white.withOpacity(0.25),
         ),
       ),
       child: Row(
@@ -370,6 +408,90 @@ class _MoviesPageState extends State<MoviesPage> {
           ),
         ],
       ),
+    );
+  }
+
+  // Widget pour la section Surprizme
+  Widget _buildSurprizmeSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Phrase d'accroche avec la police "Bebas Neue"
+        Center(
+          child: Padding(
+            padding: const EdgeInsets.only(bottom: 12.0),
+            child: Text(
+              'PAS D\'ENNUI AVEC SURPRIZME !',
+              style: GoogleFonts.bebasNeue(
+                color: Colors.orangeAccent,
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 2,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ),
+        ),
+
+        // Bouton Surprizme
+        Center(
+          child: ElevatedButton.icon(
+            onPressed: _getRandomNonRecommendedMovie,
+            icon: const Icon(Icons.casino, color: Colors.white),
+            label: Text(
+              'SURPRIZME !',
+              style: GoogleFonts.bebasNeue(
+                fontSize: 22,
+                color: Colors.white,
+                letterSpacing: 2,
+              ),
+            ),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF00C4CC),
+              padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(30),
+              ),
+              elevation: 8,
+            ),
+          ),
+        ),
+        const SizedBox(height: 16),
+
+        // Affichage du film Surprizme
+        if (_surprizmeMovie != null)
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildSectionTitle(
+                icon: Icons.shuffle,
+                label: 'VOTRE SURPRIZME DU JOUR',
+              ),
+              const SizedBox(height: 12),
+              SizedBox(
+                height: 160,
+                child: ListView(
+                  scrollDirection: Axis.horizontal,
+                  children: [
+                    MovieTile(
+                      movie: _surprizmeMovie!,
+                      recommender: _recommender,
+                      tileColor: const Color(0xFF00C4CC), // Couleur Surprizme
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          )
+        else
+          Center(
+            child: Text(
+              'Appuyez sur "SURPRIZME !" pour une suggestion aléatoire qui vous fera découvrir un autre horizon !',
+              style: GoogleFonts.poppins(color: Colors.white70, fontSize: 12),
+              textAlign: TextAlign.center,
+            ),
+          ),
+      ],
     );
   }
 }
@@ -490,7 +612,7 @@ class MovieTile extends StatelessWidget {
 }
 
 // =========================================================================
-// MovieDetailPage (reprend ton code existant, juste légère harmonisation)
+// MovieDetailPage (Mis à jour pour couvrir toute la page)
 // =========================================================================
 
 class MovieDetailPage extends StatelessWidget {
@@ -513,12 +635,10 @@ class MovieDetailPage extends StatelessWidget {
         final isDisliked = currentRating != null && !currentRating.isLiked;
 
         return Scaffold(
-          appBar: AppBar(
-            title: Text(movie.title),
-            backgroundColor: Colors.blue,
-            elevation: 0,
-          ),
+          // 1. Définir le fond du Scaffold comme transparent
+          backgroundColor: Colors.transparent,
           body: Container(
+            // 2. Appliquer le dégradé au Container body pour qu'il couvre tout
             decoration: const BoxDecoration(
               gradient: LinearGradient(
                 colors: [
@@ -529,148 +649,164 @@ class MovieDetailPage extends StatelessWidget {
                 end: Alignment.bottomCenter,
               ),
             ),
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(20.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    movie.title,
-                    style: GoogleFonts.bebasNeue(
-                      fontSize: 36,
-                      color: Colors.white,
-                      letterSpacing: 1.5,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-
-                  Row(
-                    children: [
-                      const Icon(Icons.star, color: Colors.yellow, size: 20),
-                      const SizedBox(width: 4),
-                      Text(
-                        '${movie.rating.toStringAsFixed(1)} / 5',
-                        style: GoogleFonts.poppins(
-                          color: Colors.white,
-                          fontSize: 18,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      const SizedBox(width: 20),
-                      const Icon(Icons.access_time,
-                          color: Colors.orange, size: 20),
-                      const SizedBox(width: 4),
-                      Text(
-                        '${movie.duration.toInt()} min',
-                        style: GoogleFonts.poppins(
-                          color: Colors.white,
-                          fontSize: 18,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
-
-                  Wrap(
-                    spacing: 8.0,
-                    runSpacing: 4.0,
-                    children: [
-                      ...movie.tags.map(
-                            (tag) => Chip(
-                          label: Text(
-                            tag,
-                            style: GoogleFonts.poppins(
-                              color: Colors.black,
-                              fontSize: 12,
-                            ),
-                          ),
-                          backgroundColor: Colors.grey[300],
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
-
-                  Text(
-                    'Synopsis',
-                    style: GoogleFonts.poppins(
-                      color: Colors.white,
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    movie.description.isNotEmpty
-                        ? movie.description
-                        : 'Description non disponible.',
-                    style: GoogleFonts.poppins(
-                      color: Colors.white70,
-                      fontSize: 16,
-                      height: 1.4,
-                    ),
-                  ),
-                  const SizedBox(height: 40),
-
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-                    children: [
-                      ElevatedButton.icon(
-                        onPressed: () {
-                          recommender.saveRating(movie.id, false);
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Dislike enregistré !'),
-                            ),
-                          );
-                        },
-                        icon: Icon(
-                          Icons.thumb_down,
-                          color: isDisliked ? Colors.white : Colors.red,
-                        ),
-                        label: const Text(
-                          'Dislike',
-                          style: TextStyle(color: Colors.white),
-                        ),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor:
-                          isDisliked ? Colors.red : Colors.grey[800],
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 30,
-                            vertical: 15,
+            // 3. Utiliser CustomScrollView et SliverAppBar pour le défilement et l'AppBar
+            child: CustomScrollView(
+              slivers: [
+                SliverAppBar(
+                  title: Text(movie.title),
+                  // Rendre l'AppBar transparente pour voir le dégradé en dessous
+                  backgroundColor: Colors.transparent, 
+                  elevation: 0,
+                  pinned: true,
+                ),
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.all(20.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          movie.title,
+                          style: GoogleFonts.bebasNeue(
+                            fontSize: 36,
+                            color: Colors.white,
+                            letterSpacing: 1.5,
                           ),
                         ),
-                      ),
-                      ElevatedButton.icon(
-                        onPressed: () {
-                          recommender.saveRating(movie.id, true);
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Like enregistré !'),
+                        const SizedBox(height: 8),
+
+                        Row(
+                          children: [
+                            const Icon(Icons.star, color: Colors.yellow, size: 20),
+                            const SizedBox(width: 4),
+                            Text(
+                              '${movie.rating.toStringAsFixed(1)} / 5',
+                              style: GoogleFonts.poppins(
+                                color: Colors.white,
+                                fontSize: 18,
+                                fontWeight: FontWeight.w500,
+                              ),
                             ),
-                          );
-                        },
-                        icon: Icon(
-                          Icons.thumb_up,
-                          color: isLiked ? Colors.white : Colors.green,
+                            const SizedBox(width: 20),
+                            const Icon(Icons.access_time,
+                                color: Colors.orange, size: 20),
+                            const SizedBox(width: 4),
+                            Text(
+                              '${movie.duration.toInt()} min',
+                              style: GoogleFonts.poppins(
+                                color: Colors.white,
+                                fontSize: 18,
+                              ),
+                            ),
+                          ],
                         ),
-                        label: const Text(
-                          'Like',
-                          style: TextStyle(color: Colors.white),
+                        const SizedBox(height: 20),
+
+                        Wrap(
+                          spacing: 8.0,
+                          runSpacing: 4.0,
+                          children: [
+                            ...movie.tags.map(
+                                  (tag) => Chip(
+                                label: Text(
+                                  tag,
+                                  style: GoogleFonts.poppins(
+                                    color: Colors.black,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                                backgroundColor: Colors.grey[300],
+                              ),
+                            ),
+                          ],
                         ),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor:
-                          isLiked ? Colors.green : Colors.grey[800],
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 30,
-                            vertical: 15,
+                        const SizedBox(height: 20),
+
+                        Text(
+                          'Synopsis',
+                          style: GoogleFonts.poppins(
+                            color: Colors.white,
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
                           ),
                         ),
-                      ),
-                    ],
+                        const SizedBox(height: 8),
+                        Text(
+                          movie.description.isNotEmpty
+                              ? movie.description
+                              : 'Description non disponible.',
+                          style: GoogleFonts.poppins(
+                            color: Colors.white70,
+                            fontSize: 16,
+                            height: 1.4,
+                          ),
+                        ),
+                        const SizedBox(height: 40),
+
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceAround,
+                          children: [
+                            ElevatedButton.icon(
+                              onPressed: () {
+                                recommender.saveRating(movie.id, false);
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('Dislike enregistré !'),
+                                  ),
+                                );
+                              },
+                              icon: Icon(
+                                Icons.thumb_down,
+                                color: isDisliked ? Colors.white : Colors.red,
+                              ),
+                              label: const Text(
+                                'Dislike',
+                                style: TextStyle(color: Colors.white),
+                              ),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor:
+                                isDisliked ? Colors.red : Colors.grey[800],
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 30,
+                                  vertical: 15,
+                                ),
+                              ),
+                            ),
+                            ElevatedButton.icon(
+                              onPressed: () {
+                                recommender.saveRating(movie.id, true);
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('Like enregistré !'),
+                                  ),
+                                );
+                              },
+                              icon: Icon(
+                                Icons.thumb_up,
+                                color: isLiked ? Colors.white : Colors.green,
+                              ),
+                              label: const Text(
+                                'Like',
+                                style: TextStyle(color: Colors.white),
+                              ),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor:
+                                isLiked ? Colors.green : Colors.grey[800],
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 30,
+                                  vertical: 15,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        // Espace pour s'assurer que les boutons ne sont pas au bord
+                        const SizedBox(height: 40),
+                      ],
+                    ),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         );

@@ -59,6 +59,10 @@ class _MoviePreferencePageState extends State<MoviePreferencePage> {
     widget.settingsBox.put("initial_movie_genres", selectedGenres);
     widget.settingsBox.put("preferred_duration", preferredDuration);
     widget.settingsBox.put("allow_surprise", allowSurprise);
+    
+    // FIX CLÉ : Enregistre que les préférences ont été initialisées
+    widget.settingsBox.put("movie_prefs_initialized", true);
+    
     Navigator.pop(context);
   }
 
