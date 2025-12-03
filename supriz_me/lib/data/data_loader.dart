@@ -54,12 +54,11 @@ class DataLoader {
       for (int i = 0; i < jsonData.length; i++) {
         try {
           final item = jsonData[i] as Map<String, dynamic>;
-          final category = _categorizeActivity(item);
           final activity = Activity(
             id: '${item['nom']}_$i',
             title: item['nom'] ?? 'Unknown',
             description: item['description'] ?? '',
-            category: category,
+            category: _parseActivityCategory(item['categorie']),
             duration: _parseDurationString(item['duree_moyenne']),
             minParticipants: item['joueurs_min'] ?? 1,
             maxParticipants: item['joueurs_max'] ?? 10,
@@ -68,11 +67,14 @@ class DataLoader {
           );
           activities.add(activity);
         } catch (e) {
+          print('Erreur parsing activité index $i: $e');
+          continue;
           // Skip malformed entries
         }
       }
       return activities;
     } catch (e) {
+      print('Erreur lors du chargement des activités: $e');
       return [];
     }
   }
@@ -190,6 +192,20 @@ class DataLoader {
 
   // --- Helpers des Activités (Dataset 2) ---
 
+  static ActivityCategory _parseActivityCategory(dynamic value) {
+    if (value == null) return ActivityCategory.social;
+    final categoryStr = value.toString().toLowerCase().trim();
+    
+    try {
+      return ActivityCategory.values.firstWhere(
+        (cat) => cat.toString().split('.').last == categoryStr,
+        orElse: () => ActivityCategory.social,
+      );
+    } catch (e) {
+      return ActivityCategory.social;
+    }
+  }
+
   static double _parseDurationString(String? value) {
     if (value == null || value.isEmpty) return 90.0;
 
@@ -203,7 +219,8 @@ class DataLoader {
         totalMinutes += hours * 60;
       }
 
-      final minMatch = RegExp(r'h\s*(\d+)').firstMatch(cleanValue);
+      // Extract minutes after 'h' (if exists)
+      final minMatch = RegExp(r'h\s*(\d+)|(\d+)\s*min').firstMatch(cleanValue);
       if (minMatch != null) {
         final mins = int.tryParse(minMatch.group(1) ?? '0') ?? 0;
         totalMinutes += mins;
@@ -223,72 +240,7 @@ class DataLoader {
     return 90.0;
   }
 
-  static String _categorizeActivity(Map<String, dynamic> item) {
-    final lieu = (item['lieu'] ?? '').toString().toLowerCase();
-    final nom = (item['nom'] ?? '').toString().toLowerCase();
-    final description = (item['description'] ?? '').toString().toLowerCase();
-
-    if (lieu.contains('parc') ||
-        lieu.contains('jardin') ||
-        lieu.contains('extérieur') ||
-        lieu.contains('exterieur') ||
-        nom.contains('rando') ||
-        nom.contains('vélo') ||
-        nom.contains('velo') ||
-        nom.contains('pique')) {
-      return 'Extérieur';
-    }
-
-    if (lieu.contains('maison') ||
-        lieu.contains('intérieur') ||
-        lieu.contains('interieur') ||
-        lieu.contains('bowling') ||
-        lieu.contains('cinéma') ||
-        lieu.contains('cinema') ||
-        nom.contains('jeu') ||
-        nom.contains('film')) {
-      return 'Intérieur';
-    }
-
-    if (nom.contains('football') ||
-        nom.contains('basketball') ||
-        nom.contains('tennis') ||
-        nom.contains('yoga') ||
-        nom.contains('sport') ||
-        nom.contains('natation') ||
-        nom.contains('boxe') ||
-        description.contains('sport')) {
-      return 'Sport';
-    }
-
-    if (nom.contains('musée') ||
-        nom.contains('museum') ||
-        nom.contains('théâtre') ||
-        nom.contains('theatre') ||
-        nom.contains('concert') ||
-        nom.contains('galerie') ||
-        nom.contains('exposition') ||
-        nom.contains('art') ||
-        nom.contains('culture')) {
-      return 'Culture';
-    }
-
-    if (nom.contains('méditation') ||
-        nom.contains('meditation') ||
-        nom.contains('spa') ||
-        nom.contains('massage') ||
-        nom.contains('relaxation') ||
-        nom.contains('détente') ||
-        nom.contains('detente') ||
-        description.contains('détente') ||
-        description.contains('detente')) {
-      return 'Relaxation';
-    }
-
-    return 'Extérieur';
-  }
-
-  // --- Helpers des Jeux de Société (Dataset 3) ---
+  // --- Helpers des Jeux de Société (Dataset 3 - Votre Focus) ---
 
   static double _parseRatingString(String? value) {
     if (value == null) return 3.0;

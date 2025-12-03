@@ -5,6 +5,7 @@ import '../models/activity.dart';
 import '../models/activity_rating.dart';
 import '../models/activity_preferences.dart';
 import '../models/performance_metrics.dart';
+import '../models/activity_score.dart';
 import '../services/recommendation/activity_recommendation_service_vectorial.dart';
 import 'activity_preferences_page.dart';
 import 'stats_page.dart';
@@ -255,7 +256,7 @@ class _ActivitiesPageState extends State<ActivitiesPage>
   }
 
   Widget _buildRecommendationsSection() {
-    return FutureBuilder<List<(Activity, double)>>(
+    return FutureBuilder<List<ActivityScore>>(
       future: recommendationService.getRecommendationsWithScores(limit: 3),
       builder: (context, snapshot) {
         // Récupérer la dernière métrique
@@ -359,9 +360,9 @@ class _ActivitiesPageState extends State<ActivitiesPage>
                     Padding(
                       padding: const EdgeInsets.only(bottom: 12),
                       child: _buildRecommendationCard(
-                        snapshot.data![i].$1,
+                        snapshot.data![i].activity,
                         i,
-                        snapshot.data![i].$2,
+                        snapshot.data![i].score,
                       ),
                     ),
                 ],

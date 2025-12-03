@@ -22,6 +22,7 @@ void main() async {
   await Hive.initFlutter();
 
   // Register adapters
+  Hive.registerAdapter(ActivityCategoryAdapter());
   Hive.registerAdapter(MovieAdapter());
   Hive.registerAdapter(ActivityAdapter());
   Hive.registerAdapter(BoardGameAdapter());
@@ -69,6 +70,8 @@ void main() async {
     settingsBox: settingsBox, // 🎯 PASSAGE DE settingsBox au DataLoader
   );
 
+  
+
   runApp(
     SurprizMeApp(
       movieBox: movieBox,
@@ -82,6 +85,7 @@ void main() async {
     ),
   );
 }
+
 
 class SurprizMeApp extends StatelessWidget {
   final Box<Movie> movieBox;
