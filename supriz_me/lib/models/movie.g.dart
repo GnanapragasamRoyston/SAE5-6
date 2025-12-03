@@ -1,5 +1,10 @@
-// GENERATED CODE - manual adapter (no build step)
+// GENERATED CODE - DO NOT MODIFY BY HAND
+
 part of 'movie.dart';
+
+// **************************************************************************
+// TypeAdapterGenerator
+// **************************************************************************
 
 class MovieAdapter extends TypeAdapter<Movie> {
   @override
@@ -8,10 +13,9 @@ class MovieAdapter extends TypeAdapter<Movie> {
   @override
   Movie read(BinaryReader reader) {
     final numOfFields = reader.readByte();
-    final fields = <int, dynamic>{};
-    for (int i = 0; i < numOfFields; i++) {
-      fields[reader.readByte()] = reader.read();
-    }
+    final fields = <int, dynamic>{
+      for (int i = 0; i < numOfFields; i++) reader.readByte(): reader.read(),
+    };
     return Movie(
       id: fields[0] as String,
       title: fields[1] as String,
@@ -42,4 +46,14 @@ class MovieAdapter extends TypeAdapter<Movie> {
       ..writeByte(6)
       ..write(obj.tags);
   }
+
+  @override
+  int get hashCode => typeId.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is MovieAdapter &&
+          runtimeType == other.runtimeType &&
+          typeId == other.typeId;
 }

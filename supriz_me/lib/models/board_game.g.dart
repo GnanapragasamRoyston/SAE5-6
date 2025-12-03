@@ -1,5 +1,10 @@
-// GENERATED CODE - manual adapter (no build step)
+// GENERATED CODE - DO NOT MODIFY BY HAND
+
 part of 'board_game.dart';
+
+// **************************************************************************
+// TypeAdapterGenerator
+// **************************************************************************
 
 class BoardGameAdapter extends TypeAdapter<BoardGame> {
   @override
@@ -8,10 +13,9 @@ class BoardGameAdapter extends TypeAdapter<BoardGame> {
   @override
   BoardGame read(BinaryReader reader) {
     final numOfFields = reader.readByte();
-    final fields = <int, dynamic>{};
-    for (int i = 0; i < numOfFields; i++) {
-      fields[reader.readByte()] = reader.read();
-    }
+    final fields = <int, dynamic>{
+      for (int i = 0; i < numOfFields; i++) reader.readByte(): reader.read(),
+    };
     return BoardGame(
       id: fields[0] as String,
       title: fields[1] as String,
@@ -21,14 +25,17 @@ class BoardGameAdapter extends TypeAdapter<BoardGame> {
       avgDuration: fields[5] as double,
       complexity: fields[6] as double,
       rating: fields[7] as double,
-      tags: (fields[8] as List).cast<String>(),
+      genres: (fields[8] as List).cast<String>(),
+      mechanics: (fields[9] as List).cast<String>(),
+      releaseYear: fields[10] as int,
+      minAge: fields[11] as int,
     );
   }
 
   @override
   void write(BinaryWriter writer, BoardGame obj) {
     writer
-      ..writeByte(9)
+      ..writeByte(12)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -46,6 +53,22 @@ class BoardGameAdapter extends TypeAdapter<BoardGame> {
       ..writeByte(7)
       ..write(obj.rating)
       ..writeByte(8)
-      ..write(obj.tags);
+      ..write(obj.genres)
+      ..writeByte(9)
+      ..write(obj.mechanics)
+      ..writeByte(10)
+      ..write(obj.releaseYear)
+      ..writeByte(11)
+      ..write(obj.minAge);
   }
+
+  @override
+  int get hashCode => typeId.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is BoardGameAdapter &&
+          runtimeType == other.runtimeType &&
+          typeId == other.typeId;
 }
