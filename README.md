@@ -13,7 +13,7 @@ Supriz'Me est une application mobile conçue pour combattre l'ennui en fournissa
 
 Le cœur de Supriz'Me repose sur un système de recommandation intelligent qui analyse les habitudes d'utilisation de l'utilisateur pour suggérer des activités, des jeux de société, et des films qui correspondent parfaitement à ses goûts et à son contexte actuel (temps disponible, loisirs, etc.).
 
-🎯 Domaines de Recommandation
+Domaines de Recommandation
 L'application couvre trois grandes catégories pour garantir une solution à tout type d'ennui :
 
 Activités et Sorties : (Ex: Sports, lieux à visiter, etc.)
@@ -130,5 +130,6 @@ Assurez-vous d’être dans le répertoire supriz_me afin que le fichier pubspec
 - **[Inès Marcisz](https://github.com/inesmrcz)**
 - **[Lucas Férard](https://github.com/Lucas93t)**
 - **[Dhanoush Kessavane](https://github.com/dkessavane)**
+
 
 
