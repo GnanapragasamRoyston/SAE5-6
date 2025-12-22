@@ -18,9 +18,8 @@ List<BoardGame> parseBoardGamesJson(String jsonString) {
       final item = jsonData[i] as Map<String, dynamic>;
 
       final mechanics = item['Mechanics']?.toString() ?? '';
-      final description = mechanics.length > 100 
-          ? mechanics.substring(0, 100) 
-          : mechanics;
+      final description =
+          mechanics.length > 100 ? mechanics.substring(0, 100) : mechanics;
 
       final game = BoardGame(
         id: '${item['Title']}_$i',
@@ -31,16 +30,18 @@ List<BoardGame> parseBoardGamesJson(String jsonString) {
         avgDuration: (item['Play Time (moyen)'] as num?)?.toDouble() ?? 60.0,
         complexity: _parseComplexity(item['Difficulty']),
         rating: _parseRatingString(item['Rating']),
-        genres : item['Genre'],
-        mechanics : item['Mechanics'],
-        releaseYear: (item['Release Year'] as num?)?.toInt() ?? 0, 
-        minAge: (item['Min Age'] as num?)?.toInt() ?? 8, 
+        genres: item['Genre'],
+        mechanics: item['Mechanics'],
+        releaseYear: (item['Release Year'] as num?)?.toInt() ?? 0,
+        minAge: (item['Min Age'] as num?)?.toInt() ?? 8,
       );
       games.add(game);
     } catch (e) {
-      final title = (i < jsonData.length) ? (jsonData[i] as Map<String, dynamic>)['Title'] ?? 'Unknown Index $i' : 'Unknown';
+      final title = (i < jsonData.length)
+          ? (jsonData[i] as Map<String, dynamic>)['Title'] ?? 'Unknown Index $i'
+          : 'Unknown';
       print('Erreur lors du parsing du jeu "$title" (Isolate): $e');
-      continue; 
+      continue;
     }
   }
   return games;
@@ -48,58 +49,58 @@ List<BoardGame> parseBoardGamesJson(String jsonString) {
 
 /// Parseur des Films.
 List<Movie> parseMoviesJson(String jsonString) {
-    final lines = jsonString
-        .split('\n')
-        .where((line) => line.trim().isNotEmpty)
-        .toList();
+  final lines =
+      jsonString.split('\n').where((line) => line.trim().isNotEmpty).toList();
 
-    final movies = <Movie>[];
-    for (final line in lines) {
-      try {
-        final jsonData = jsonDecode(line) as Map<String, dynamic>;
-        final movie = Movie(
-          id: jsonData['names'] ?? 'unknown',
-          title: jsonData['names'] ?? 'Unknown',
-          description: jsonData['overview'] ?? '',
-          genre: jsonData['genre'] ?? 'Unknown',
-          duration: (jsonData['duration'] as num?)?.toDouble() ?? 120.0,
-          rating: _parseMovieRating(jsonData['score']), // Renommé pour éviter les conflits
-          tags: _parseMovieTags(jsonData['genre']), // Renommé pour éviter les conflits
-        );
-        movies.add(movie);
-      } catch (e) {
-        // Skip malformed entries
-      }
+  final movies = <Movie>[];
+  for (final line in lines) {
+    try {
+      final jsonData = jsonDecode(line) as Map<String, dynamic>;
+      final movie = Movie(
+        id: jsonData['names'] ?? 'unknown',
+        title: jsonData['names'] ?? 'Unknown',
+        description: jsonData['overview'] ?? '',
+        genre: jsonData['genre'] ?? 'Unknown',
+        duration: (jsonData['duration'] as num?)?.toDouble() ?? 120.0,
+        rating: _parseMovieRating(
+            jsonData['score']), // Renommé pour éviter les conflits
+        tags: _parseMovieTags(
+            jsonData['genre']), // Renommé pour éviter les conflits
+      );
+      movies.add(movie);
+    } catch (e) {
+      // Skip malformed entries
     }
-    return movies;
+  }
+  return movies;
 }
 
 /// Parseur des Activités.
 List<Activity> parseActivitiesJson(String jsonString) {
-    final jsonData = jsonDecode(jsonString) as List;
+  final jsonData = jsonDecode(jsonString) as List;
 
-    final activities = <Activity>[];
-    for (int i = 0; i < jsonData.length; i++) {
-      try {
-        final item = jsonData[i] as Map<String, dynamic>;
-        final category = _categorizeActivity(item);
-        final activity = Activity(
-          id: '${item['nom']}_$i',
-          title: item['nom'] ?? 'Unknown',
-          description: item['description'] ?? '',
-          category: category,
-          duration: _parseDurationString(item['duree_moyenne']),
-          minParticipants: item['joueurs_min'] ?? 1,
-          maxParticipants: item['joueurs_max'] ?? 10,
-          tags: [item['lieu'] ?? 'General'],
-          difficulty: 2.5, // Default difficulty
-        );
-        activities.add(activity);
-      } catch (e) {
-        // Skip malformed entries
-      }
+  final activities = <Activity>[];
+  for (int i = 0; i < jsonData.length; i++) {
+    try {
+      final item = jsonData[i] as Map<String, dynamic>;
+      final category = _categorizeActivity(item);
+      final activity = Activity(
+        id: '${item['nom']}_$i',
+        title: item['nom'] ?? 'Unknown',
+        description: item['description'] ?? '',
+        category: category,
+        duration: _parseDurationString(item['duree_moyenne']),
+        minParticipants: item['joueurs_min'] ?? 1,
+        maxParticipants: item['joueurs_max'] ?? 10,
+        tags: [item['lieu'] ?? 'General'],
+        difficulty: 2.5, // Default difficulty
+      );
+      activities.add(activity);
+    } catch (e) {
+      // Skip malformed entries
     }
-    return activities;
+  }
+  return activities;
 }
 
 // --------------------------------------------------------------------------
@@ -113,22 +114,17 @@ double _parseRatingString(String? value) {
   if (value == null) return 3.0;
   final cleanedValue = value.replaceAll(',', '.');
   final parsed = double.tryParse(cleanedValue);
-  return (parsed ?? 0).clamp(0.0, 10.0) / 2; 
+  return (parsed ?? 0).clamp(0.0, 10.0) / 2;
 }
 
 double _parseComplexity(dynamic value) {
   if (value is num) return (value.toDouble()).clamp(0.0, 5.0);
   if (value is String) {
-    final cleanedValue = value.replaceAll(',', '.'); 
+    final cleanedValue = value.replaceAll(',', '.');
     final parsed = double.tryParse(cleanedValue);
     return (parsed ?? 0).clamp(0.0, 5.0);
   }
   return 2.5;
-}
-
-List<String> _parseGenres(String? value) {
-  if (value == null || value.isEmpty) return [];
-  return value.split(',').map((genre) => genre.trim()).toList();
 }
 
 // --- Helpers des Films (Dataset 1) ---
@@ -189,13 +185,20 @@ String _categorizeActivity(Map<String, dynamic> item) {
   final description = (item['description'] ?? '').toString().toLowerCase();
 
   // Logique de catégorisation (la même que celle fournie)
-  if (lieu.contains('parc') || lieu.contains('extérieur') || nom.contains('rando') || nom.contains('vélo')) {
+  if (lieu.contains('parc') ||
+      lieu.contains('extérieur') ||
+      nom.contains('rando') ||
+      nom.contains('vélo')) {
     return 'Extérieur';
   }
-  if (lieu.contains('maison') || lieu.contains('intérieur') || nom.contains('jeu')) {
+  if (lieu.contains('maison') ||
+      lieu.contains('intérieur') ||
+      nom.contains('jeu')) {
     return 'Intérieur';
   }
-  if (nom.contains('football') || nom.contains('sport') || description.contains('sport')) {
+  if (nom.contains('football') ||
+      nom.contains('sport') ||
+      description.contains('sport')) {
     return 'Sport';
   }
   if (nom.contains('musée') || nom.contains('culture')) {

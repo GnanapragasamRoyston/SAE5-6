@@ -14,7 +14,6 @@ import 'package:supriz_me/models/board_game.dart';
 import 'package:supriz_me/models/activity_rating.dart';
 import 'package:supriz_me/models/activity_preferences.dart';
 import 'package:supriz_me/models/performance_metrics.dart';
-import 'package:supriz_me/models/performance_metrics_adapter.dart';
 import 'package:supriz_me/models/movie_rating.dart';
 
 void main() {

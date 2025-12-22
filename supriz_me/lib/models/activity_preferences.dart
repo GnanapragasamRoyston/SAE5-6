@@ -4,6 +4,15 @@ part 'activity_preferences.g.dart';
 
 @HiveType(typeId: 5)
 class ActivityPreferences {
+  // Catégories disponibles dans l'application
+  static const List<String> availableCategories = [
+    'Sport',
+    'Créatif',
+    'Social',
+    'Relaxation',
+    'Aventure',
+  ];
+
   @HiveField(0)
   final int availableTime; // en minutes (ex: 60, 120, 180)
 

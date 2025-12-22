@@ -429,23 +429,6 @@ class _MoviesPageState extends State<MoviesPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Phrase d'accroche avec la police "Bebas Neue"
-        Center(
-          child: Padding(
-            padding: const EdgeInsets.only(bottom: 12.0),
-            child: Text(
-              'PAS D\'ENNUI AVEC SURPRIZME !',
-              style: GoogleFonts.bebasNeue(
-                color: Colors.orangeAccent,
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-                letterSpacing: 2,
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ),
-        ),
-
         // Bouton Surprizme (appelle la nouvelle méthode de navigation)
         Center(
           child: ElevatedButton.icon(

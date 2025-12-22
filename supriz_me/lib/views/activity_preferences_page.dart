@@ -2,11 +2,20 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hive/hive.dart';
 import '../models/activity_preferences.dart';
+import '../models/activity.dart';
+import '../models/activity_rating.dart';
 
 class ActivityPreferencesPage extends StatefulWidget {
   final Box<ActivityPreferences> preferencesBox;
+  final Box<Activity> activityBox;
+  final Box<ActivityRating> activityRatingBox;
 
-  const ActivityPreferencesPage({super.key, required this.preferencesBox});
+  const ActivityPreferencesPage({
+    super.key,
+    required this.preferencesBox,
+    required this.activityBox,
+    required this.activityRatingBox,
+  });
 
   @override
   State<ActivityPreferencesPage> createState() =>
@@ -18,17 +27,20 @@ class _ActivityPreferencesPageState extends State<ActivityPreferencesPage> {
   late int groupSize;
   late List<String> selectedCategories;
   late bool allowSurprise;
+  final Set<String> selectedActivityIds = {};
+  late List<Activity> suggestedActivities;
 
   @override
   void initState() {
     super.initState();
     _loadPreferences();
+    suggestedActivities = [];
   }
 
   void _loadPreferences() {
     final prefs = widget.preferencesBox.isNotEmpty
         ? widget.preferencesBox.getAt(0) ??
-              ActivityPreferences.defaultPreferences()
+            ActivityPreferences.defaultPreferences()
         : ActivityPreferences.defaultPreferences();
 
     setState(() {
@@ -53,7 +65,47 @@ class _ActivityPreferencesPageState extends State<ActivityPreferencesPage> {
       widget.preferencesBox.add(prefs);
     }
 
+    // Sauvegarder les 5 activités sélectionnées comme "liked" pour initialiser le profil
+    for (final activityId in selectedActivityIds) {
+      final existingRating = widget.activityRatingBox.values.firstWhere(
+        (r) => r.activityId == activityId,
+        orElse: () => ActivityRating(
+            activityId: activityId, rating: 0, ratedAt: DateTime.now()),
+      );
+
+      // Si pas encore d'évaluation, créer une avec rating de 5 (top like)
+      if (existingRating.rating == 0) {
+        final newRating = ActivityRating(
+          activityId: activityId,
+          rating: 5,
+          ratedAt: DateTime.now(),
+        );
+        widget.activityRatingBox.add(newRating);
+      }
+    }
+
     Navigator.pop(context);
+  }
+
+  /// Charge les activités suggérées basées sur les catégories sélectionnées
+  void _loadSuggestedActivities() {
+    if (selectedCategories.isEmpty) {
+      setState(() {
+        suggestedActivities = [];
+        selectedActivityIds.clear();
+      });
+      return;
+    }
+
+    final activities = widget.activityBox.values
+        .where((a) => selectedCategories.contains(a.category))
+        .toList();
+
+    // Mélanger et prendre les 20 premières
+    activities.shuffle();
+    setState(() {
+      suggestedActivities = activities.take(20).toList();
+    });
   }
 
   @override
@@ -83,7 +135,7 @@ class _ActivityPreferencesPageState extends State<ActivityPreferencesPage> {
             Slider(
               value: availableTime.toDouble(),
               min: 15,
-              max: 480,
+              max: 360,
               divisions: 15,
               label: '$availableTime min',
               onChanged: (value) {
@@ -165,13 +217,7 @@ class _ActivityPreferencesPageState extends State<ActivityPreferencesPage> {
             Wrap(
               spacing: 8,
               children: [
-                for (String category in [
-                  'Extérieur',
-                  'Intérieur',
-                  'Sport',
-                  'Culture',
-                  'Relaxation',
-                ])
+                for (String category in ActivityPreferences.availableCategories)
                   FilterChip(
                     label: Text(category),
                     selected: selectedCategories.contains(category),
@@ -183,11 +229,68 @@ class _ActivityPreferencesPageState extends State<ActivityPreferencesPage> {
                           selectedCategories.remove(category);
                         }
                       });
+                      _loadSuggestedActivities();
                     },
                   ),
               ],
             ),
             const SizedBox(height: 24),
+
+            // Section simple : Choix des activités
+            if (suggestedActivities.isNotEmpty)
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Sélectionnez 5 activités',
+                        style: GoogleFonts.poppins(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      Text(
+                        '${selectedActivityIds.length}/5',
+                        style: GoogleFonts.poppins(fontSize: 14),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  ListView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: suggestedActivities.length,
+                    itemBuilder: (context, index) {
+                      final activity = suggestedActivities[index];
+                      final isSelected =
+                          selectedActivityIds.contains(activity.id);
+                      final canSelect =
+                          !isSelected && selectedActivityIds.length >= 5;
+
+                      return CheckboxListTile(
+                        value: isSelected,
+                        onChanged: canSelect
+                            ? null
+                            : (value) {
+                                setState(() {
+                                  if (value == true) {
+                                    selectedActivityIds.add(activity.id);
+                                  } else {
+                                    selectedActivityIds.remove(activity.id);
+                                  }
+                                });
+                              },
+                        title: Text(activity.title),
+                        subtitle: Text(activity.category),
+                        enabled: !canSelect,
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 24),
+                ],
+              ),
 
             // Allow Surprise
             CheckboxListTile(

@@ -88,6 +88,32 @@ class ActivityRecommendationServiceVectorial {
     }
   }
 
+  /// Filtre les activités selon les préférences de l'utilisateur
+  bool _matchesUserPreferences(Activity activity) {
+    // 1. Filtrer par catégories préférées (si au moins une catégorie sélectionnée)
+    if (userPreferences.preferredCategories.isNotEmpty &&
+        !userPreferences.preferredCategories.contains(activity.category)) {
+      // Si allowSurprise est false, rejeter les activités hors catégories
+      if (!userPreferences.allowSurprise) {
+        return false;
+      }
+      // Sinon, on peut toujours les proposer (surprises)
+    }
+
+    // 2. Filtrer par temps disponible
+    if (activity.duration > userPreferences.availableTime) {
+      return false;
+    }
+
+    // 3. Filtrer par nombre de personnes
+    if (activity.minParticipants > userPreferences.groupSize ||
+        activity.maxParticipants < userPreferences.groupSize) {
+      return false;
+    }
+
+    return true;
+  }
+
   /// Retourne les recommandations AVEC leurs scores
   /// Pour afficher pourquoi c'est recommandé
   Future<List<(Activity, double)>> getRecommendationsWithScores({
@@ -98,9 +124,19 @@ class ActivityRecommendationServiceVectorial {
     try {
       final likedActivities = _getLikedActivities();
 
+      // Filtrer les activités selon les préférences de l'utilisateur
+      final allActivities =
+          activityBox.values.where((a) => _matchesUserPreferences(a)).toList();
+
+      if (allActivities.isEmpty) {
+        return [];
+      }
+
       if (likedActivities.isEmpty) {
-        final activities = _getTopActivitiesByDifficulty(limit);
-        return activities.map((a) => (a, 0.0)).toList();
+        final topActivities = _getTopActivitiesByDifficulty(limit)
+            .where((a) => _matchesUserPreferences(a))
+            .toList();
+        return topActivities.map((a) => (a, 0.0)).toList();
       }
 
       final userProfileVector = _createUserProfileVector(likedActivities);
@@ -117,7 +153,6 @@ class ActivityRecommendationServiceVectorial {
         _adaptiveWeights['difficultyWeight']!,
       ];
 
-      final allActivities = activityBox.values.toList();
       final ratedIds = ratingBox.values.map((r) => r.activityId).toSet();
 
       final scored = <(Activity, double)>[];
@@ -271,11 +306,8 @@ class ActivityRecommendationServiceVectorial {
 
   /// Retourne les stats moyennes
   Map<String, dynamic> getAverageMetrics({int lastNMetrics = 10}) {
-    final recent = metricsBox.values
-        .toList()
-        .reversed
-        .take(lastNMetrics)
-        .toList();
+    final recent =
+        metricsBox.values.toList().reversed.take(lastNMetrics).toList();
 
     if (recent.isEmpty) {
       return {'avgTime': 0, 'avgCPU': 0.0, 'totalBatteryDrain': 0.0};
@@ -307,9 +339,8 @@ class ActivityRecommendationServiceVectorial {
 
       // Si pas assez d'expérience, retourner aléatoire
       if (likedActivities.isEmpty) {
-        final unrated = allActivities
-            .where((a) => !ratedIds.contains(a.id))
-            .toList();
+        final unrated =
+            allActivities.where((a) => !ratedIds.contains(a.id)).toList();
         if (unrated.isEmpty) return null;
         unrated.shuffle();
         return unrated.first;

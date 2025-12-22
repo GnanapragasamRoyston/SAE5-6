@@ -294,9 +294,8 @@ class _SettingsPageState extends State<SettingsPage> {
                           subtitle,
                           style: GoogleFonts.poppins(
                             fontSize: 12,
-                            color: darkMode
-                                ? Colors.grey[400]
-                                : Colors.grey[600],
+                            color:
+                                darkMode ? Colors.grey[400] : Colors.grey[600],
                           ),
                         ),
                       ],
@@ -418,8 +417,8 @@ class _SettingsPageState extends State<SettingsPage> {
     final ratingsCount = widget.activityRatingBox?.length ?? 0;
     final preferencesEntry =
         widget.activityPreferencesBox?.values.isNotEmpty ?? false
-        ? widget.activityPreferencesBox?.values.first
-        : null;
+            ? widget.activityPreferencesBox?.values.first
+            : null;
 
     showDialog(
       context: context,
@@ -546,8 +545,8 @@ class _SettingsPageState extends State<SettingsPage> {
       final ratings = widget.activityRatingBox?.values.toList() ?? [];
       final preferences =
           widget.activityPreferencesBox?.values.isNotEmpty ?? false
-          ? widget.activityPreferencesBox?.values.first
-          : null;
+              ? widget.activityPreferencesBox?.values.first
+              : null;
       final metrics = widget.metricsBox?.values.toList() ?? [];
 
       final exportData = {
@@ -658,8 +657,6 @@ class _SettingsPageState extends State<SettingsPage> {
 
                 if (!mounted) return;
                 Navigator.pop(context);
-
-                if (!mounted) return;
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: Text(
@@ -673,8 +670,6 @@ class _SettingsPageState extends State<SettingsPage> {
               } catch (e) {
                 if (!mounted) return;
                 Navigator.pop(context);
-
-                if (!mounted) return;
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: Text(

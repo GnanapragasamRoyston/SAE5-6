@@ -92,38 +92,31 @@ class HomePage extends StatelessWidget {
         child: SafeArea(
           child: Center(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 2),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   // Header "Surpriz'Me" + tagline
                   _buildHeader(),
 
-                  const SizedBox(height: 24),
-
                   // Logo
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(20),
-                    child: Container(
-                      decoration: BoxDecoration(
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.35),
-                            blurRadius: 20,
-                            offset: const Offset(0, 10),
-                          ),
-                        ],
-                      ),
-                      child: Image.asset(
-                        'assets/images/logo_app.png',
-                        height: 170,
-                        width: 170,
-                        fit: BoxFit.cover,
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 0),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(20),
+                      child: Container(
+                        decoration: BoxDecoration(),
+                        child: Image.asset(
+                          'assets/images/logo_app.png',
+                          height: 198,
+                          width: 198,
+                          fit: BoxFit.cover,
+                        ),
                       ),
                     ),
                   ),
 
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 0),
 
                   // Description dans un "bloc" glassmorphism
                   _buildDescription(),
@@ -144,7 +137,7 @@ class HomePage extends StatelessWidget {
                       settingsBox: settingsBox,
                     ),
                   ),
-                  const SizedBox(height: 18),
+                  const SizedBox(height: 12),
 
                   _buildCategoryCard(
                     context: context,
@@ -158,7 +151,7 @@ class HomePage extends StatelessWidget {
                       settingsBox: settingsBox,
                     ),
                   ),
-                  const SizedBox(height: 18),
+                  const SizedBox(height: 12),
 
                   _buildCategoryCard(
                     context: context,
@@ -174,6 +167,7 @@ class HomePage extends StatelessWidget {
                       metricsBox: metricsBox,
                     ),
                   ),
+                  const SizedBox(height: 12),
                 ],
               ),
             ),
@@ -186,58 +180,21 @@ class HomePage extends StatelessWidget {
   Widget _buildHeader() {
     return Column(
       children: [
-        Text(
-          "Surpriz'Me",
-          style: GoogleFonts.bebasNeue(
-            fontSize: 44,
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-            letterSpacing: 3,
-            shadows: [
-              Shadow(
-                offset: const Offset(0, 2),
-                blurRadius: 4,
-                color: Colors.black.withOpacity(0.4),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 6),
-        Text(
-          "Anti-ennui, pro-surprises.",
-          textAlign: TextAlign.center,
-          style: GoogleFonts.poppins(
-            color: Colors.white70,
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
+        const SizedBox(height: 2),
       ],
     );
   }
 
   Widget _buildDescription() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.08),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(
-          color: Colors.white.withOpacity(0.25),
-          width: 1,
-        ),
-      ),
-      child: Text(
-        "L'ennui vous gagne et vous ne savez pas quoi faire ?\n"
-            "LAISSEZ-VOUS SURPRENDRE !",
-        textAlign: TextAlign.center,
-        style: GoogleFonts.poppins(
-          color: Colors.white,
-          fontSize: 16,
-          fontWeight: FontWeight.w500,
-          height: 1.5,
-        ),
+    return Text(
+      "L'ennui vous gagne et vous ne savez pas quoi faire ?\n"
+      "LAISSEZ-VOUS SURPRENDRE !",
+      textAlign: TextAlign.center,
+      style: GoogleFonts.poppins(
+        color: Colors.white,
+        fontSize: 14,
+        fontWeight: FontWeight.w500,
+        height: 1.3,
       ),
     );
   }
@@ -258,7 +215,7 @@ class HomePage extends StatelessWidget {
       borderRadius: BorderRadius.circular(16),
       child: Container(
         width: double.infinity,
-        height: 90,
+        height: 70,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(16),
           gradient: LinearGradient(

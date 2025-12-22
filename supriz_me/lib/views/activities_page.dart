@@ -84,8 +84,7 @@ class _ActivitiesPageState extends State<ActivitiesPage>
 
     // Charger les préférences existantes ou utiliser les defaults
     if (widget.activityPreferencesBox.isNotEmpty) {
-      userPreferences =
-          widget.activityPreferencesBox.getAt(0) ??
+      userPreferences = widget.activityPreferencesBox.getAt(0) ??
           ActivityPreferences.defaultPreferences();
       preferencesSet = true;
       recommendationService.initializePreferences(userPreferences);
@@ -103,8 +102,7 @@ class _ActivitiesPageState extends State<ActivitiesPage>
   void _loadPreferencesAfterConfiguration() {
     // Charger les préférences sauvegardées
     if (widget.activityPreferencesBox.isNotEmpty) {
-      userPreferences =
-          widget.activityPreferencesBox.getAt(0) ??
+      userPreferences = widget.activityPreferencesBox.getAt(0) ??
           ActivityPreferences.defaultPreferences();
       preferencesSet = true;
     } else {
@@ -133,6 +131,8 @@ class _ActivitiesPageState extends State<ActivitiesPage>
                 MaterialPageRoute(
                   builder: (context) => ActivityPreferencesPage(
                     preferencesBox: widget.activityPreferencesBox,
+                    activityBox: widget.activityBox,
+                    activityRatingBox: widget.activityRatingBox,
                   ),
                 ),
               ).then((_) {
@@ -210,6 +210,8 @@ class _ActivitiesPageState extends State<ActivitiesPage>
                 MaterialPageRoute(
                   builder: (context) => ActivityPreferencesPage(
                     preferencesBox: widget.activityPreferencesBox,
+                    activityBox: widget.activityBox,
+                    activityRatingBox: widget.activityRatingBox,
                   ),
                 ),
               ).then((_) {
@@ -394,13 +396,12 @@ class _ActivitiesPageState extends State<ActivitiesPage>
       child: SlideTransition(
         position: Tween<Offset>(begin: const Offset(0, 0.1), end: Offset.zero)
             .animate(
-              CurvedAnimation(
-                parent:
-                    _fadeControllers[activity.id] ??
-                    AlwaysStoppedAnimation(1.0),
-                curve: Curves.easeOut,
-              ),
-            ),
+          CurvedAnimation(
+            parent:
+                _fadeControllers[activity.id] ?? AlwaysStoppedAnimation(1.0),
+            curve: Curves.easeOut,
+          ),
+        ),
         child: Container(
           width: double.infinity,
           margin: const EdgeInsets.only(bottom: 8),
@@ -521,8 +522,8 @@ class _ActivitiesPageState extends State<ActivitiesPage>
                   _surpriseRotationController.reset();
                 });
 
-                final surprise = await recommendationService
-                    .getSurpriseActivity();
+                final surprise =
+                    await recommendationService.getSurpriseActivity();
                 if (surprise != null && mounted) {
                   showDialog(
                     context: context,
