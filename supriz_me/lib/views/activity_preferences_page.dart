@@ -121,6 +121,7 @@ class _ActivityPreferencesPageState extends State<ActivityPreferencesPage> {
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Temps disponible
@@ -305,13 +306,35 @@ class _ActivityPreferencesPageState extends State<ActivityPreferencesPage> {
             ),
             const SizedBox(height: 32),
 
+            // Message de validation
+            if (selectedActivityIds.isEmpty && suggestedActivities.isNotEmpty)
+              Container(
+                padding: const EdgeInsets.all(12),
+                margin: const EdgeInsets.only(bottom: 16),
+                decoration: BoxDecoration(
+                  color: Colors.orange.shade100,
+                  border: Border.all(color: Colors.orange),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  'Veuillez sélectionner au moins 1 activité',
+                  style: GoogleFonts.poppins(
+                    fontSize: 14,
+                    color: Colors.orange.shade800,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+
             // Bouton sauvegarde
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: _savePreferences,
+                onPressed:
+                    selectedActivityIds.isEmpty ? null : _savePreferences,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blue,
+                  backgroundColor:
+                      selectedActivityIds.isEmpty ? Colors.grey : Colors.blue,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                 ),
                 child: Text(

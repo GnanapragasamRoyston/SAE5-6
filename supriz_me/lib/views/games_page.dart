@@ -133,7 +133,8 @@ class _GamesPageState extends State<GamesPage> {
 
     if (availableSurpriseGames.isNotEmpty) {
       final random = Random();
-      final surpriseGame = availableSurpriseGames[random.nextInt(availableSurpriseGames.length)];
+      final surpriseGame =
+          availableSurpriseGames[random.nextInt(availableSurpriseGames.length)];
 
       Navigator.of(context).push(
         MaterialPageRoute(
@@ -191,7 +192,8 @@ class _GamesPageState extends State<GamesPage> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.purple.shade700,
                 foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10),
                   side: BorderSide(color: Colors.purple.shade300, width: 2),
@@ -223,7 +225,8 @@ class _GamesPageState extends State<GamesPage> {
   void _buildTagProfile() {
     Map<String, double> profile = {};
 
-    bool hasUserFeedback = _likedGamesTitles.isNotEmpty || _dislikedGamesTitles.isNotEmpty;
+    bool hasUserFeedback =
+        _likedGamesTitles.isNotEmpty || _dislikedGamesTitles.isNotEmpty;
 
     if (hasUserFeedback) {
       for (var title in _likedGamesTitles) {
@@ -261,8 +264,10 @@ class _GamesPageState extends State<GamesPage> {
   }
 
   double _calculateRecommendationScore(BoardGame game) {
-    if (_tagProfileScores.isEmpty && !_likedGamesTitles.isNotEmpty && !_dislikedGamesTitles.isNotEmpty) {
-        return game.rating;
+    if (_tagProfileScores.isEmpty &&
+        !_likedGamesTitles.isNotEmpty &&
+        !_dislikedGamesTitles.isNotEmpty) {
+      return game.rating;
     }
 
     double tagScoreSum = 0.0;
@@ -349,11 +354,9 @@ class _GamesPageState extends State<GamesPage> {
 
     if (playerCount != null && playerCount > 0) {
       filteredGames = filteredGames.where((game) {
-        return playerCount >= game.minPlayers &&
-            playerCount <= game.maxPlayers;
+        return playerCount >= game.minPlayers && playerCount <= game.maxPlayers;
       });
     }
-
 
     if (filteredGames.isNotEmpty) {
       initialRecs = filteredGames.toList();
@@ -427,9 +430,7 @@ class _GamesPageState extends State<GamesPage> {
                       Padding(
                         padding: const EdgeInsets.only(bottom: 10.0),
                         child: Text(
-                          'Filtres actifs : ${_preferredPlayers != null ? '👤 $_preferredPlayers joueurs' : ''} ${
-                            _maxDuration != null ? ' | ⏱️ max ${_maxDuration} min' : ''
-                          }'
+                          'Filtres actifs : ${_preferredPlayers != null ? '👤 $_preferredPlayers joueurs' : ''} ${_maxDuration != null ? ' | ⏱️ max ${_maxDuration} min' : ''}'
                           ' (modifier dans les paramètres ⚙️)',
                           style: const TextStyle(
                             color: Colors.white70,
@@ -437,7 +438,7 @@ class _GamesPageState extends State<GamesPage> {
                           ),
                         ),
                       ),
-                    
+
                     // Suppression de l'ancien texte de feedback ici
 
                     const SizedBox(height: 24),
@@ -490,8 +491,7 @@ class _GamesPageState extends State<GamesPage> {
                     Center(
                       child: ElevatedButton(
                         onPressed: () {
-                          Navigator.popUntil(
-                              context, (route) => route.isFirst);
+                          Navigator.popUntil(context, (route) => route.isFirst);
                         },
                         style: ElevatedButton.styleFrom(
                           shape: const CircleBorder(),
@@ -639,12 +639,12 @@ class _GamesPageState extends State<GamesPage> {
   }
 
   Widget _buildHorizontalGameList(
-      List<BoardGame> games,
-      Color? color, {
-        required bool showFeedback,
-        required bool showDynamicScore,
-        required _GameInfoType infoType,
-      }) {
+    List<BoardGame> games,
+    Color? color, {
+    required bool showFeedback,
+    required bool showDynamicScore,
+    required _GameInfoType infoType,
+  }) {
     if (games.isEmpty) {
       return SizedBox(
         height: 170,
@@ -744,8 +744,9 @@ class _GamesPageState extends State<GamesPage> {
               );
             },
             child: Container(
-              margin: const EdgeInsets.only(right: 10),
-              width: 170,
+              margin: const EdgeInsets.symmetric(horizontal: 8),
+              width: 150,
+              height: 170,
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
@@ -778,35 +779,38 @@ class _GamesPageState extends State<GamesPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          game.title,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: GoogleFonts.poppins(
-                            color: color == Colors.yellow[700]
-                                ? Colors.black
-                                : Colors.white,
-                            fontWeight: FontWeight.w700,
-                            fontSize: 13,
+                    Flexible(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            game.title,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: GoogleFonts.poppins(
+                              color: color == Colors.yellow[700]
+                                  ? Colors.black
+                                  : Colors.white,
+                              fontWeight: FontWeight.w700,
+                              fontSize: 12,
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          '${game.minPlayers}-${game.maxPlayers} joueurs',
-                          style: GoogleFonts.poppins(
-                            color: color == Colors.redAccent
-                                ? Colors.yellowAccent
-                                : Colors.white70,
-                            fontSize: 11,
-                            fontWeight: FontWeight.w500,
+                          const SizedBox(height: 3),
+                          Text(
+                            '${game.minPlayers}-${game.maxPlayers} joueurs',
+                            style: GoogleFonts.poppins(
+                              color: color == Colors.redAccent
+                                  ? Colors.yellowAccent
+                                  : Colors.white70,
+                              fontSize: 10,
+                              fontWeight: FontWeight.w500,
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 2),
-                        extraInfoWidget,
-                      ],
+                          const SizedBox(height: 2),
+                          extraInfoWidget,
+                        ],
+                      ),
                     ),
                     if (showFeedback)
                       Row(
@@ -828,9 +832,8 @@ class _GamesPageState extends State<GamesPage> {
                             child: Icon(
                               Icons.thumb_up_alt_rounded,
                               size: 20,
-                              color: isLiked
-                                  ? Colors.greenAccent
-                                  : Colors.white54,
+                              color:
+                                  isLiked ? Colors.greenAccent : Colors.white54,
                             ),
                           ),
                         ],

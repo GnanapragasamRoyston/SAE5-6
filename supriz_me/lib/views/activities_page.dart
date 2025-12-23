@@ -258,7 +258,7 @@ class _ActivitiesPageState extends State<ActivitiesPage>
 
   Widget _buildRecommendationsSection() {
     return FutureBuilder<List<(Activity, double)>>(
-      future: recommendationService.getRecommendationsWithScores(limit: 3),
+      future: recommendationService.getRecommendationsWithScores(limit: 50),
       builder: (context, snapshot) {
         // Récupérer la dernière métrique
         final metrics = recommendationService.getMetricsHistory();
@@ -266,10 +266,13 @@ class _ActivitiesPageState extends State<ActivitiesPage>
           lastMetrics = metrics.first;
         }
 
+        final topThree = snapshot.data?.take(3).toList() ?? [];
+        final suggestions = snapshot.data?.skip(3).toList() ?? [];
+
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Titre avec fond
+            // Titre avec fond - TOP 3
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               decoration: BoxDecoration(
@@ -357,15 +360,72 @@ class _ActivitiesPageState extends State<ActivitiesPage>
             else
               Column(
                 children: [
-                  for (int i = 0; i < snapshot.data!.length; i++)
+                  // Top 3
+                  for (int i = 0; i < topThree.length; i++)
                     Padding(
                       padding: const EdgeInsets.only(bottom: 12),
                       child: _buildRecommendationCard(
-                        snapshot.data![i].$1,
+                        topThree[i].$1,
                         i,
-                        snapshot.data![i].$2,
+                        topThree[i].$2,
                       ),
                     ),
+                  // Section "Vous pourriez aimer"
+                  if (suggestions.isNotEmpty) ...[
+                    const SizedBox(height: 24),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.2),
+                          width: 1,
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.lightbulb,
+                              color: Colors.amber, size: 22),
+                          const SizedBox(width: 8),
+                          Text(
+                            'VOUS POURRIEZ AIMER',
+                            style: GoogleFonts.bebasNeue(
+                              fontSize: 14,
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 1.2,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        children: [
+                          for (int i = 0; i < suggestions.length; i++)
+                            Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 8),
+                              child: SizedBox(
+                                width: 260,
+                                height: 180,
+                                child: _buildRecommendationCard(
+                                  suggestions[i].$1,
+                                  i + 3,
+                                  suggestions[i].$2,
+                                  isSuggestion: true,
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                  ],
                 ],
               ),
           ],
@@ -374,13 +434,30 @@ class _ActivitiesPageState extends State<ActivitiesPage>
     );
   }
 
-  Widget _buildRecommendationCard(Activity activity, int index, double score) {
+  Widget _buildRecommendationCard(Activity activity, int index, double score,
+      {bool isSuggestion = false}) {
     final medals = ['🥇', '🥈', '🥉'];
     final colors = [
       const Color(0xFFFFD700), // Gold
       const Color(0xFFC0C0C0), // Silver
       const Color(0xFFCD7F32), // Bronze
     ];
+
+    final cardColor = isSuggestion
+        ? const Color(0xFF4A90E2).withValues(alpha: 0.15)
+        : colors[index].withValues(alpha: 0.15);
+    final borderColor = isSuggestion
+        ? const Color(0xFF4A90E2).withValues(alpha: 0.6)
+        : colors[index].withValues(alpha: 0.6);
+    final gradientColor1 = isSuggestion
+        ? const Color(0xFF4A90E2).withValues(alpha: 0.25)
+        : colors[index].withValues(alpha: 0.25);
+    final gradientColor2 = isSuggestion
+        ? const Color(0xFF4A90E2).withValues(alpha: 0.1)
+        : colors[index].withValues(alpha: 0.1);
+    final shadowColor = isSuggestion
+        ? const Color(0xFF4A90E2).withValues(alpha: 0.4)
+        : colors[index].withValues(alpha: 0.4);
 
     // Créer un fade controller si n'existe pas
     if (!_fadeControllers.containsKey(activity.id)) {
@@ -404,76 +481,89 @@ class _ActivitiesPageState extends State<ActivitiesPage>
         ),
         child: Container(
           width: double.infinity,
+          height: isSuggestion ? 140 : 190,
           margin: const EdgeInsets.only(bottom: 8),
           decoration: BoxDecoration(
-            color: colors[index].withValues(alpha: 0.15),
+            color: cardColor,
             gradient: LinearGradient(
               colors: [
-                colors[index].withValues(alpha: 0.25),
-                colors[index].withValues(alpha: 0.1),
+                gradientColor1,
+                gradientColor2,
               ],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: colors[index].withValues(alpha: 0.6),
+              color: borderColor,
               width: 2.5,
             ),
             boxShadow: [
               BoxShadow(
-                color: colors[index].withValues(alpha: 0.4),
+                color: shadowColor,
                 blurRadius: 12,
                 offset: const Offset(0, 4),
               ),
             ],
           ),
           child: Padding(
-            padding: const EdgeInsets.all(14),
+            padding: const EdgeInsets.all(10),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
               children: [
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(medals[index], style: const TextStyle(fontSize: 28)),
-                    const SizedBox(width: 12),
+                    Text(
+                      isSuggestion ? '💡' : medals[index],
+                      style: TextStyle(fontSize: isSuggestion ? 20 : 28),
+                    ),
+                    const SizedBox(width: 8),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
                             activity.title,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                             style: GoogleFonts.poppins(
-                              fontSize: 16,
+                              fontSize: isSuggestion ? 13 : 16,
                               fontWeight: FontWeight.bold,
                               color: Colors.white,
                             ),
                           ),
-                          const SizedBox(height: 4),
-                          Text(
-                            activity.description,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: GoogleFonts.poppins(
-                              fontSize: 12,
-                              color: Colors.white.withValues(alpha: 0.8),
+                          if (!isSuggestion) ...[
+                            const SizedBox(height: 4),
+                            Text(
+                              activity.description,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: GoogleFonts.poppins(
+                                fontSize: 12,
+                                color: Colors.white.withValues(alpha: 0.8),
+                              ),
                             ),
-                          ),
+                          ],
                         ],
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 10),
+                const SizedBox(height: 3),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
-                      '${activity.duration.toInt()} min • ${activity.category}',
-                      style: GoogleFonts.poppins(
-                        fontSize: 12,
-                        color: Colors.white.withValues(alpha: 0.7),
+                    Expanded(
+                      child: Text(
+                        '${activity.duration.toInt()} min • ${activity.category}',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: GoogleFonts.poppins(
+                          fontSize: isSuggestion ? 10 : 12,
+                          color: Colors.white.withValues(alpha: 0.7),
+                        ),
                       ),
                     ),
                     Row(
@@ -482,7 +572,7 @@ class _ActivitiesPageState extends State<ActivitiesPage>
                           onPressed: () => _rateActivity(activity.id, 3),
                           icon: const Icon(Icons.thumb_up),
                           color: Colors.grey,
-                          iconSize: 20,
+                          iconSize: isSuggestion ? 18 : 20,
                           padding: EdgeInsets.zero,
                           constraints: const BoxConstraints(),
                         ),
@@ -491,7 +581,7 @@ class _ActivitiesPageState extends State<ActivitiesPage>
                           onPressed: () => _rateActivity(activity.id, 1),
                           icon: const Icon(Icons.thumb_down),
                           color: Colors.grey,
-                          iconSize: 20,
+                          iconSize: isSuggestion ? 18 : 20,
                           padding: EdgeInsets.zero,
                           constraints: const BoxConstraints(),
                         ),
@@ -599,7 +689,7 @@ class _ActivitiesPageState extends State<ActivitiesPage>
                     ),
                     const SizedBox(width: 10),
                     Text(
-                      'Surprise',
+                      'Surprise Me',
                       style: GoogleFonts.bebasNeue(
                         fontSize: 16,
                         fontWeight: FontWeight.w700,
@@ -654,7 +744,14 @@ class _ActivitiesPageState extends State<ActivitiesPage>
             ),
           ),
           const SizedBox(height: 12),
-          ...activities.map((activity) => _buildActivityCard(activity)),
+          ListView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: activities.length,
+            itemBuilder: (context, index) {
+              return _buildActivityCard(activities[index]);
+            },
+          ),
         ],
       ],
     );

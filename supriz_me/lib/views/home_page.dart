@@ -108,8 +108,8 @@ class HomePage extends StatelessWidget {
                         decoration: BoxDecoration(),
                         child: Image.asset(
                           'assets/images/logo_app.png',
-                          height: 198,
-                          width: 198,
+                          height: 202,
+                          width: 202,
                           fit: BoxFit.cover,
                         ),
                       ),

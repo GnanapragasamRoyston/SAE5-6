@@ -181,40 +181,40 @@ class _MoviesPageState extends State<MoviesPage> {
                 label: 'RECOMMANDATIONS POUR VOUS',
               ),
               const SizedBox(height: 12),
-              SizedBox(
-                height: 160,
-                child: ValueListenableBuilder<Box<MovieRating>>(
-                  valueListenable: widget.movieRatingBox.listenable(),
-                  builder: (context, box, child) {
-                    final recommendedMovies =
-                        _recommender.getRecommendedMovies(count: 5);
+              ValueListenableBuilder<Box<MovieRating>>(
+                valueListenable: widget.movieRatingBox.listenable(),
+                builder: (context, box, child) {
+                  final recommendedMovies =
+                      _recommender.getRecommendedMovies(count: 5);
 
-                    final hasPrefsBeenSet = widget.settingsBox
-                        .get('movie_prefs_initialized', defaultValue: false);
+                  final hasPrefsBeenSet = widget.settingsBox
+                      .get('movie_prefs_initialized', defaultValue: false);
 
-                    if (recommendedMovies.isEmpty && !hasPrefsBeenSet) {
-                      return Center(
-                        child: Text(
-                          'Sélectionnez vos genres favoris pour afficher vos premières recommandations.',
-                          style: GoogleFonts.poppins(
-                              color: Colors.white70, fontSize: 12),
-                          textAlign: TextAlign.center,
-                        ),
-                      );
-                    }
+                  if (recommendedMovies.isEmpty && !hasPrefsBeenSet) {
+                    return Center(
+                      child: Text(
+                        'Sélectionnez vos genres favoris pour afficher vos premières recommandations.',
+                        style: GoogleFonts.poppins(
+                            color: Colors.white70, fontSize: 12),
+                        textAlign: TextAlign.center,
+                      ),
+                    );
+                  }
 
-                    if (recommendedMovies.isEmpty) {
-                      return Center(
-                        child: Text(
-                          'Aimez ou n\'aimez pas des films ci-dessous pour plus de recommandations !',
-                          style: GoogleFonts.poppins(
-                              color: Colors.white70, fontSize: 12),
-                          textAlign: TextAlign.center,
-                        ),
-                      );
-                    }
+                  if (recommendedMovies.isEmpty) {
+                    return Center(
+                      child: Text(
+                        'Aimez ou n\'aimez pas des films ci-dessous pour plus de recommandations !',
+                        style: GoogleFonts.poppins(
+                            color: Colors.white70, fontSize: 12),
+                        textAlign: TextAlign.center,
+                      ),
+                    );
+                  }
 
-                    return ListView.builder(
+                  return SizedBox(
+                    height: 160,
+                    child: ListView.builder(
                       scrollDirection: Axis.horizontal,
                       itemCount: recommendedMovies.length,
                       itemBuilder: (context, index) {
@@ -225,9 +225,9 @@ class _MoviesPageState extends State<MoviesPage> {
                           tileColor: Colors.redAccent,
                         );
                       },
-                    );
-                  },
-                ),
+                    ),
+                  );
+                },
               ),
               const SizedBox(height: 24),
 
@@ -500,8 +500,9 @@ class MovieTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.only(right: 10),
-      width: 170,
+      margin: const EdgeInsets.symmetric(horizontal: 8),
+      width: 150,
+      height: 160,
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
@@ -548,20 +549,26 @@ class MovieTile extends StatelessWidget {
                 children: [
                   const Icon(Icons.star, color: Colors.yellow, size: 12),
                   const SizedBox(width: 2),
-                  Text(
-                    '${movie.rating.toStringAsFixed(1)} / 5',
-                    style: GoogleFonts.poppins(
-                      color: Colors.yellow,
-                      fontSize: 11,
-                      fontWeight: FontWeight.w500,
+                  Flexible(
+                    child: Text(
+                      '${movie.rating.toStringAsFixed(1)} / 5',
+                      style: GoogleFonts.poppins(
+                        color: Colors.yellow,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w500,
+                      ),
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
-                  const Spacer(),
-                  Text(
-                    '${movie.duration.toInt()} min',
-                    style: GoogleFonts.poppins(
-                      color: Colors.white,
-                      fontSize: 11,
+                  const SizedBox(width: 4),
+                  Flexible(
+                    child: Text(
+                      '${movie.duration.toInt()} min',
+                      style: GoogleFonts.poppins(
+                        color: Colors.white,
+                        fontSize: 11,
+                      ),
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
                 ],
@@ -648,31 +655,34 @@ class MovieDetailPage extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(height: 8),
-                        Row(
-                          children: [
-                            const Icon(Icons.star,
-                                color: Colors.yellow, size: 20),
-                            const SizedBox(width: 4),
-                            Text(
-                              '${movie.rating.toStringAsFixed(1)} / 5',
-                              style: GoogleFonts.poppins(
-                                color: Colors.white,
-                                fontSize: 18,
-                                fontWeight: FontWeight.w500,
+                        SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: Row(
+                            children: [
+                              const Icon(Icons.star,
+                                  color: Colors.yellow, size: 20),
+                              const SizedBox(width: 4),
+                              Text(
+                                '${movie.rating.toStringAsFixed(1)} / 5',
+                                style: GoogleFonts.poppins(
+                                  color: Colors.white,
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w500,
+                                ),
                               ),
-                            ),
-                            const SizedBox(width: 20),
-                            const Icon(Icons.access_time,
-                                color: Colors.orange, size: 20),
-                            const SizedBox(width: 4),
-                            Text(
-                              '${movie.duration.toInt()} min',
-                              style: GoogleFonts.poppins(
-                                color: Colors.white,
-                                fontSize: 18,
+                              const SizedBox(width: 20),
+                              const Icon(Icons.access_time,
+                                  color: Colors.orange, size: 20),
+                              const SizedBox(width: 4),
+                              Text(
+                                '${movie.duration.toInt()} min',
+                                style: GoogleFonts.poppins(
+                                  color: Colors.white,
+                                  fontSize: 18,
+                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                         const SizedBox(height: 20),
                         Wrap(
@@ -715,57 +725,62 @@ class MovieDetailPage extends StatelessWidget {
                         ),
                         const SizedBox(height: 40),
                         Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceAround,
                           children: [
-                            ElevatedButton.icon(
-                              onPressed: () {
-                                recommender.saveRating(movie.id, false);
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text('Dislike enregistré !'),
+                            Expanded(
+                              child: ElevatedButton.icon(
+                                onPressed: () {
+                                  recommender.saveRating(movie.id, false);
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text('Dislike enregistré !'),
+                                    ),
+                                  );
+                                },
+                                icon: Icon(
+                                  Icons.thumb_down,
+                                  color: isDisliked ? Colors.white : Colors.red,
+                                ),
+                                label: const Text(
+                                  'Dislike',
+                                  style: TextStyle(color: Colors.white),
+                                ),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: isDisliked
+                                      ? Colors.red
+                                      : Colors.grey[800],
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 20,
+                                    vertical: 15,
                                   ),
-                                );
-                              },
-                              icon: Icon(
-                                Icons.thumb_down,
-                                color: isDisliked ? Colors.white : Colors.red,
-                              ),
-                              label: const Text(
-                                'Dislike',
-                                style: TextStyle(color: Colors.white),
-                              ),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor:
-                                    isDisliked ? Colors.red : Colors.grey[800],
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 30,
-                                  vertical: 15,
                                 ),
                               ),
                             ),
-                            ElevatedButton.icon(
-                              onPressed: () {
-                                recommender.saveRating(movie.id, true);
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text('Like enregistré !'),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: ElevatedButton.icon(
+                                onPressed: () {
+                                  recommender.saveRating(movie.id, true);
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text('Like enregistré !'),
+                                    ),
+                                  );
+                                },
+                                icon: Icon(
+                                  Icons.thumb_up,
+                                  color: isLiked ? Colors.white : Colors.green,
+                                ),
+                                label: const Text(
+                                  'Like',
+                                  style: TextStyle(color: Colors.white),
+                                ),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor:
+                                      isLiked ? Colors.green : Colors.grey[800],
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 20,
+                                    vertical: 15,
                                   ),
-                                );
-                              },
-                              icon: Icon(
-                                Icons.thumb_up,
-                                color: isLiked ? Colors.white : Colors.green,
-                              ),
-                              label: const Text(
-                                'Like',
-                                style: TextStyle(color: Colors.white),
-                              ),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor:
-                                    isLiked ? Colors.green : Colors.grey[800],
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 30,
-                                  vertical: 15,
                                 ),
                               ),
                             ),

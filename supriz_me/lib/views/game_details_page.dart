@@ -33,8 +33,10 @@ class _GameDetailsPageState extends State<GameDetailsPage> {
   }
 
   void _loadFeedbackData() {
-    final savedLikes = List<String>.from(widget.settingsBox.get(_likedGamesKey) ?? []);
-    final savedDislikes = List<String>.from(widget.settingsBox.get(_dislikedGamesKey) ?? []);
+    final savedLikes =
+        List<String>.from(widget.settingsBox.get(_likedGamesKey) ?? []);
+    final savedDislikes =
+        List<String>.from(widget.settingsBox.get(_dislikedGamesKey) ?? []);
     setState(() {
       _likedGamesTitles = savedLikes.toSet();
       _dislikedGamesTitles = savedDislikes.toSet();
@@ -72,13 +74,18 @@ class _GameDetailsPageState extends State<GameDetailsPage> {
 
     if (feedbackChanged) {
       await widget.settingsBox.put(_likedGamesKey, _likedGamesTitles.toList());
-      await widget.settingsBox.put(_dislikedGamesKey, _dislikedGamesTitles.toList());
+      await widget.settingsBox
+          .put(_dislikedGamesKey, _dislikedGamesTitles.toList());
 
       widget.onFeedbackGiven();
 
       final message = isLiked
-          ? (_likedGamesTitles.contains(game.title) ? '✓ Like enregistré' : 'Like annulé')
-          : (_dislikedGamesTitles.contains(game.title) ? '✗ Dislike enregistré' : 'Dislike annulé');
+          ? (_likedGamesTitles.contains(game.title)
+              ? '✓ Like enregistré'
+              : 'Like annulé')
+          : (_dislikedGamesTitles.contains(game.title)
+              ? '✗ Dislike enregistré'
+              : 'Dislike annulé');
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -117,6 +124,7 @@ class _GameDetailsPageState extends State<GameDetailsPage> {
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(20),
           child: Column(
+            mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
@@ -264,7 +272,8 @@ class _GameDetailsPageState extends State<GameDetailsPage> {
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
                       // 🔥 Bordure : Rose clair
-                      side: BorderSide(color: Colors.pink.shade300.withOpacity(0.5)),
+                      side: BorderSide(
+                          color: Colors.pink.shade300.withOpacity(0.5)),
                     ),
                   ),
                 )
@@ -284,24 +293,28 @@ class _GameDetailsPageState extends State<GameDetailsPage> {
   }) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
-      mainAxisSize: MainAxisSize.min,
       children: [
         Icon(icon, color: color, size: 18),
         const SizedBox(width: 6),
-        Text(
-          '$label : ',
-          style: GoogleFonts.poppins(
-            color: Colors.white70,
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
+        Flexible(
+          child: Text(
+            '$label : ',
+            style: GoogleFonts.poppins(
+              color: Colors.white70,
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+            ),
           ),
         ),
-        Text(
-          value,
-          style: GoogleFonts.poppins(
-            color: Colors.white,
-            fontSize: 14,
-            fontWeight: FontWeight.bold,
+        Flexible(
+          child: Text(
+            value,
+            style: GoogleFonts.poppins(
+              color: Colors.white,
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+            ),
+            overflow: TextOverflow.ellipsis,
           ),
         ),
       ],
