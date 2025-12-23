@@ -22,9 +22,13 @@ class GameDetailsPage extends StatefulWidget {
 class _GameDetailsPageState extends State<GameDetailsPage> {
   Set<String> _likedGamesTitles = {};
   Set<String> _dislikedGamesTitles = {};
+  Set<String> _favoriteGamesTitles = {};
+  Set<String> _toDoGamesTitles = {};
 
   static const String _likedGamesKey = 'liked_games_titles';
   static const String _dislikedGamesKey = 'disliked_games_titles';
+  static const String _favoriteGamesKey = 'favorite_games_titles';
+  static const String _toDoGamesKey = 'todo_games_titles';
 
   @override
   void initState() {
@@ -37,9 +41,15 @@ class _GameDetailsPageState extends State<GameDetailsPage> {
         List<String>.from(widget.settingsBox.get(_likedGamesKey) ?? []);
     final savedDislikes =
         List<String>.from(widget.settingsBox.get(_dislikedGamesKey) ?? []);
+    final savedFavorites =
+        List<String>.from(widget.settingsBox.get(_favoriteGamesKey) ?? []);
+    final savedToDo =
+        List<String>.from(widget.settingsBox.get(_toDoGamesKey) ?? []);
     setState(() {
       _likedGamesTitles = savedLikes.toSet();
       _dislikedGamesTitles = savedDislikes.toSet();
+      _favoriteGamesTitles = savedFavorites.toSet();
+      _toDoGamesTitles = savedToDo.toSet();
     });
   }
 
@@ -99,11 +109,68 @@ class _GameDetailsPageState extends State<GameDetailsPage> {
     }
   }
 
+  void _toggleFavorite(BoardGame game) async {
+    setState(() {
+      if (_favoriteGamesTitles.contains(game.title)) {
+        _favoriteGamesTitles.remove(game.title);
+      } else {
+        _favoriteGamesTitles.add(game.title);
+      }
+    });
+
+    await widget.settingsBox
+        .put(_favoriteGamesKey, _favoriteGamesTitles.toList());
+    widget.onFeedbackGiven();
+
+    final message = _favoriteGamesTitles.contains(game.title)
+        ? '⭐ Ajouté aux favoris'
+        : '⭐ Retiré des favoris';
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(message),
+          backgroundColor: Colors.grey.shade700,
+          duration: const Duration(milliseconds: 800),
+        ),
+      );
+    }
+  }
+
+  void _toggleToDo(BoardGame game) async {
+    setState(() {
+      if (_toDoGamesTitles.contains(game.title)) {
+        _toDoGamesTitles.remove(game.title);
+      } else {
+        _toDoGamesTitles.add(game.title);
+      }
+    });
+
+    await widget.settingsBox.put(_toDoGamesKey, _toDoGamesTitles.toList());
+    widget.onFeedbackGiven();
+
+    final message = _toDoGamesTitles.contains(game.title)
+        ? '✅ Ajouté à faire plus tard'
+        : '⏸️ Retiré de faire plus tard';
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(message),
+          backgroundColor: Colors.grey.shade700,
+          duration: const Duration(milliseconds: 800),
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final game = widget.game;
     final isLiked = _likedGamesTitles.contains(game.title);
     final isDisliked = _dislikedGamesTitles.contains(game.title);
+    final isFavorite = _favoriteGamesTitles.contains(game.title);
+    final isToDo = _toDoGamesTitles.contains(game.title);
 
     return Scaffold(
       appBar: AppBar(
@@ -159,24 +226,62 @@ class _GameDetailsPageState extends State<GameDetailsPage> {
                       ],
                     ),
                   ),
-                  Column(
-                    children: [
-                      _buildFeedbackButton(
-                        icon: Icons.thumb_up_alt_rounded,
-                        color: Colors.greenAccent,
-                        isActive: isLiked,
-                        onTap: () => _handleGameFeedback(game, true),
-                      ),
-                      const SizedBox(height: 10),
-                      _buildFeedbackButton(
-                        icon: Icons.thumb_down_alt_rounded,
-                        color: Colors.pinkAccent,
-                        isActive: isDisliked,
-                        onTap: () => _handleGameFeedback(game, false),
-                      ),
-                    ],
+                ],
+              ),
+
+              const SizedBox(height: 24),
+
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  _buildFeedbackButton(
+                    icon: Icons.thumb_down_alt_rounded,
+                    color: Colors.pinkAccent,
+                    isActive: isDisliked,
+                    onTap: () => _handleGameFeedback(game, false),
+                  ),
+                  const SizedBox(width: 10),
+                  _buildFeedbackButton(
+                    icon: Icons.thumb_up_alt_rounded,
+                    color: Colors.greenAccent,
+                    isActive: isLiked,
+                    onTap: () => _handleGameFeedback(game, true),
+                  ),
+                  const SizedBox(width: 10),
+                  _buildFeedbackButton(
+                    icon: Icons.favorite,
+                    color: Colors.redAccent,
+                    isActive: isFavorite,
+                    onTap: () => _toggleFavorite(game),
                   ),
                 ],
+              ),
+
+              const SizedBox(height: 24),
+
+              // Bouton Marquer comme complété
+              Center(
+                child: ElevatedButton.icon(
+                  icon: Icon(
+                    isToDo ? Icons.check_circle : Icons.radio_button_unchecked,
+                    color: Colors.white,
+                  ),
+                  label: Text(
+                    isToDo ? 'À faire ✓' : 'À faire plus tard',
+                    style: GoogleFonts.poppins(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  onPressed: () => _toggleToDo(game),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor:
+                        isToDo ? Colors.green : Colors.blue.shade700,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 24,
+                      vertical: 12,
+                    ),
+                  ),
+                ),
               ),
 
               const SizedBox(height: 24),

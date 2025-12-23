@@ -32,6 +32,7 @@ class _GamesPageState extends State<GamesPage> {
 
   Set<String> _likedGamesTitles = {};
   Set<String> _dislikedGamesTitles = {};
+  Set<String> _favoriteGamesTitles = {};
 
   Map<String, double> _tagProfileScores = {};
   List<String>? _initialGenres;
@@ -43,6 +44,7 @@ class _GamesPageState extends State<GamesPage> {
 
   static const String _likedGamesKey = 'liked_games_titles';
   static const String _dislikedGamesKey = 'disliked_games_titles';
+  static const String _favoriteGamesKey = 'favorite_games_titles';
 
   @override
   void initState() {
@@ -58,8 +60,11 @@ class _GamesPageState extends State<GamesPage> {
         List<String>.from(widget.settingsBox.get(_likedGamesKey) ?? []);
     final savedDislikes =
         List<String>.from(widget.settingsBox.get(_dislikedGamesKey) ?? []);
+    final savedFavorites =
+        List<String>.from(widget.settingsBox.get(_favoriteGamesKey) ?? []);
     _likedGamesTitles = savedLikes.toSet();
     _dislikedGamesTitles = savedDislikes.toSet();
+    _favoriteGamesTitles = savedFavorites.toSet();
   }
 
   void _checkPreferencesStatus() async {
@@ -175,31 +180,25 @@ class _GamesPageState extends State<GamesPage> {
         ),
         const SizedBox(height: 12),
         Center(
-          child: Tooltip(
-            message: "Un petit coup de pouce du destin?",
-            child: ElevatedButton.icon(
-              onPressed: _navigateToSurpriseGame,
-              icon: const Icon(Icons.casino, color: Colors.white),
-              label: Text(
-                "Supriz'Me",
-                style: GoogleFonts.bebasNeue(
-                  fontSize: 20,
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 2.0,
-                ),
+          child: ElevatedButton.icon(
+            onPressed: _navigateToSurpriseGame,
+            icon: const Icon(Icons.casino, color: Colors.white),
+            label: Text(
+              'SURPRIZME !',
+              style: GoogleFonts.bebasNeue(
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 1.5,
+                color: Colors.white,
               ),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.purple.shade700,
-                foregroundColor: Colors.white,
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                  side: BorderSide(color: Colors.purple.shade300, width: 2),
-                ),
-                elevation: 8,
+            ),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF00C4CC),
+              padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(30),
               ),
+              elevation: 8,
             ),
           ),
         ),
@@ -229,6 +228,7 @@ class _GamesPageState extends State<GamesPage> {
         _likedGamesTitles.isNotEmpty || _dislikedGamesTitles.isNotEmpty;
 
     if (hasUserFeedback) {
+      // Bonifier les genres des jeux aimés
       for (var title in _likedGamesTitles) {
         final game = widget.boardGameBox.values.firstWhere(
           (g) => g.title == title,
@@ -238,9 +238,15 @@ class _GamesPageState extends State<GamesPage> {
           for (var tag in game.genres) {
             profile[tag] = (profile[tag] ?? 0.0) + 1.0;
           }
+          // Bonus pour les méchaniques aussi
+          for (var mechanic in game.mechanics) {
+            final mechanicKey = 'mechanic:$mechanic';
+            profile[mechanicKey] = (profile[mechanicKey] ?? 0.0) + 0.5;
+          }
         }
       }
 
+      // Pénaliser les genres des jeux non aimés
       for (var title in _dislikedGamesTitles) {
         final game = widget.boardGameBox.values.firstWhere(
           (g) => g.title == title,
@@ -253,6 +259,7 @@ class _GamesPageState extends State<GamesPage> {
         }
       }
     } else {
+      // Mode initialisation: bonus fort pour les genres sélectionnés
       if (_initialGenres != null) {
         for (var genre in _initialGenres!) {
           profile[genre] = (profile[genre] ?? 0.0) + 20.0;
@@ -263,25 +270,89 @@ class _GamesPageState extends State<GamesPage> {
     _tagProfileScores = profile;
   }
 
+  void _toggleGameFavorite(String gameTitle) {
+    if (_favoriteGamesTitles.contains(gameTitle)) {
+      _favoriteGamesTitles.remove(gameTitle);
+    } else {
+      _favoriteGamesTitles.add(gameTitle);
+    }
+    widget.settingsBox.put(_favoriteGamesKey, _favoriteGamesTitles.toList());
+    setState(() {});
+  }
+
+  bool _isGameFavorite(String gameTitle) {
+    return _favoriteGamesTitles.contains(gameTitle);
+  }
+
   double _calculateRecommendationScore(BoardGame game) {
+    // Si pas de feedback utilisateur, utiliser le rating par défaut
     if (_tagProfileScores.isEmpty &&
         !_likedGamesTitles.isNotEmpty &&
         !_dislikedGamesTitles.isNotEmpty) {
       return game.rating;
     }
 
-    double tagScoreSum = 0.0;
+    double score = 0.0;
 
+    // 1. Score de genre/tag (apprentissage utilisateur)
+    double tagScoreSum = 0.0;
     for (var tag in game.genres) {
       tagScoreSum += _tagProfileScores[tag] ?? 0.0;
     }
-
     final affinityScore = tagScoreSum * 5.0;
+
+    // 2. Score de popularité (rating)
     final popularityScore = game.rating * 0.5;
 
-    final finalScore = affinityScore + popularityScore;
+    // 3. Score de complexité
+    // Si l'utilisateur aime les jeux complexes, augmenter le score
+    final complexityPreference = _calculateComplexityPreference();
+    final complexityScore = game.complexity * complexityPreference * 2.0;
 
-    return finalScore;
+    // 4. Score de durée
+    // Préférer des jeux qui ne sont pas trop long ni trop court
+    final durationScore = _calculateDurationFit(game.avgDuration) * 3.0;
+
+    score = affinityScore + popularityScore + complexityScore + durationScore;
+
+    return score;
+  }
+
+  /// Calcule la préférence de complexité en fonction du feedback utilisateur
+  double _calculateComplexityPreference() {
+    if (_likedGamesTitles.isEmpty) {
+      return 1.0; // Neutre par défaut
+    }
+
+    double totalComplexity = 0.0;
+    for (var title in _likedGamesTitles) {
+      final game = widget.boardGameBox.values.firstWhere(
+        (g) => g.title == title,
+        orElse: () => BoardGame.empty(),
+      );
+      if (game.title.isNotEmpty) {
+        totalComplexity += game.complexity;
+      }
+    }
+
+    final avgComplexity = totalComplexity / _likedGamesTitles.length;
+    return (avgComplexity / 5.0).clamp(0.5, 1.5); // Entre 0.5 et 1.5
+  }
+
+  /// Calcule si la durée d'un jeu correspond aux préférences
+  double _calculateDurationFit(double gameDuration) {
+    // Si durée max définie, préférer les jeux proche de cette limite
+    if (_maxDuration != null && _maxDuration! > 0) {
+      final durationDiff = (_maxDuration! - gameDuration).abs();
+      final fit = 1.0 - (durationDiff / _maxDuration!).clamp(0.0, 1.0);
+      return fit; // Plus proche = plus haute note
+    }
+
+    // Sinon, préférer les jeux de durée "normale" (30-120 min)
+    if (gameDuration < 30 || gameDuration > 120) {
+      return 0.7; // Pénalité légère
+    }
+    return 1.0; // Bonus pour durée idéale
   }
 
   void _handleGameFeedback(BoardGame game, bool isLiked) async {
@@ -486,6 +557,11 @@ class _GamesPageState extends State<GamesPage> {
                       infoType: _GameInfoType.year,
                     ),
 
+                    const SizedBox(height: 24),
+
+                    // Section À FAIRE PLUS TARD
+                    _buildFavoriteGamesSection(),
+
                     const SizedBox(height: 32),
 
                     Center(
@@ -509,6 +585,218 @@ class _GamesPageState extends State<GamesPage> {
                 ),
               ),
       ),
+    );
+  }
+
+  Widget _buildFavoriteGamesSection() {
+    final allGames = widget.boardGameBox.values.toList();
+    final favoriteGames = allGames
+        .where((game) => _favoriteGamesTitles.contains(game.title))
+        .toList();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Titre
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.15),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(
+              color: Colors.white.withValues(alpha: 0.3),
+              width: 1,
+            ),
+          ),
+          child: Row(
+            children: [
+              const Icon(Icons.bookmark, color: Colors.yellow, size: 24),
+              const SizedBox(width: 8),
+              Text(
+                'À FAIRE PLUS TARD',
+                style: GoogleFonts.bebasNeue(
+                  fontSize: 16,
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1.5,
+                ),
+              ),
+              const Spacer(),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.yellow.withValues(alpha: 0.3),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  '${favoriteGames.length}',
+                  style: GoogleFonts.poppins(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 12),
+        if (favoriteGames.isEmpty)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            child: Center(
+              child: Text(
+                'Aucun jeu ajouté',
+                style: GoogleFonts.poppins(
+                  color: Colors.white70,
+                  fontSize: 12,
+                ),
+              ),
+            ),
+          )
+        else
+          SizedBox(
+            height: 170,
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              itemCount: favoriteGames.length,
+              itemBuilder: (context, index) {
+                final game = favoriteGames[index];
+                final isLiked = _likedGamesTitles.contains(game.title);
+                final isDisliked = _dislikedGamesTitles.contains(game.title);
+
+                return GestureDetector(
+                  onTap: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => GameDetailsPage(
+                          game: game,
+                          settingsBox: widget.settingsBox,
+                          onFeedbackGiven: _reloadRecommendationSystem,
+                        ),
+                      ),
+                    );
+                  },
+                  child: Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 8),
+                    width: 150,
+                    height: 170,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          Colors.amber.withOpacity(0.9),
+                          Colors.amber.withOpacity(0.6),
+                        ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(12),
+                      border: isLiked
+                          ? Border.all(color: Colors.greenAccent, width: 2.5)
+                          : isDisliked
+                              ? Border.all(color: Colors.pinkAccent, width: 2.5)
+                              : Border.all(
+                                  color: Colors.white.withOpacity(0.2),
+                                  width: 1.5,
+                                ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.3),
+                          blurRadius: 8,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(10),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Flexible(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  game.title,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: GoogleFonts.poppins(
+                                    color: Colors.black,
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                                const SizedBox(height: 3),
+                                Text(
+                                  '${game.minPlayers}-${game.maxPlayers} joueurs',
+                                  style: GoogleFonts.poppins(
+                                    color: Colors.white70,
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  'Note: ${game.rating.toStringAsFixed(2)}/10',
+                                  style: GoogleFonts.poppins(
+                                    color: Colors.white70,
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              GestureDetector(
+                                onTap: () => _handleGameFeedback(game, false),
+                                child: Icon(
+                                  Icons.thumb_down_alt_rounded,
+                                  size: 20,
+                                  color: isDisliked
+                                      ? Colors.pinkAccent
+                                      : Colors.white54,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              GestureDetector(
+                                onTap: () => _handleGameFeedback(game, true),
+                                child: Icon(
+                                  Icons.thumb_up_alt_rounded,
+                                  size: 20,
+                                  color: isLiked
+                                      ? Colors.greenAccent
+                                      : Colors.white54,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              GestureDetector(
+                                onTap: () => _toggleGameFavorite(game.title),
+                                child: Icon(
+                                  _isGameFavorite(game.title)
+                                      ? Icons.favorite
+                                      : Icons.favorite_border,
+                                  size: 20,
+                                  color: _isGameFavorite(game.title)
+                                      ? Colors.red
+                                      : Colors.white54,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+      ],
     );
   }
 
@@ -834,6 +1122,19 @@ class _GamesPageState extends State<GamesPage> {
                               size: 20,
                               color:
                                   isLiked ? Colors.greenAccent : Colors.white54,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          GestureDetector(
+                            onTap: () => _toggleGameFavorite(game.title),
+                            child: Icon(
+                              _isGameFavorite(game.title)
+                                  ? Icons.favorite
+                                  : Icons.favorite_border,
+                              size: 20,
+                              color: _isGameFavorite(game.title)
+                                  ? Colors.red
+                                  : Colors.white54,
                             ),
                           ),
                         ],

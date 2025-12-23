@@ -25,18 +25,21 @@ class ActivityPreferences {
   @HiveField(3)
   final bool allowSurprise; // permettre les recommandations hors zone
 
+  @HiveField(4)
+  final double preferredDifficulty; // difficulté préférée (0-5)
+
   // Poids adaptatifs pour le système vectoriel
   // Évoluent avec les likes/dislikes
-  @HiveField(4)
+  @HiveField(5)
   double? categoryWeight; // poids des catégories aimées
 
-  @HiveField(5)
+  @HiveField(6)
   double? durationWeight; // poids de la durée préférée
 
-  @HiveField(6)
+  @HiveField(7)
   double? groupWeight; // poids de la taille groupe
 
-  @HiveField(7)
+  @HiveField(8)
   double? difficultyWeight; // poids de la difficulté
 
   ActivityPreferences({
@@ -44,6 +47,7 @@ class ActivityPreferences {
     required this.groupSize,
     required this.preferredCategories,
     required this.allowSurprise,
+    this.preferredDifficulty = 2.5,
     this.categoryWeight = 1.0,
     this.durationWeight = 1.0,
     this.groupWeight = 1.0,
@@ -57,6 +61,7 @@ class ActivityPreferences {
       groupSize: 1,
       preferredCategories: [],
       allowSurprise: true,
+      preferredDifficulty: 2.5,
       categoryWeight: 1.0,
       durationWeight: 1.0,
       groupWeight: 1.0,

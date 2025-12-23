@@ -173,7 +173,16 @@ class ActivityRecommendationServiceVectorial {
           weightsVector,
         );
 
-        scored.add((activity, distance));
+        // 🎯 Bonus de difficulté: si l'activité a la bonne difficulté, réduire la distance
+        final difficultyDiff =
+            (activity.difficulty - userPreferences.preferredDifficulty).abs();
+        final difficultyBonus =
+            max(0.0, 2.0 - (difficultyDiff / 5.0) * 2.0); // Bonus 0-2
+
+        // La distance effective est réduite par le bonus (meilleur score)
+        final finalScore = distance - (difficultyBonus * 0.5);
+
+        scored.add((activity, finalScore));
       }
 
       stopwatch.stop();
@@ -212,11 +221,12 @@ class ActivityRecommendationServiceVectorial {
     return VectorUtils.averageVector(vectors);
   }
 
-  /// Récupère les activités likées par l'utilisateur
+  /// Récupère les activités likées par l'utilisateur (+ activités complétées)
   List<Activity> _getLikedActivities() {
     final liked = <Activity>[];
     for (final rating in ratingBox.values) {
-      if (rating.rating >= 3) {
+      // Activités likées (rating >= 3) OU complétées (isDone = true)
+      if (rating.rating >= 3 || rating.isDone) {
         final activity = activityBox.get(rating.activityId);
         if (activity != null) {
           liked.add(activity);

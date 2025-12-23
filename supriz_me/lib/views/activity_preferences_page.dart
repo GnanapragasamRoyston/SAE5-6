@@ -25,6 +25,7 @@ class ActivityPreferencesPage extends StatefulWidget {
 class _ActivityPreferencesPageState extends State<ActivityPreferencesPage> {
   late int availableTime;
   late int groupSize;
+  late double preferredDifficulty;
   late List<String> selectedCategories;
   late bool allowSurprise;
   final Set<String> selectedActivityIds = {};
@@ -46,6 +47,7 @@ class _ActivityPreferencesPageState extends State<ActivityPreferencesPage> {
     setState(() {
       availableTime = prefs.availableTime;
       groupSize = prefs.groupSize;
+      preferredDifficulty = prefs.preferredDifficulty;
       selectedCategories = List.from(prefs.preferredCategories);
       allowSurprise = prefs.allowSurprise;
     });
@@ -55,6 +57,7 @@ class _ActivityPreferencesPageState extends State<ActivityPreferencesPage> {
     final prefs = ActivityPreferences(
       availableTime: availableTime,
       groupSize: groupSize,
+      preferredDifficulty: preferredDifficulty,
       preferredCategories: selectedCategories,
       allowSurprise: allowSurprise,
     );
@@ -146,6 +149,43 @@ class _ActivityPreferencesPageState extends State<ActivityPreferencesPage> {
               },
             ),
             Text('$availableTime minutes'),
+            const SizedBox(height: 24),
+
+            // Difficulté préférée
+            Text(
+              'Difficulté préférée',
+              style: GoogleFonts.poppins(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Slider(
+              value: preferredDifficulty,
+              min: 0,
+              max: 5,
+              divisions: 10,
+              label: '${preferredDifficulty.toStringAsFixed(1)}/5',
+              onChanged: (value) {
+                setState(() {
+                  preferredDifficulty = value;
+                });
+              },
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text('Facile',
+                    style: GoogleFonts.poppins(
+                        fontSize: 12, color: Colors.grey[600])),
+                Text('${preferredDifficulty.toStringAsFixed(1)}/5',
+                    style: GoogleFonts.poppins(
+                        fontSize: 14, fontWeight: FontWeight.bold)),
+                Text('Difficile',
+                    style: GoogleFonts.poppins(
+                        fontSize: 12, color: Colors.grey[600])),
+              ],
+            ),
             const SizedBox(height: 24),
 
             // Nombre de personnes
