@@ -33,7 +33,7 @@ Films & Séries : (Ex: Suggestions de contenu en fonction de vos genres de films
 - ## Aperçu du projet
 Voici un aperçu de l'application :
 <p align="center">
-  <img src="supriz_me/assets/images/image_home_page.png" width="300">
+  <img src="supriz_me/assets/images/homepage.png" width="300">
 </p>
 
 
@@ -130,6 +130,7 @@ Assurez-vous d’être dans le répertoire supriz_me afin que le fichier pubspec
 - **[Inès Marcisz](https://github.com/inesmrcz)**
 - **[Lucas Férard](https://github.com/Lucas93t)**
 - **[Dhanoush Kessavane](https://github.com/dkessavane)**
+
 
 
 
