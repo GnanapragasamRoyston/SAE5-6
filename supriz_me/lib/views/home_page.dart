@@ -10,7 +10,6 @@ import '../models/activity_preferences.dart';
 import '../models/performance_metrics.dart';
 import '../models/movie_rating.dart';
 
-// Import pages
 import 'movies_page.dart';
 import 'games_page.dart';
 import 'activities_page.dart';
@@ -41,247 +40,351 @@ class HomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.transparent,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        title: Text(
-          "Surpriz'Me",
-          style: GoogleFonts.bebasNeue(
-            fontSize: 26,
-            letterSpacing: 2,
-            color: Colors.white,
-          ),
-        ),
-        actions: [
-          Container(
-            margin: const EdgeInsets.only(right: 12, top: 8, bottom: 8),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.15),
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(
-                color: Colors.white.withOpacity(0.3),
-                width: 1,
-              ),
-            ),
-            child: IconButton(
-              icon: const Icon(Icons.settings, color: Colors.white, size: 22),
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const SettingsPage()),
-                );
-              },
-              splashColor: Colors.white.withOpacity(0.1),
-              highlightColor: Colors.white.withOpacity(0.05),
-            ),
-          ),
-        ],
-      ),
+      backgroundColor: const Color(0xFF0A0A1A),
       body: Container(
         decoration: const BoxDecoration(
-          gradient: LinearGradient(
+          gradient: RadialGradient(
             colors: [
-              Color(0xFF1A3A52), // bleu marine foncé
-              Color(0xFF2563EB), // bleu moyen
+              Color(0xFF1A1A3A),
+              Color(0xFF0A0A1A),
+              Color(0xFF0D0D2B),
             ],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
           ),
         ),
         child: SafeArea(
-          child: Center(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 2),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  // Header "Surpriz'Me" + tagline
-                  _buildHeader(),
+          child: Column(
+            children: [
+              // Rien en haut pour l’instant
+              const SizedBox(height: 0),
 
-                  // Logo
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 0),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(20),
-                      child: Container(
-                        decoration: BoxDecoration(),
-                        child: Image.asset(
-                          'assets/images/logo_app.png',
-                          height: 202,
-                          width: 202,
-                          fit: BoxFit.cover,
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    children: [
+                      // Logo pixel art
+                      _buildPixelLogo(),
+                      const SizedBox(height: 20),
+
+                      // Nouvelle phrase sous le logo
+                      Text(
+                        "l'ennui vous gagne et vous ne savez pas quoi faire ? Laissez vous surprendre",
+                        textAlign: TextAlign.center,
+                        style: GoogleFonts.poppins(
+                          fontSize: 13,
+                          color: Colors.white.withOpacity(0.75),
+                          height: 1.4,
                         ),
                       ),
-                    ),
+                      const SizedBox(height: 30),
+
+                      // Compteur "score" avec vraies données
+                      _buildScoreCounter(),
+                      const SizedBox(height: 30),
+
+                      // Bouton principal "Surpriz'Me"
+                      _buildPlayButton(context),
+                      const SizedBox(height: 35),
+
+                      // Menu catégories "gamepad"
+                      _buildGamepadMenu(context),
+                    ],
                   ),
-
-                  const SizedBox(height: 0),
-
-                  // Description dans un "bloc" glassmorphism
-                  _buildDescription(),
-
-                  const SizedBox(height: 32),
-
-                  // Boutons catégories (cartes modernes)
-                  _buildCategoryCard(
-                    context: context,
-                    title: "FILMS",
-                    subtitle: "Sors les pop corns, trouve ton film",
-                    color1: const Color(0xFFFFA726),
-                    color2: const Color(0xFFFF7043),
-                    icon: Icons.local_movies,
-                    page: MoviesPage(
-                      movieBox: movieBox,
-                      movieRatingBox: movieRatingBox,
-                      settingsBox: settingsBox,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-
-                  _buildCategoryCard(
-                    context: context,
-                    title: "JEUX",
-                    subtitle: "Rebattez les cartes de l'ennui",
-                    color1: const Color(0xFFAB47BC),
-                    color2: const Color(0xFF7E57C2),
-                    icon: Icons.casino,
-                    page: GamesPage(
-                      boardGameBox: boardGameBox,
-                      settingsBox: settingsBox,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-
-                  _buildCategoryCard(
-                    context: context,
-                    title: "ACTIVITÉS",
-                    subtitle: "Bouge, crée, découvre.",
-                    color1: const Color(0xFF29B6F6),
-                    color2: const Color(0xFF26C6DA),
-                    icon: Icons.flash_on,
-                    page: ActivitiesPage(
-                      activityBox: activityBox,
-                      activityRatingBox: activityRatingBox,
-                      activityPreferencesBox: activityPreferencesBox,
-                      metricsBox: metricsBox,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                ],
+                ),
               ),
-            ),
+            ],
           ),
         ),
       ),
     );
   }
 
-  Widget _buildHeader() {
-    return Column(
+  Widget _buildPixelLogo() {
+    return Stack(
+      alignment: Alignment.center,
       children: [
-        const SizedBox(height: 2),
+        Container(
+          width: 140,
+          height: 140,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            gradient: RadialGradient(
+              colors: [
+                Colors.cyan.withOpacity(0.4),
+                Colors.transparent,
+              ],
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.cyan.withOpacity(0.6),
+                blurRadius: 30,
+                spreadRadius: 2,
+              ),
+            ],
+          ),
+        ),
+        Container(
+          width: 110,
+          height: 110,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            border: Border.all(
+              color: Colors.white.withOpacity(0.3),
+              width: 3,
+            ),
+            boxShadow: const [
+              BoxShadow(
+                color: Colors.black54,
+                blurRadius: 15,
+                offset: Offset(0, 8),
+              ),
+            ],
+          ),
+          child: ClipOval(
+            child: Image.asset(
+              'assets/images/logo_app.png',
+              fit: BoxFit.cover,
+            ),
+          ),
+        ),
       ],
     );
   }
 
-  Widget _buildDescription() {
-    return Text(
-      "L'ennui vous gagne et vous ne savez pas quoi faire ?\n"
-      "LAISSEZ-VOUS SURPRENDRE !",
-      textAlign: TextAlign.center,
-      style: GoogleFonts.poppins(
-        color: Colors.white,
-        fontSize: 14,
-        fontWeight: FontWeight.w500,
-        height: 1.3,
+  Widget _buildScoreCounter() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.cyan.withOpacity(0.4)),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: [
+          _statItem("🎬", "Films", movieBox.length.toString()),
+          _statItem("🎲", "Jeux", boardGameBox.length.toString()),
+          _statItem("⚡", "Activités", activityBox.length.toString()),
+        ],
       ),
     );
   }
 
-  Widget _buildCategoryCard({
-    required BuildContext context,
-    required String title,
-    required String subtitle,
-    required Color color1,
-    required Color color2,
-    required IconData icon,
-    required Widget page,
-  }) {
-    return InkWell(
-      onTap: () {
-        Navigator.push(context, MaterialPageRoute(builder: (context) => page));
-      },
-      borderRadius: BorderRadius.circular(16),
-      child: Container(
-        width: double.infinity,
-        height: 70,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
-          gradient: LinearGradient(
-            colors: [
-              color1,
-              color2,
-            ],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
+  Widget _statItem(String emoji, String label, String value) {
+    return Column(
+      children: [
+        Text(emoji, style: const TextStyle(fontSize: 24)),
+        const SizedBox(height: 4),
+        Text(
+          value,
+          style: GoogleFonts.pressStart2p(
+            fontSize: 16,
+            color: Colors.cyanAccent,
+            letterSpacing: 1,
           ),
-          boxShadow: [
-            BoxShadow(
-              color: color2.withOpacity(0.45),
-              blurRadius: 16,
-              offset: const Offset(0, 8),
+        ),
+        Text(
+          label,
+          style: GoogleFonts.poppins(
+            fontSize: 10,
+            color: Colors.white.withOpacity(0.7),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPlayButton(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      height: 70,
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFFFF0080), Color(0xFFFF6600)],
+        ),
+        borderRadius: BorderRadius.circular(35),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFFFF0080).withOpacity(0.5),
+            blurRadius: 25,
+            offset: const Offset(0, 12),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(35),
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => ActivitiesPage(
+                activityBox: activityBox,
+                activityRatingBox: activityRatingBox,
+                activityPreferencesBox: activityPreferencesBox,
+                metricsBox: metricsBox,
+              ),
+            ),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.play_arrow,
+                  color: Color(0xFFFF0080),
+                  size: 28,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Text(
+                "Surpriz'Me",
+                style: GoogleFonts.bebasNeue(
+                  fontSize: 28,
+                  color: Colors.white,
+                  letterSpacing: 3,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildGamepadMenu(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          "Choisis ta catégorie",
+          style: GoogleFonts.pressStart2p(
+            fontSize: 11,
+            color: Colors.white.withOpacity(0.8),
+          ),
+        ),
+        const SizedBox(height: 16),
+        Row(
+          children: [
+            const Expanded(child: SizedBox.shrink()),
+            Expanded(
+              flex: 3,
+              child: _gameButton(
+                context,
+                label: "FILMS",
+                color: const Color(0xFF00DDFF),
+                icon: Icons.movie,
+                page: MoviesPage(
+                  movieBox: movieBox,
+                  movieRatingBox: movieRatingBox,
+                  settingsBox: settingsBox,
+                ),
+              ),
+            ),
+            const Expanded(child: SizedBox.shrink()),
+          ],
+        ),
+        const SizedBox(height: 16),
+        Row(
+          children: [
+            Expanded(
+              child: _gameButton(
+                context,
+                label: "JEUX DE SOCIÉTÉ",
+                color: const Color(0xFFFFAA00),
+                icon: Icons.casino,
+                page: GamesPage(
+                  boardGameBox: boardGameBox,
+                  settingsBox: settingsBox,
+                ),
+              ),
+            ),
+            const SizedBox(width: 20),
+            Expanded(
+              child: _gameButton(
+                context,
+                label: "ACTIVITÉS",
+                color: const Color(0xFF00FF88),
+                icon: Icons.flash_on,
+                page: ActivitiesPage(
+                  activityBox: activityBox,
+                  activityRatingBox: activityRatingBox,
+                  activityPreferencesBox: activityPreferencesBox,
+                  metricsBox: metricsBox,
+                ),
+              ),
             ),
           ],
         ),
-        child: Row(
-          children: [
-            const SizedBox(width: 18),
-            Container(
-              width: 46,
-              height: 46,
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.18),
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: Colors.white.withOpacity(0.6),
-                  width: 1.2,
+      ],
+    );
+  }
+
+  Widget _gameButton(
+      BuildContext context, {
+        required String label,
+        required Color color,
+        required IconData icon,
+        required Widget page,
+      }) {
+    return Container(
+      height: 80,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [color.withOpacity(0.2), Colors.transparent],
+        ),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: color.withOpacity(0.6), width: 2),
+        boxShadow: [
+          BoxShadow(
+            color: color.withOpacity(0.3),
+            blurRadius: 12,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => page),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: color,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(icon, color: Colors.black, size: 20),
                 ),
-              ),
-              child: Icon(icon, color: Colors.white, size: 26),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: GoogleFonts.bebasNeue(
-                      fontSize: 22,
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    label,
+                    style: GoogleFonts.pressStart2p(
+                      fontSize: 10,
                       color: Colors.white,
-                      letterSpacing: 1.5,
+                      height: 1.0,
                     ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    subtitle,
-                    maxLines: 1,
+                    maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: GoogleFonts.poppins(
-                      color: Colors.white.withOpacity(0.9),
-                      fontSize: 12,
-                    ),
                   ),
-                ],
-              ),
+                ),
+                Icon(Icons.arrow_forward, color: color, size: 18),
+              ],
             ),
-            const SizedBox(width: 8),
-            const Icon(Icons.arrow_forward_ios,
-                color: Colors.white70, size: 18),
-            const SizedBox(width: 16),
-          ],
+          ),
         ),
       ),
     );
