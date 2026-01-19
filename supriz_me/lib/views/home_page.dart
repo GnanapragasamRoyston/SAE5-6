@@ -324,7 +324,7 @@ class HomePage extends StatelessWidget {
             Expanded(
               child: _gameButton(
                 context,
-                label: "JEUX DE SOCIÉTÉ",
+                label: "JEUX",
                 color: const Color(0xFFFFAA00),
                 icon: Icons.casino,
                 page: GamesPage(

@@ -369,85 +369,47 @@ class _MoviesPageState extends State<MoviesPage> {
                     ),
                     const SizedBox(height: 25),
 
-                    _buildArcadeSectionTitle(
-                        Icons.timer, 'FILMS COURTS < 120MIN'),
-                    const SizedBox(height: 12),
-                    SizedBox(
-                      height: 170,
-                      child: Builder(
-                        builder: (context) {
-                          final shortMovies = widget.movieBox.values
-                              .where((m) => m.duration < 120)
-                              .take(5)
-                              .toList();
+                   if (hasPrefsBeenSet) ...(() {
+                    // 1. Récupérer la liste des genres choisis par l'utilisateur
+                    final List<String> selectedGenres = 
+                        (widget.settingsBox.get('initial_movie_genres') as List?)?.cast<String>() ?? [];
 
-                          if (shortMovies.isEmpty) {
-                            return Center(
-                              child: Text(
-                                'Aucun film court',
-                                style:
-                                GoogleFonts.poppins(color: Colors.white),
-                              ),
-                            );
-                          }
+                    // 2. Créer une section pour chaque genre
+                    return selectedGenres.map((genreName) {
+                      // Filtrer les films de la base de données pour ce genre précis
+                      final genreMovies = widget.movieBox.values
+                          .where((m) => m.genre.toLowerCase() == genreName.toLowerCase())
+                          .take(6) // On en prend 6 pour la ligne
+                          .toList();
 
-                          return ListView.builder(
-                            scrollDirection: Axis.horizontal,
-                            itemCount: shortMovies.length,
-                            itemBuilder: (context, index) {
-                              final movie = shortMovies[index];
-                              return MovieTile(
-                                movie: movie,
-                                recommender: _recommender,
-                                tileColor: const Color(0xFF00ff85),
-                                moviesPageRef: this,
-                              );
-                            },
-                          );
-                        },
-                      ),
-                    ),
-                    const SizedBox(height: 25),
+                      // Si on n'a pas de films pour ce genre, on n'affiche pas la catégorie
+                      if (genreMovies.isEmpty) return const SizedBox.shrink();
 
-                    _buildArcadeSectionTitle(
-                        Icons.timelapse, 'FILMS LONGS >= 120MIN'),
-                    const SizedBox(height: 12),
-                    SizedBox(
-                      height: 170,
-                      child: Builder(
-                        builder: (context) {
-                          final longMovies = widget.movieBox.values
-                              .where((m) => m.duration >= 120)
-                              .take(5)
-                              .toList();
-
-                          if (longMovies.isEmpty) {
-                            return Center(
-                              child: Text(
-                                'Aucun film long',
-                                style:
-                                GoogleFonts.poppins(color: Colors.white),
-                              ),
-                            );
-                          }
-
-                          return ListView.builder(
-                            scrollDirection: Axis.horizontal,
-                            itemCount: longMovies.length,
-                            itemBuilder: (context, index) {
-                              final movie = longMovies[index];
-                              return MovieTile(
-                                movie: movie,
-                                recommender: _recommender,
-                                tileColor: const Color(0xFFb67dff),
-                                moviesPageRef: this,
-                              );
-                            },
-                          );
-                        },
-                      ),
-                    ),
-                    const SizedBox(height: 25),
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _buildArcadeSectionTitle(Icons.label_important, 'TOP ${genreName.toUpperCase()}'),
+                          const SizedBox(height: 12),
+                          SizedBox(
+                            height: 170,
+                            child: ListView.builder(
+                              scrollDirection: Axis.horizontal,
+                              itemCount: genreMovies.length,
+                              itemBuilder: (context, index) {
+                                return MovieTile(
+                                  movie: genreMovies[index],
+                                  recommender: _recommender,
+                                  tileColor: const Color(0xFF00ff85), // Couleur arcade verte
+                                  moviesPageRef: this,
+                                );
+                              },
+                            ),
+                          ),
+                          const SizedBox(height: 25),
+                        ],
+                      );
+                    }).toList();
+                  }()),
 
                     _buildFavoriteMoviesSection(),
                     const SizedBox(height: 25),
