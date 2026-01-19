@@ -9,15 +9,17 @@ import '../services/recommendation/movie_recommender.dart';
 import 'movie_preference_page.dart';
 
 class MoviesPage extends StatefulWidget {
-  final Box<Movie> movieBox;
-  final Box<MovieRating> movieRatingBox;
+  final Box movieBox;
+  final Box movieRatingBox;
   final Box settingsBox;
+  final bool autoSurprizme; // ✅ NOUVEAU PARAMÈTRE
 
   const MoviesPage({
     super.key,
     required this.movieBox,
     required this.movieRatingBox,
     required this.settingsBox,
+    this.autoSurprizme = false, // ✅ PAR DÉFAUT FALSE
   });
 
   @override
@@ -27,23 +29,29 @@ class MoviesPage extends StatefulWidget {
 class _MoviesPageState extends State<MoviesPage> {
   late MovieRecommender _recommender;
   Set<String> _favoriteMovieTitles = {};
+  Set<String> _completedMovieTitles = {};
 
   static const String _favoriteMoviesKey = 'favorite_movies_titles';
+  static const String _completedMoviesKey = 'completed_movies_titles';
 
   @override
   void initState() {
     super.initState();
-
     _recommender = MovieRecommender(
-      movieBox: widget.movieBox,
-      movieRatingBox: widget.movieRatingBox,
+      movieBox: widget.movieBox as Box<Movie>,
+      movieRatingBox: widget.movieRatingBox as Box<MovieRating>,
       settingsBox: widget.settingsBox,
     );
-
     _loadFavoriteMovies();
+    _loadCompletedMovies();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _checkAndPromptForMoviePreferences();
+
+      // ✅ AUTO-DÉCLENCHE SURPRIZ'ME SI DEMANDÉ
+      if (widget.autoSurprizme) {
+        _navigateToSurprizmeMovie();
+      }
     });
   }
 
@@ -53,18 +61,40 @@ class _MoviesPageState extends State<MoviesPage> {
     _favoriteMovieTitles = savedFavorites.toSet();
   }
 
+  void _loadCompletedMovies() {
+    final savedCompleted =
+    List<String>.from(widget.settingsBox.get(_completedMoviesKey) ?? []);
+    _completedMovieTitles = savedCompleted.toSet();
+  }
+
   void _toggleMovieFavorite(String movieTitle) {
     if (_favoriteMovieTitles.contains(movieTitle)) {
       _favoriteMovieTitles.remove(movieTitle);
     } else {
       _favoriteMovieTitles.add(movieTitle);
     }
+
     widget.settingsBox.put(_favoriteMoviesKey, _favoriteMovieTitles.toList());
     setState(() {});
   }
 
   bool _isMovieFavorite(String movieTitle) {
     return _favoriteMovieTitles.contains(movieTitle);
+  }
+
+  void _toggleMovieCompleted(String movieTitle) {
+    if (_completedMovieTitles.contains(movieTitle)) {
+      _completedMovieTitles.remove(movieTitle);
+    } else {
+      _completedMovieTitles.add(movieTitle);
+    }
+
+    widget.settingsBox.put(_completedMoviesKey, _completedMovieTitles.toList());
+    setState(() {});
+  }
+
+  bool _isMovieCompleted(String movieTitle) {
+    return _completedMovieTitles.contains(movieTitle);
   }
 
   void _navigateToPreferencePage() {
@@ -83,7 +113,6 @@ class _MoviesPageState extends State<MoviesPage> {
   void _checkAndPromptForMoviePreferences() {
     final hasPrefsBeenSet =
     widget.settingsBox.get('movie_prefs_initialized', defaultValue: false);
-
     if (!hasPrefsBeenSet) {
       _navigateToPreferencePage();
     }
@@ -91,14 +120,12 @@ class _MoviesPageState extends State<MoviesPage> {
 
   Future<void> _resetAppPreferences() async {
     await widget.movieRatingBox.clear();
-
     await Future.wait([
       widget.settingsBox.delete('movie_prefs_initialized'),
       widget.settingsBox.delete('initial_movie_genres'),
       widget.settingsBox.delete('preferred_duration'),
       widget.settingsBox.delete('allow_surprise'),
     ]);
-
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -117,7 +144,6 @@ class _MoviesPageState extends State<MoviesPage> {
     final recommendedIds =
     _recommender.getRecommendedMovies(count: 5).map((m) => m.id).toSet();
     final allMovies = widget.movieBox.values.toList();
-
     final nonRecommendedMovies =
     allMovies.where((m) => !recommendedIds.contains(m.id)).toList();
 
@@ -132,6 +158,7 @@ class _MoviesPageState extends State<MoviesPage> {
           builder: (context) => MovieDetailPage(
             movie: surprizmeMovie,
             recommender: _recommender,
+            moviesPageRef: this,
           ),
         ),
       ).then((_) {
@@ -148,23 +175,19 @@ class _MoviesPageState extends State<MoviesPage> {
 
   String _buildFiltersText() {
     List<String> filters = [];
-
     final hasPrefsBeenSet =
     widget.settingsBox.get('movie_prefs_initialized', defaultValue: false);
-
     if (!hasPrefsBeenSet) {
       return 'Aucun filtre actif';
     }
 
-    // Durée préférée
     final preferredDuration = widget.settingsBox.get('preferred_duration');
     if (preferredDuration != null && preferredDuration > 0) {
       filters.add('⏱️ ${preferredDuration}min');
     }
 
-    // Genres préférés
     final initialGenres =
-    widget.settingsBox.get('initial_movie_genres') as List<dynamic>?;
+    widget.settingsBox.get('initial_movie_genres') as List?;
     if (initialGenres != null && initialGenres.isNotEmpty) {
       final genresText = initialGenres
           .cast<String>()
@@ -174,7 +197,6 @@ class _MoviesPageState extends State<MoviesPage> {
       filters.add('🎬 $genresText');
     }
 
-    // Allow surprise (optionnel)
     final allowSurprise = widget.settingsBox.get('allow_surprise');
     if (allowSurprise != null && !allowSurprise) {
       filters.add('🎲 Surprises OFF');
@@ -187,7 +209,6 @@ class _MoviesPageState extends State<MoviesPage> {
   Widget build(BuildContext context) {
     final hasPrefsBeenSet =
     widget.settingsBox.get('movie_prefs_initialized', defaultValue: false);
-
     return Scaffold(
       backgroundColor: const Color(0xFF050814),
       body: Container(
@@ -210,10 +231,7 @@ class _MoviesPageState extends State<MoviesPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // 1️⃣ BOUTON SURPRIZ'ME
                     _buildSurpriseMeButton(),
-
-                    // 2️⃣ COMPTEUR FILMS
                     Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
@@ -252,7 +270,6 @@ class _MoviesPageState extends State<MoviesPage> {
                     ),
                     const SizedBox(height: 20),
 
-                    // 3️⃣ FILTRES ACTIFS
                     if (hasPrefsBeenSet)
                       Container(
                         padding: const EdgeInsets.all(12),
@@ -271,13 +288,11 @@ class _MoviesPageState extends State<MoviesPage> {
                           textAlign: TextAlign.center,
                         ),
                       ),
-
                     const SizedBox(height: 25),
 
-                    // Section 1 : Recommandations
                     _buildArcadeSectionTitle(Icons.favorite, 'RECOMMANDÉS'),
                     const SizedBox(height: 12),
-                    ValueListenableBuilder<Box<MovieRating>>(
+                    ValueListenableBuilder<Box>(
                       valueListenable: widget.movieRatingBox.listenable(),
                       builder: (context, box, child) {
                         final recommendedMovies =
@@ -331,7 +346,6 @@ class _MoviesPageState extends State<MoviesPage> {
                     ),
                     const SizedBox(height: 25),
 
-                    // Section 2 : Tous les films
                     _buildArcadeSectionTitle(Icons.movie, 'TOUS LES FILMS'),
                     const SizedBox(height: 12),
                     SizedBox(
@@ -344,7 +358,6 @@ class _MoviesPageState extends State<MoviesPage> {
                         itemBuilder: (context, index) {
                           final movie = widget.movieBox.getAt(index);
                           if (movie == null) return const SizedBox.shrink();
-
                           return MovieTile(
                             movie: movie,
                             recommender: _recommender,
@@ -356,7 +369,6 @@ class _MoviesPageState extends State<MoviesPage> {
                     ),
                     const SizedBox(height: 25),
 
-                    // Section 3 : Films courts
                     _buildArcadeSectionTitle(
                         Icons.timer, 'FILMS COURTS < 120MIN'),
                     const SizedBox(height: 12),
@@ -397,7 +409,6 @@ class _MoviesPageState extends State<MoviesPage> {
                     ),
                     const SizedBox(height: 25),
 
-                    // Section 4 : Films longs
                     _buildArcadeSectionTitle(
                         Icons.timelapse, 'FILMS LONGS >= 120MIN'),
                     const SizedBox(height: 12),
@@ -436,15 +447,15 @@ class _MoviesPageState extends State<MoviesPage> {
                         },
                       ),
                     ),
-
                     const SizedBox(height: 25),
 
-                    // Section À FAIRE PLUS TARD
                     _buildFavoriteMoviesSection(),
+                    const SizedBox(height: 25),
+
+                    _buildCompletedMoviesSection(),
 
                     const SizedBox(height: 40),
 
-                    // HOME BUTTON
                     Center(
                       child: Container(
                         decoration: BoxDecoration(
@@ -536,7 +547,7 @@ class _MoviesPageState extends State<MoviesPage> {
               colors: [
                 Color(0xFFff0080),
                 Color(0xFFff6600)
-              ], // rose → orange
+              ],
               begin: Alignment.centerLeft,
               end: Alignment.centerRight,
             ),
@@ -564,7 +575,7 @@ class _MoviesPageState extends State<MoviesPage> {
                       shape: BoxShape.circle,
                     ),
                     child: const Icon(
-                      Icons.play_arrow, // Bouton PLAY blanc
+                      Icons.play_arrow,
                       color: Colors.black87,
                       size: 24,
                     ),
@@ -693,12 +704,83 @@ class _MoviesPageState extends State<MoviesPage> {
       ],
     );
   }
+
+  Widget _buildCompletedMoviesSection() {
+    final allMovies = widget.movieBox.values.toList();
+    final completedMovies = allMovies
+        .where((movie) => _completedMovieTitles.contains(movie.title))
+        .toList();
+
+    if (completedMovies.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          decoration: BoxDecoration(
+            color: const Color(0xFF121b3a),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: const Color(0xFF00FF88), width: 1.5),
+          ),
+          child: Row(
+            children: [
+              const Icon(Icons.check_circle, color: Color(0xFF00FF88), size: 20),
+              const SizedBox(width: 10),
+              Text(
+                'FILMS COMPLÉTÉS',
+                style: GoogleFonts.pressStart2p(
+                  fontSize: 11,
+                  color: Colors.white,
+                  letterSpacing: 2,
+                ),
+              ),
+              const Spacer(),
+              Container(
+                padding:
+                const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF00FF88).withOpacity(0.3),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  '${completedMovies.length}',
+                  style: GoogleFonts.pressStart2p(
+                    fontSize: 10,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 12),
+        SizedBox(
+          height: 170,
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            itemCount: completedMovies.length,
+            itemBuilder: (context, index) {
+              final movie = completedMovies[index];
+              return MovieTile(
+                movie: movie,
+                recommender: _recommender,
+                tileColor: const Color(0xFF00FF88),
+                moviesPageRef: this,
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
 }
 
 // =========================================================================
-// MovieTile
+// MovieTile - AUCUN CHANGEMENT
 // =========================================================================
-
 class MovieTile extends StatefulWidget {
   final Movie movie;
   final MovieRecommender recommender;
@@ -725,190 +807,229 @@ class _MovieTileState extends State<MovieTile> {
         builder: (context) => MovieDetailPage(
           movie: widget.movie,
           recommender: widget.recommender,
+          moviesPageRef: widget.moviesPageRef,
         ),
       ),
     ).then((_) {
+      widget.moviesPageRef?.setState(() {});
       setState(() {});
     });
   }
 
   void _handleFeedback(bool isLiked) {
-    widget.recommender.saveRating(widget.movie.id, isLiked);
-    setState(() {});
+    final currentRating = widget.recommender.movieRatingBox.get(widget.movie.id);
+    if (currentRating != null && currentRating.isLiked == isLiked) {
+      widget.recommender.movieRatingBox.delete(widget.movie.id);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Rating supprimé'),
+          backgroundColor: Colors.grey,
+          duration: Duration(milliseconds: 800),
+        ),
+      );
+    } else {
+      widget.recommender.saveRating(widget.movie.id, isLiked);
+      final message = isLiked ? '✓ Like enregistré' : '✗ Dislike enregistré';
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(message),
+          backgroundColor: Colors.grey.shade700,
+          duration: const Duration(milliseconds: 800),
+        ),
+      );
+    }
+  }
 
-    final message = isLiked ? '✓ Like enregistré' : '✗ Dislike enregistré';
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: Colors.grey.shade700,
-        duration: const Duration(milliseconds: 800),
-      ),
-    );
+  void _handleFavoriteToggle() {
+    widget.moviesPageRef?._toggleMovieFavorite(widget.movie.title);
+    setState(() {});
   }
 
   @override
   Widget build(BuildContext context) {
-    final currentRating =
-    widget.recommender.movieRatingBox.get(widget.movie.id);
-    final isLiked = currentRating?.isLiked ?? false;
-    final isDisliked = currentRating != null && !currentRating.isLiked;
+    final isFavorite =
+        widget.moviesPageRef?._isMovieFavorite(widget.movie.title) ?? false;
 
-    return Container(
-      margin: const EdgeInsets.only(right: 12),
-      width: 160,
-      height: 170,
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            widget.tileColor.withOpacity(0.3),
-            widget.tileColor.withOpacity(0.1),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(
-          color: widget.tileColor,
-          width: 2,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: widget.tileColor.withOpacity(0.45),
-            blurRadius: 18,
-            offset: const Offset(0, 10),
+    return ValueListenableBuilder<Box>(
+      valueListenable: widget.recommender.movieRatingBox.listenable(),
+      builder: (context, box, child) {
+        final currentRating =
+        widget.recommender.movieRatingBox.get(widget.movie.id);
+        final isLiked = currentRating?.isLiked ?? false;
+        final isDisliked = currentRating != null && !currentRating.isLiked;
+
+        return Container(
+          margin: const EdgeInsets.only(right: 12),
+          width: 160,
+          height: 170,
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                widget.tileColor.withOpacity(0.3),
+                widget.tileColor.withOpacity(0.1),
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(
+              color: widget.tileColor,
+              width: 2,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: widget.tileColor.withOpacity(0.45),
+                blurRadius: 18,
+                offset: const Offset(0, 10),
+              ),
+            ],
           ),
-        ],
-      ),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(18),
-        onTap: () => _navigateToMovieDetail(context),
-        child: Padding(
-          padding: const EdgeInsets.all(12.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      widget.movie.title,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: GoogleFonts.pressStart2p(
-                        color: Colors.white,
-                        fontSize: 10,
-                        height: 1.1,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Row(
+          child: InkWell(
+            borderRadius: BorderRadius.circular(18),
+            onTap: () => _navigateToMovieDetail(context),
+            child: Padding(
+              padding: const EdgeInsets.all(12.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Icon(Icons.star,
-                            color: Color(0xFFffd700), size: 12),
-                        const SizedBox(width: 4),
                         Text(
-                          '${widget.movie.rating.toStringAsFixed(1)}',
-                          style: GoogleFonts.poppins(
-                            color: const Color(0xFFffd700),
+                          widget.movie.title,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: GoogleFonts.pressStart2p(
+                            color: Colors.white,
                             fontSize: 10,
-                            fontWeight: FontWeight.w500,
+                            height: 1.1,
                           ),
                         ),
-                        const SizedBox(width: 8),
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            const Icon(Icons.star,
+                                color: Color(0xFFffd700), size: 12),
+                            const SizedBox(width: 4),
+                            Text(
+                              '${widget.movie.rating.toStringAsFixed(1)}',
+                              style: GoogleFonts.poppins(
+                                color: const Color(0xFFffd700),
+                                fontSize: 10,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              '${widget.movie.duration.toInt()}min',
+                              style: GoogleFonts.poppins(
+                                color: Colors.white.withOpacity(0.8),
+                                fontSize: 10,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
                         Text(
-                          '${widget.movie.duration.toInt()}min',
+                          widget.movie.genre,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                           style: GoogleFonts.poppins(
-                            color: Colors.white.withOpacity(0.8),
-                            fontSize: 10,
+                            color: Colors.white.withOpacity(0.7),
+                            fontSize: 9,
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      widget.movie.genre,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: GoogleFonts.poppins(
-                        color: Colors.white.withOpacity(0.7),
-                        fontSize: 9,
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      GestureDetector(
+                        onTap: () => _handleFeedback(false),
+                        child: Icon(
+                          Icons.thumb_down,
+                          size: 18,
+                          color: isDisliked ? Colors.pinkAccent : Colors.white38,
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  GestureDetector(
-                    onTap: () => _handleFeedback(false),
-                    child: Icon(
-                      Icons.thumb_down,
-                      size: 18,
-                      color: isDisliked ? Colors.pinkAccent : Colors.white38,
-                    ),
-                  ),
-                  GestureDetector(
-                    onTap: () => _handleFeedback(true),
-                    child: Icon(
-                      Icons.thumb_up,
-                      size: 18,
-                      color: isLiked ? Colors.greenAccent : Colors.white38,
-                    ),
-                  ),
-                  GestureDetector(
-                    onTap: () {
-                      widget.moviesPageRef
-                          ?._toggleMovieFavorite(widget.movie.title);
-                    },
-                    child: Icon(
-                      widget.moviesPageRef
-                          ?._isMovieFavorite(widget.movie.title) ??
-                          false
-                          ? Icons.favorite
-                          : Icons.favorite_border,
-                      size: 18,
-                      color: widget.moviesPageRef
-                          ?._isMovieFavorite(widget.movie.title) ??
-                          false
-                          ? Colors.red
-                          : Colors.white38,
-                    ),
+                      GestureDetector(
+                        onTap: () => _handleFeedback(true),
+                        child: Icon(
+                          Icons.thumb_up,
+                          size: 18,
+                          color: isLiked ? Colors.greenAccent : Colors.white38,
+                        ),
+                      ),
+                      GestureDetector(
+                        onTap: _handleFavoriteToggle,
+                        child: Icon(
+                          isFavorite ? Icons.favorite : Icons.favorite_border,
+                          size: 18,
+                          color: isFavorite ? Colors.red : Colors.white38,
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
-            ],
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }
 
 // =========================================================================
-// MovieDetailPage
+// MovieDetailPage - AUCUN CHANGEMENT
 // =========================================================================
-
-class MovieDetailPage extends StatelessWidget {
+class MovieDetailPage extends StatefulWidget {
   final Movie movie;
   final MovieRecommender recommender;
+  final _MoviesPageState? moviesPageRef;
 
   const MovieDetailPage({
     super.key,
     required this.movie,
     required this.recommender,
+    this.moviesPageRef,
   });
 
   @override
+  State<MovieDetailPage> createState() => _MovieDetailPageState();
+}
+
+class _MovieDetailPageState extends State<MovieDetailPage> {
+  bool get _isFavorite =>
+      widget.moviesPageRef?._isMovieFavorite(widget.movie.title) ?? false;
+
+  bool get _isCompleted =>
+      widget.moviesPageRef?._isMovieCompleted(widget.movie.title) ?? false;
+
+  void _toggleFavorite() {
+    widget.moviesPageRef?._toggleMovieFavorite(widget.movie.title);
+    setState(() {});
+  }
+
+  void _toggleCompleted() {
+    widget.moviesPageRef?._toggleMovieCompleted(widget.movie.title);
+    setState(() {});
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return ValueListenableBuilder<Box<MovieRating>>(
-      valueListenable: recommender.movieRatingBox.listenable(),
+    return ValueListenableBuilder<Box>(
+      valueListenable: widget.recommender.movieRatingBox.listenable(),
       builder: (context, box, child) {
-        final currentRating = recommender.movieRatingBox.get(movie.id);
+        final currentRating =
+        widget.recommender.movieRatingBox.get(widget.movie.id);
         final isLiked = currentRating?.isLiked ?? false;
         final isDisliked = currentRating != null && !currentRating.isLiked;
+        final isFavorite = _isFavorite;
+        final isCompleted = _isCompleted;
 
         return Scaffold(
           backgroundColor: Colors.transparent,
@@ -927,7 +1048,7 @@ class MovieDetailPage extends StatelessWidget {
               slivers: [
                 SliverAppBar(
                   title: Text(
-                    movie.title,
+                    widget.movie.title,
                     style: GoogleFonts.pressStart2p(
                         fontSize: 12, color: Colors.white),
                   ),
@@ -942,7 +1063,7 @@ class MovieDetailPage extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          movie.title,
+                          widget.movie.title,
                           style: GoogleFonts.pressStart2p(
                             fontSize: 18,
                             color: Colors.white,
@@ -957,7 +1078,7 @@ class MovieDetailPage extends StatelessWidget {
                                 color: Color(0xFFffd700), size: 20),
                             const SizedBox(width: 4),
                             Text(
-                              '${movie.rating.toStringAsFixed(1)} / 5',
+                              '${widget.movie.rating.toStringAsFixed(1)} / 5',
                               style: GoogleFonts.poppins(
                                 color: Colors.white,
                                 fontSize: 16,
@@ -969,7 +1090,7 @@ class MovieDetailPage extends StatelessWidget {
                                 color: Color(0xFF00ff85), size: 20),
                             const SizedBox(width: 4),
                             Text(
-                              '${movie.duration.toInt()} min',
+                              '${widget.movie.duration.toInt()} min',
                               style: GoogleFonts.poppins(
                                 color: Colors.white,
                                 fontSize: 16,
@@ -982,7 +1103,7 @@ class MovieDetailPage extends StatelessWidget {
                           spacing: 8.0,
                           runSpacing: 4.0,
                           children: [
-                            ...movie.tags.map(
+                            ...widget.movie.tags.map(
                                   (tag) => Container(
                                 padding: const EdgeInsets.symmetric(
                                     horizontal: 12, vertical: 6),
@@ -1016,8 +1137,8 @@ class MovieDetailPage extends StatelessWidget {
                         ),
                         const SizedBox(height: 12),
                         Text(
-                          movie.description.isNotEmpty
-                              ? movie.description
+                          widget.movie.description.isNotEmpty
+                              ? widget.movie.description
                               : 'Description non disponible.',
                           style: GoogleFonts.poppins(
                             color: Colors.white.withOpacity(0.9),
@@ -1026,6 +1147,7 @@ class MovieDetailPage extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(height: 40),
+
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
@@ -1034,14 +1156,28 @@ class MovieDetailPage extends StatelessWidget {
                               color: Colors.pinkAccent,
                               isActive: isDisliked,
                               onTap: () {
-                                recommender.saveRating(movie.id, false);
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text('✗ Dislike enregistré !'),
-                                    backgroundColor: Colors.grey,
-                                    duration: Duration(milliseconds: 800),
-                                  ),
-                                );
+                                if (currentRating != null &&
+                                    !currentRating.isLiked) {
+                                  widget.recommender.movieRatingBox
+                                      .delete(widget.movie.id);
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text('Dislike supprimé'),
+                                      backgroundColor: Colors.grey,
+                                      duration: Duration(milliseconds: 800),
+                                    ),
+                                  );
+                                } else {
+                                  widget.recommender
+                                      .saveRating(widget.movie.id, false);
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text('✗ Dislike enregistré !'),
+                                      backgroundColor: Colors.grey,
+                                      duration: Duration(milliseconds: 800),
+                                    ),
+                                  );
+                                }
                               },
                             ),
                             const SizedBox(width: 10),
@@ -1050,48 +1186,43 @@ class MovieDetailPage extends StatelessWidget {
                               color: Colors.greenAccent,
                               isActive: isLiked,
                               onTap: () {
-                                recommender.saveRating(movie.id, true);
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text('✓ Like enregistré !'),
-                                    backgroundColor: Colors.grey,
-                                    duration: Duration(milliseconds: 800),
-                                  ),
-                                );
+                                if (currentRating != null &&
+                                    currentRating.isLiked) {
+                                  widget.recommender.movieRatingBox
+                                      .delete(widget.movie.id);
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text('Like supprimé'),
+                                      backgroundColor: Colors.grey,
+                                      duration: Duration(milliseconds: 800),
+                                    ),
+                                  );
+                                } else {
+                                  widget.recommender
+                                      .saveRating(widget.movie.id, true);
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text('✓ Like enregistré !'),
+                                      backgroundColor: Colors.grey,
+                                      duration: Duration(milliseconds: 800),
+                                    ),
+                                  );
+                                }
                               },
                             ),
                             const SizedBox(width: 10),
                             _buildFeedbackButton(
                               icon: Icons.favorite,
                               color: Colors.redAccent,
-                              isActive: currentRating?.isFavorite ?? false,
-                              onTap: () {
-                                final updatedRating = currentRating != null
-                                    ? currentRating.copyWith(
-                                    isFavorite: !currentRating.isFavorite)
-                                    : MovieRating(
-                                  movieId: movie.id,
-                                  isLiked: false,
-                                  timestamp: DateTime.now(),
-                                  isFavorite: true,
-                                );
-                                recommender.movieRatingBox
-                                    .put(movie.id, updatedRating);
-                                final message = updatedRating.isFavorite
-                                    ? '⭐ Ajouté aux favoris'
-                                    : '⭐ Retiré des favoris';
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text(message),
-                                    backgroundColor: Colors.grey.shade700,
-                                    duration:
-                                    const Duration(milliseconds: 800),
-                                  ),
-                                );
-                              },
+                              isActive: isFavorite,
+                              onTap: _toggleFavorite,
                             ),
                           ],
                         ),
+                        const SizedBox(height: 30),
+
+                        _buildCompletedButton(isCompleted),
+
                         const SizedBox(height: 40),
                       ],
                     ),
@@ -1116,26 +1247,81 @@ class MovieDetailPage extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color:
-          isActive ? color.withOpacity(0.2) : const Color(0xFF121b3a),
+          color: isActive ? color.withOpacity(0.2) : const Color(0xFF121b3a),
           shape: BoxShape.circle,
           border: Border.all(
             color: isActive ? color : const Color(0xFF3cf2ff),
             width: 2,
           ),
-          boxShadow: [
-            if (isActive)
-              BoxShadow(
-                color: color.withOpacity(0.5),
-                blurRadius: 15,
-                offset: const Offset(0, 4),
-              ),
-          ],
+          boxShadow: isActive
+              ? [
+            BoxShadow(
+              color: color.withOpacity(0.5),
+              blurRadius: 15,
+              offset: const Offset(0, 4),
+            ),
+          ]
+              : null,
         ),
         child: Icon(
           icon,
           color: isActive ? color : Colors.white70,
           size: 28,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCompletedButton(bool isCompleted) {
+    return Center(
+      child: GestureDetector(
+        onTap: _toggleCompleted,
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: isCompleted
+                  ? [
+                const Color(0xFF00FF88),
+                const Color(0xFF00CC66),
+              ]
+                  : [
+                const Color(0xFF3cf2ff),
+                const Color(0xFF0088ff),
+              ],
+            ),
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: (isCompleted
+                    ? const Color(0xFF00FF88)
+                    : const Color(0xFF3cf2ff))
+                    .withOpacity(0.5),
+                blurRadius: 20,
+                offset: const Offset(0, 8),
+              ),
+            ],
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                isCompleted ? Icons.check_circle : Icons.radio_button_unchecked,
+                color: Colors.white,
+                size: 24,
+              ),
+              const SizedBox(width: 12),
+              Text(
+                isCompleted ? 'COMPLÉTÉ' : 'MARQUER COMPLÉTÉ',
+                style: GoogleFonts.pressStart2p(
+                  fontSize: 12,
+                  color: Colors.white,
+                  letterSpacing: 1.5,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
