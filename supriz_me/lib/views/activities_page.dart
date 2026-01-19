@@ -16,6 +16,7 @@ class ActivitiesPage extends StatefulWidget {
   final Box<ActivityRating> activityRatingBox;
   final Box<ActivityPreferences> activityPreferencesBox;
   final Box<PerformanceMetrics> metricsBox;
+  final bool autoSurprizme; // ✅ NOUVEAU PARAMÈTRE
 
   const ActivitiesPage({
     super.key,
@@ -23,6 +24,7 @@ class ActivitiesPage extends StatefulWidget {
     required this.activityRatingBox,
     required this.activityPreferencesBox,
     required this.metricsBox,
+    this.autoSurprizme = false, // ✅ PAR DÉFAUT FALSE
   });
 
   @override
@@ -50,6 +52,13 @@ class _ActivitiesPageState extends State<ActivitiesPage>
       vsync: this,
     );
     _initializeRecommendationService();
+
+    // ✅ AUTO-DÉCLENCHE SURPRIZ'ME SI DEMANDÉ
+    if (widget.autoSurprizme) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _triggerSurprizme();
+      });
+    }
   }
 
   @override
@@ -139,6 +148,28 @@ class _ActivitiesPageState extends State<ActivitiesPage>
         ],
       ),
     );
+  }
+
+  // ✅ NOUVELLE FONCTION POUR DÉCLENCHER SURPRIZ'ME
+  void _triggerSurprizme() async {
+    _surpriseRotationController.forward().then((_) {
+      _surpriseRotationController.reset();
+    });
+    final surprise = await recommendationService.getSurpriseActivity();
+    if (surprise != null && mounted) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => ActivityDetailsPage(
+            activity: surprise,
+            activityRatingBox: widget.activityRatingBox,
+            onFeedbackGiven: () {
+              setState(() {});
+            },
+          ),
+        ),
+      );
+    }
   }
 
   void _rateActivity(String activityId, int rating) {
@@ -253,23 +284,19 @@ class _ActivitiesPageState extends State<ActivitiesPage>
   String _buildFiltersText() {
     List<String> filters = [];
 
-    // availableTime (en minutes)
     if (userPreferences.availableTime > 0) {
       filters.add('⏱️ ${userPreferences.availableTime}min');
     }
 
-    // groupSize
     if (userPreferences.groupSize > 0) {
       filters.add('👥 ${userPreferences.groupSize} pers.');
     }
 
-    // preferredCategories
     if (userPreferences.preferredCategories.isNotEmpty) {
       final categoriesText = userPreferences.preferredCategories.take(2).join(', ');
       filters.add('📁 $categoriesText');
     }
 
-    // allowSurprise (optionnel)
     if (!userPreferences.allowSurprise) {
       filters.add('🎲 Surprises OFF');
     }
@@ -287,8 +314,8 @@ class _ActivitiesPageState extends State<ActivitiesPage>
             radius: 1.2,
             center: Alignment(0, -0.5),
             colors: [
-              Color(0xFF0a1628), // Bleu nuit
-              Color(0xFF050814), // Noir bleuté
+              Color(0xFF0a1628),
+              Color(0xFF050814),
             ],
           ),
         ),
@@ -301,10 +328,7 @@ class _ActivitiesPageState extends State<ActivitiesPage>
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // 1️⃣ BOUTON SURPRIZME
                     _buildSurprizmeButton(),
-
-                    // 2️⃣ COMPTEUR
                     Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
@@ -343,7 +367,6 @@ class _ActivitiesPageState extends State<ActivitiesPage>
                     ),
                     const SizedBox(height: 20),
 
-                    // 3️⃣ FILTRES ACTIFS
                     if (preferencesSet)
                       Container(
                         padding: const EdgeInsets.all(12),
@@ -365,23 +388,18 @@ class _ActivitiesPageState extends State<ActivitiesPage>
 
                     const SizedBox(height: 25),
 
-                    // RECOMMANDATIONS (avec podium et suggestions)
                     _buildRecommendationsSection(),
                     const SizedBox(height: 25),
 
-                    // À FAIRE PLUS TARD
                     _buildFavoritesSection(),
                     const SizedBox(height: 25),
 
-                    // ACTIVITÉS COMPLÉTÉES
                     _buildCompletedSection(),
                     const SizedBox(height: 25),
 
-                    // TOUTES LES ACTIVITÉS
                     _buildAllActivitiesSection(),
                     const SizedBox(height: 40),
 
-                    // HOME BUTTON
                     Center(
                       child: Container(
                         decoration: BoxDecoration(
@@ -509,26 +527,7 @@ class _ActivitiesPageState extends State<ActivitiesPage>
             color: Colors.transparent,
             child: InkWell(
               borderRadius: BorderRadius.circular(40),
-              onTap: () async {
-                _surpriseRotationController.forward().then((_) {
-                  _surpriseRotationController.reset();
-                });
-                final surprise = await recommendationService.getSurpriseActivity();
-                if (surprise != null && mounted) {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => ActivityDetailsPage(
-                        activity: surprise,
-                        activityRatingBox: widget.activityRatingBox,
-                        onFeedbackGiven: () {
-                          setState(() {});
-                        },
-                      ),
-                    ),
-                  );
-                }
-              },
+              onTap: _triggerSurprizme, // ✅ UTILISE LA NOUVELLE FONCTION
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -629,7 +628,6 @@ class _ActivitiesPageState extends State<ActivitiesPage>
             else
               Column(
                 children: [
-                  // PODIUM TOP 3 en horizontal scroll
                   SizedBox(
                     height: 170,
                     child: ListView.builder(
@@ -638,9 +636,9 @@ class _ActivitiesPageState extends State<ActivitiesPage>
                       itemBuilder: (context, i) {
                         final medals = ['🥇', '🥈', '🥉'];
                         final colors = [
-                          const Color(0xFFffd700), // Or
-                          const Color(0xFFc0c0c0), // Argent
-                          const Color(0xFFcd7f32), // Bronze
+                          const Color(0xFFffd700),
+                          const Color(0xFFc0c0c0),
+                          const Color(0xFFcd7f32),
                         ];
                         return _buildActivityTile(
                           topThree[i].$1,
