@@ -1,3 +1,5 @@
+// activity_details_page.dart
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hive/hive.dart';
@@ -32,7 +34,7 @@ class _ActivityDetailsPageState extends State<ActivityDetailsPage> {
 
   void _loadActivityRating() {
     final existingRating = widget.activityRatingBox.values.firstWhereOrNull(
-      (r) => r.activityId == widget.activity.id,
+          (r) => r.activityId == widget.activity.id,
     );
 
     setState(() {
@@ -53,7 +55,6 @@ class _ActivityDetailsPageState extends State<ActivityDetailsPage> {
       ratedAt: DateTime.now(),
     );
 
-    // Sauvegarder ou mettre à jour
     final existingIndex = widget.activityRatingBox.values
         .toList()
         .indexWhere((r) => r.activityId == widget.activity.id);
@@ -71,8 +72,8 @@ class _ActivityDetailsPageState extends State<ActivityDetailsPage> {
     final message = rating == 3
         ? '✓ Comme enregistré'
         : rating == 1
-            ? '✗ Pas comme enregistré'
-            : '📌 Note neutre';
+        ? '✗ Pas comme enregistré'
+        : '📌 Note neutre';
 
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -106,7 +107,7 @@ class _ActivityDetailsPageState extends State<ActivityDetailsPage> {
       _currentRating = updatedRating;
     });
 
-    final message = updatedRating.isFavorite
+    final message = _currentRating.isFavorite
         ? '⭐ Ajouté aux favoris'
         : '⭐ Retiré des favoris';
 
@@ -142,7 +143,7 @@ class _ActivityDetailsPageState extends State<ActivityDetailsPage> {
       _currentRating = updatedRating;
     });
 
-    final message = updatedRating.isDone
+    final message = _currentRating.isDone
         ? '✅ Activité complétée !'
         : '⏸️ Marquer comme non complétée';
 
@@ -165,192 +166,175 @@ class _ActivityDetailsPageState extends State<ActivityDetailsPage> {
     final isLiked = _currentRating.rating == 3;
     final isDisliked = _currentRating.rating == 1;
     final isFavorite = _currentRating.isFavorite;
-    final isDone = _currentRating.isDone;
 
     return Scaffold(
-      appBar: AppBar(
-        title:
-            Text(activity.title, maxLines: 2, overflow: TextOverflow.ellipsis),
-        backgroundColor: Colors.purple,
-      ),
+      backgroundColor: Colors.transparent,
       body: Container(
         decoration: const BoxDecoration(
-          gradient: LinearGradient(
+          gradient: RadialGradient(
+            radius: 1.2,
+            center: Alignment(0, -0.5),
             colors: [
-              Color(0xFF1A3A52),
-              Color(0xFF2563EB),
+              Color(0xFF101738),
+              Color(0xFF050814),
             ],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
           ),
         ),
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+        child: CustomScrollView(
+          slivers: [
+            SliverAppBar(
+              title: Text(
+                activity.title,
+                style: GoogleFonts.pressStart2p(
+                  fontSize: 12,
+                  color: Colors.white,
+                ),
+              ),
+              backgroundColor: Colors.transparent,
+              elevation: 0,
+              pinned: true,
+            ),
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.all(20.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      activity.title,
+                      style: GoogleFonts.pressStart2p(
+                        fontSize: 18,
+                        color: Colors.white,
+                        letterSpacing: 1.5,
+                        height: 1.5,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    Row(
                       children: [
+                        const Icon(
+                          Icons.star,
+                          color: Color(0xFFffd700),
+                          size: 20,
+                        ),
+                        const SizedBox(width: 4),
                         Text(
-                          activity.title,
-                          style: GoogleFonts.bebasNeue(
-                            fontSize: 36,
+                          '${_currentRating.rating}/5',
+                          style: GoogleFonts.poppins(
                             color: Colors.white,
-                            letterSpacing: 1.5,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
                           ),
                         ),
-                        const SizedBox(height: 8),
-                        _buildDetailRow(
-                          icon: Icons.timer,
-                          label: 'Durée',
-                          value: '${activity.duration.toInt()} minutes',
-                          color: Colors.orangeAccent,
+                        const SizedBox(width: 20),
+                        const Icon(
+                          Icons.access_time,
+                          color: Color(0xFF00ff85),
+                          size: 20,
                         ),
-                        const SizedBox(height: 8),
-                        _buildDetailRow(
-                          icon: Icons.category,
-                          label: 'Catégorie',
-                          value: activity.category,
-                          color: Colors.cyanAccent,
+                        const SizedBox(width: 4),
+                        Text(
+                          '${activity.duration.toInt()} min',
+                          style: GoogleFonts.poppins(
+                            color: Colors.white,
+                            fontSize: 16,
+                          ),
                         ),
                       ],
                     ),
-                  ),
-                  Column(
-                    children: [
-                      _buildFeedbackButton(
-                        icon: Icons.thumb_up_alt_rounded,
-                        color: Colors.greenAccent,
-                        isActive: isLiked,
-                        onTap: () => _rateActivity(3),
+
+                    const SizedBox(height: 20),
+
+                    Wrap(
+                      spacing: 8.0,
+                      runSpacing: 4.0,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF3cf2ff).withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(
+                              color: const Color(0xFF3cf2ff).withOpacity(0.5),
+                            ),
+                          ),
+                          child: Text(
+                            activity.category,
+                            style: GoogleFonts.poppins(
+                              color: Colors.white,
+                              fontSize: 11,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 24),
+
+                    Text(
+                      'SYNOPSIS',
+                      style: GoogleFonts.pressStart2p(
+                        color: const Color(0xFF3cf2ff),
+                        fontSize: 12,
+                        letterSpacing: 1.5,
                       ),
-                      const SizedBox(height: 10),
-                      _buildFeedbackButton(
-                        icon: Icons.thumb_down_alt_rounded,
-                        color: Colors.pinkAccent,
-                        isActive: isDisliked,
-                        onTap: () => _rateActivity(1),
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      activity.description.isNotEmpty
+                          ? activity.description
+                          : 'Description non disponible.',
+                      style: GoogleFonts.poppins(
+                        color: Colors.white.withOpacity(0.9),
+                        fontSize: 14,
+                        height: 1.6,
                       ),
-                      const SizedBox(height: 10),
-                      _buildFeedbackButton(
-                        icon: Icons.favorite,
-                        color: Colors.redAccent,
-                        isActive: isFavorite,
-                        onTap: _toggleFavorite,
-                      ),
-                    ],
-                  ),
-                ],
+                    ),
+
+                    const SizedBox(height: 40),
+
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        _buildFeedbackButton(
+                          icon: Icons.thumb_down_alt_rounded,
+                          color: Colors.pinkAccent,
+                          isActive: isDisliked,
+                          onTap: () => _rateActivity(1),
+                        ),
+                        const SizedBox(width: 10),
+                        _buildFeedbackButton(
+                          icon: Icons.thumb_up_alt_rounded,
+                          color: Colors.greenAccent,
+                          isActive: isLiked,
+                          onTap: () => _rateActivity(3),
+                        ),
+                        const SizedBox(width: 10),
+                        _buildFeedbackButton(
+                          icon: Icons.favorite,
+                          color: Colors.redAccent,
+                          isActive: isFavorite,
+                          onTap: _toggleFavorite,
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 30),
+
+                    _buildDoneButton(),
+
+                    const SizedBox(height: 40),
+                  ],
+                ),
               ),
-
-              const SizedBox(height: 24),
-              const Divider(color: Colors.white30),
-              const SizedBox(height: 16),
-
-              // Description
-              if (activity.description.isNotEmpty) ...[
-                Text(
-                  'Description',
-                  style: GoogleFonts.bebasNeue(
-                    fontSize: 18,
-                    color: Colors.white,
-                    letterSpacing: 1.2,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(
-                      color: Colors.white.withValues(alpha: 0.2),
-                    ),
-                  ),
-                  child: Text(
-                    activity.description,
-                    style: GoogleFonts.poppins(
-                      fontSize: 14,
-                      color: Colors.white.withValues(alpha: 0.9),
-                      height: 1.5,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-              ],
-
-              // Bouton Marquer comme complété
-              Center(
-                child: ElevatedButton.icon(
-                  icon: Icon(
-                    isDone ? Icons.check_circle : Icons.radio_button_unchecked,
-                    color: Colors.white,
-                  ),
-                  label: Text(
-                    isDone ? 'Complétée ✓' : 'Marquer comme complétée',
-                    style: GoogleFonts.poppins(
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  onPressed: _toggleDone,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor:
-                        isDone ? Colors.green : Colors.blue.shade700,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 24,
-                      vertical: 12,
-                    ),
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 30),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
-    );
-  }
-
-  Widget _buildDetailRow({
-    required IconData icon,
-    required String label,
-    required String value,
-    Color? color,
-  }) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        Icon(icon, color: color, size: 18),
-        const SizedBox(width: 6),
-        Flexible(
-          child: Text(
-            '$label : ',
-            style: GoogleFonts.poppins(
-              color: Colors.white70,
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ),
-        Flexible(
-          child: Text(
-            value,
-            style: GoogleFonts.poppins(
-              color: Colors.white,
-              fontSize: 14,
-              fontWeight: FontWeight.bold,
-            ),
-            overflow: TextOverflow.ellipsis,
-          ),
-        ),
-      ],
     );
   }
 
@@ -363,19 +347,84 @@ class _ActivityDetailsPageState extends State<ActivityDetailsPage> {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: isActive ? color.withOpacity(0.2) : Colors.white12,
+          color: isActive ? color.withOpacity(0.2) : const Color(0xFF121b3a),
           shape: BoxShape.circle,
           border: Border.all(
-            color: isActive ? color : Colors.white24,
+            color: isActive ? color : const Color(0xFF3cf2ff),
             width: 2,
           ),
+          boxShadow: isActive
+              ? [
+            BoxShadow(
+              color: color.withOpacity(0.5),
+              blurRadius: 15,
+              offset: const Offset(0, 4),
+            ),
+          ]
+              : null,
         ),
         child: Icon(
           icon,
           color: isActive ? color : Colors.white70,
           size: 28,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDoneButton() {
+    final isDone = _currentRating.isDone;
+    return Center(
+      child: GestureDetector(
+        onTap: _toggleDone,
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: isDone
+                  ? [
+                const Color(0xFF00FF88),
+                const Color(0xFF00CC66),
+              ]
+                  : [
+                const Color(0xFF3cf2ff),
+                const Color(0xFF0088ff),
+              ],
+            ),
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: (isDone
+                    ? const Color(0xFF00FF88)
+                    : const Color(0xFF3cf2ff))
+                    .withOpacity(0.5),
+                blurRadius: 20,
+                offset: const Offset(0, 8),
+              ),
+            ],
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                isDone ? Icons.check_circle : Icons.radio_button_unchecked,
+                color: Colors.white,
+                size: 24,
+              ),
+              const SizedBox(width: 12),
+              Text(
+                isDone ? 'COMPLÉTÉE' : 'MARQUER COMPLÉTÉE',
+                style: GoogleFonts.pressStart2p(
+                  fontSize: 12,
+                  color: Colors.white,
+                  letterSpacing: 1.5,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
