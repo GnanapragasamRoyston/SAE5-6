@@ -10,13 +10,15 @@ import 'games_preferences_page.dart';
 import 'game_details_page.dart';
 
 class GamesPage extends StatefulWidget {
-  final Box<BoardGame> boardGameBox;
+  final Box boardGameBox;
   final Box settingsBox;
+  final bool autoSurprizme; // ✅ NOUVEAU PARAMÈTRE
 
   const GamesPage({
     super.key,
     required this.boardGameBox,
     required this.settingsBox,
+    this.autoSurprizme = false, // ✅ PAR DÉFAUT FALSE
   });
 
   @override
@@ -26,14 +28,12 @@ class GamesPage extends StatefulWidget {
 class _GamesPageState extends State<GamesPage> {
   bool _isContentLoaded = false;
   List<BoardGame> _recommendedGames = [];
-
   int? _preferredPlayers;
   int? _maxDuration;
-
   Set<String> _likedGamesTitles = {};
   Set<String> _dislikedGamesTitles = {};
   Set<String> _favoriteGamesTitles = {};
-
+  Set<String> _completedGamesTitles = {};
   Map<String, double> _tagProfileScores = {};
   List<String>? _initialGenres;
 
@@ -41,10 +41,10 @@ class _GamesPageState extends State<GamesPage> {
   static const String _userGenresKey = 'user_game_genres';
   static const String _playersCountKey = 'player_count_preference';
   static const String _maxDurationKey = 'max_duration_preference';
-
   static const String _likedGamesKey = 'liked_games_titles';
   static const String _dislikedGamesKey = 'disliked_games_titles';
   static const String _favoriteGamesKey = 'favorite_games_titles';
+  static const String _completedGamesKey = 'completed_games_titles';
 
   @override
   void initState() {
@@ -62,9 +62,13 @@ class _GamesPageState extends State<GamesPage> {
     List<String>.from(widget.settingsBox.get(_dislikedGamesKey) ?? []);
     final savedFavorites =
     List<String>.from(widget.settingsBox.get(_favoriteGamesKey) ?? []);
+    final savedCompleted =
+    List<String>.from(widget.settingsBox.get(_completedGamesKey) ?? []);
+
     _likedGamesTitles = savedLikes.toSet();
     _dislikedGamesTitles = savedDislikes.toSet();
     _favoriteGamesTitles = savedFavorites.toSet();
+    _completedGamesTitles = savedCompleted.toSet();
   }
 
   void _checkPreferencesStatus() async {
@@ -73,19 +77,24 @@ class _GamesPageState extends State<GamesPage> {
     if (preferencesSet) {
       final List<String>? savedGenres =
       widget.settingsBox.get(_userGenresKey)?.cast<String>();
-
       _initialGenres = savedGenres;
-
       _preferredPlayers = widget.settingsBox.get(_playersCountKey);
       _maxDuration = widget.settingsBox.get(_maxDurationKey);
 
       _buildTagProfile();
-
       _loadRecommendations(
         genres: savedGenres,
         playerCount: _preferredPlayers,
         maxDuration: _maxDuration,
       );
+
+      // ✅ SEUL DÉCLENCHEMENT ICI (après chargement complet)
+      if (widget.autoSurprizme && mounted) {
+        await Future.delayed(const Duration(milliseconds: 500));
+        if (mounted) {
+          _navigateToSurpriseGame();
+        }
+      }
     } else {
       _navigateToPreferences(canGoBack: false);
     }
@@ -104,14 +113,11 @@ class _GamesPageState extends State<GamesPage> {
     if (result != null) {
       _preferredPlayers = widget.settingsBox.get(_playersCountKey);
       _maxDuration = widget.settingsBox.get(_maxDurationKey);
-
       final List<String>? savedGenres =
       widget.settingsBox.get(_userGenresKey)?.cast<String>();
-
       _initialGenres = savedGenres;
 
       _buildTagProfile();
-
       _loadRecommendations(
         genres: savedGenres,
         playerCount: _preferredPlayers,
@@ -128,7 +134,7 @@ class _GamesPageState extends State<GamesPage> {
 
   void _navigateToSurpriseGame() {
     final recommendedTitles = _recommendedGames.map((g) => g.title).toSet();
-    final allGames = widget.boardGameBox.values.toList();
+    final allGames = widget.boardGameBox.values.cast<BoardGame>().toList();
 
     final availableSurpriseGames = allGames.where((game) {
       return !recommendedTitles.contains(game.title) &&
@@ -186,10 +192,11 @@ class _GamesPageState extends State<GamesPage> {
 
     if (hasUserFeedback) {
       for (var title in _likedGamesTitles) {
-        final game = widget.boardGameBox.values.firstWhere(
+        final game = widget.boardGameBox.values.cast<BoardGame>().firstWhere(
               (g) => g.title == title,
           orElse: () => BoardGame.empty(),
         );
+
         if (game.title.isNotEmpty) {
           for (var tag in game.genres) {
             profile[tag] = (profile[tag] ?? 0.0) + 1.0;
@@ -202,10 +209,11 @@ class _GamesPageState extends State<GamesPage> {
       }
 
       for (var title in _dislikedGamesTitles) {
-        final game = widget.boardGameBox.values.firstWhere(
+        final game = widget.boardGameBox.values.cast<BoardGame>().firstWhere(
               (g) => g.title == title,
           orElse: () => BoardGame.empty(),
         );
+
         if (game.title.isNotEmpty) {
           for (var tag in game.genres) {
             profile[tag] = (profile[tag] ?? 0.0) - 1.0;
@@ -229,6 +237,7 @@ class _GamesPageState extends State<GamesPage> {
     } else {
       _favoriteGamesTitles.add(gameTitle);
     }
+
     widget.settingsBox.put(_favoriteGamesKey, _favoriteGamesTitles.toList());
     setState(() {});
   }
@@ -239,8 +248,8 @@ class _GamesPageState extends State<GamesPage> {
 
   double _calculateRecommendationScore(BoardGame game) {
     if (_tagProfileScores.isEmpty &&
-        !_likedGamesTitles.isNotEmpty &&
-        !_dislikedGamesTitles.isNotEmpty) {
+        _likedGamesTitles.isEmpty &&
+        _dislikedGamesTitles.isEmpty) {
       return game.rating;
     }
 
@@ -248,13 +257,11 @@ class _GamesPageState extends State<GamesPage> {
     for (var tag in game.genres) {
       tagScoreSum += _tagProfileScores[tag] ?? 0.0;
     }
+
     final affinityScore = tagScoreSum * 5.0;
-
     final popularityScore = game.rating * 0.5;
-
     final complexityPreference = _calculateComplexityPreference();
     final complexityScore = game.complexity * complexityPreference * 2.0;
-
     final durationScore = _calculateDurationFit(game.avgDuration) * 3.0;
 
     return affinityScore + popularityScore + complexityScore + durationScore;
@@ -267,10 +274,11 @@ class _GamesPageState extends State<GamesPage> {
 
     double totalComplexity = 0.0;
     for (var title in _likedGamesTitles) {
-      final game = widget.boardGameBox.values.firstWhere(
+      final game = widget.boardGameBox.values.cast<BoardGame>().firstWhere(
             (g) => g.title == title,
         orElse: () => BoardGame.empty(),
       );
+
       if (game.title.isNotEmpty) {
         totalComplexity += game.complexity;
       }
@@ -290,6 +298,7 @@ class _GamesPageState extends State<GamesPage> {
     if (gameDuration < 30 || gameDuration > 120) {
       return 0.7;
     }
+
     return 1.0;
   }
 
@@ -343,7 +352,7 @@ class _GamesPageState extends State<GamesPage> {
     int? maxDuration,
   }) {
     List<BoardGame> initialRecs = [];
-    final allGames = widget.boardGameBox.values.toList();
+    final allGames = widget.boardGameBox.values.cast<BoardGame>().toList();
 
     Iterable<BoardGame> filteredGames = allGames;
 
@@ -367,13 +376,11 @@ class _GamesPageState extends State<GamesPage> {
 
     if (filteredGames.isNotEmpty) {
       initialRecs = filteredGames.toList();
-
       initialRecs.sort((a, b) {
         final scoreA = _calculateRecommendationScore(a);
         final scoreB = _calculateRecommendationScore(b);
         return scoreB.compareTo(scoreA);
       });
-
       initialRecs = initialRecs.take(20).toList();
     } else {
       initialRecs = allGames.toList();
@@ -397,8 +404,8 @@ class _GamesPageState extends State<GamesPage> {
             radius: 1.2,
             center: Alignment(0, -0.5),
             colors: [
-              Color(0xFF0a1628), // Bleu nuit
-              Color(0xFF050814), // Noir bleuté
+              Color(0xFF0a1628),
+              Color(0xFF050814),
             ],
           ),
         ),
@@ -414,10 +421,7 @@ class _GamesPageState extends State<GamesPage> {
                 padding: const EdgeInsets.all(20),
                 child: Column(
                   children: [
-                    // 1️⃣ BOUTON SURPRIZ'ME
                     _buildSurpriseMeButton(),
-
-                    // 2️⃣ COMPTEUR JEUX
                     Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
@@ -456,7 +460,6 @@ class _GamesPageState extends State<GamesPage> {
                     ),
                     const SizedBox(height: 20),
 
-                    // 3️⃣ FILTRES ACTIFS
                     if (_preferredPlayers != null || _maxDuration != null)
                       Container(
                         padding: const EdgeInsets.all(12),
@@ -474,15 +477,11 @@ class _GamesPageState extends State<GamesPage> {
                           ),
                         ),
                       ),
-
                     const SizedBox(height: 25),
 
-                    // RECOMMANDATIONS
                     _buildRecommendationsSection(),
-
                     const SizedBox(height: 25),
 
-                    // MIEUX NOTÉS
                     _buildArcadeSectionTitle(Icons.star, 'TOP NOTES'),
                     const SizedBox(height: 12),
                     _buildHorizontalGameList(
@@ -492,10 +491,8 @@ class _GamesPageState extends State<GamesPage> {
                       showDynamicScore: false,
                       infoType: _GameInfoType.rating,
                     ),
-
                     const SizedBox(height: 25),
 
-                    // PLUS DURS
                     _buildArcadeSectionTitle(Icons.psychology, 'PLUS DURS'),
                     const SizedBox(height: 12),
                     _buildHorizontalGameList(
@@ -505,10 +502,8 @@ class _GamesPageState extends State<GamesPage> {
                       showDynamicScore: false,
                       infoType: _GameInfoType.complexity,
                     ),
-
                     const SizedBox(height: 25),
 
-                    // RÉCENTS
                     _buildArcadeSectionTitle(Icons.new_releases, 'RÉCENTS'),
                     const SizedBox(height: 12),
                     _buildHorizontalGameList(
@@ -518,15 +513,14 @@ class _GamesPageState extends State<GamesPage> {
                       showDynamicScore: false,
                       infoType: _GameInfoType.year,
                     ),
-
                     const SizedBox(height: 25),
 
-                    // À FAIRE PLUS TARD
                     _buildFavoriteGamesSection(),
+                    const SizedBox(height: 25),
 
+                    _buildCompletedGamesSection(),
                     const SizedBox(height: 40),
 
-                    // HOME BUTTON
                     Center(
                       child: Container(
                         decoration: BoxDecoration(
@@ -735,7 +729,7 @@ class _GamesPageState extends State<GamesPage> {
         const SizedBox(height: 12),
         _buildHorizontalGameList(
           _recommendedGames,
-          const Color(0xFF8b2f4a), // Bordeaux
+          const Color(0xFF8b2f4a),
           showFeedback: true,
           showDynamicScore: true,
           infoType: _GameInfoType.dynamicScore,
@@ -745,7 +739,7 @@ class _GamesPageState extends State<GamesPage> {
   }
 
   Widget _buildFavoriteGamesSection() {
-    final allGames = widget.boardGameBox.values.toList();
+    final allGames = widget.boardGameBox.values.cast<BoardGame>().toList();
     final favoriteGames = allGames
         .where((game) => _favoriteGamesTitles.contains(game.title))
         .toList();
@@ -817,22 +811,92 @@ class _GamesPageState extends State<GamesPage> {
     );
   }
 
+  Widget _buildCompletedGamesSection() {
+    final allGames = widget.boardGameBox.values.cast<BoardGame>().toList();
+    final completedGames = allGames
+        .where((game) => _completedGamesTitles.contains(game.title))
+        .toList();
+
+    if (completedGames.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          decoration: BoxDecoration(
+            color: const Color(0xFF0d1b35),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: const Color(0xFF00FF88), width: 1.5),
+          ),
+          child: Row(
+            children: [
+              const Icon(Icons.check_circle, color: Color(0xFF00FF88), size: 20),
+              const SizedBox(width: 10),
+              Text(
+                'JEUX COMPLÉTÉS',
+                style: GoogleFonts.pressStart2p(
+                  fontSize: 11,
+                  color: Colors.white,
+                  letterSpacing: 2,
+                ),
+              ),
+              const Spacer(),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF00FF88).withOpacity(0.3),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  '${completedGames.length}',
+                  style: GoogleFonts.pressStart2p(
+                    fontSize: 10,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 12),
+        SizedBox(
+          height: 170,
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            itemCount: completedGames.length,
+            itemBuilder: (context, index) {
+              final game = completedGames[index];
+              return _buildGameCard(game, const Color(0xFF00FF88));
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
   List<BoardGame> _topRatedGames() {
-    final games = widget.boardGameBox.values.toList();
+    final games = widget.boardGameBox.values.cast<BoardGame>().toList();
     games.sort((a, b) => b.rating.compareTo(a.rating));
     return games.take(20).toList();
   }
 
   List<BoardGame> _mostComplexGames() {
-    final games =
-    widget.boardGameBox.values.where((g) => g.complexity > 0.0).toList();
+    final games = widget.boardGameBox.values
+        .cast<BoardGame>()
+        .where((g) => g.complexity > 0.0)
+        .toList();
     games.sort((a, b) => b.complexity.compareTo(a.complexity));
     return games.take(20).toList();
   }
 
   List<BoardGame> _mostRecentGames() {
-    final games =
-    widget.boardGameBox.values.where((g) => g.releaseYear >= 1900).toList();
+    final games = widget.boardGameBox.values
+        .cast<BoardGame>()
+        .where((g) => g.releaseYear >= 1900)
+        .toList();
     games.sort((a, b) => b.releaseYear.compareTo(a.releaseYear));
     return games.take(20).toList();
   }
@@ -886,6 +950,7 @@ class _GamesPageState extends State<GamesPage> {
     final isDisliked = _dislikedGamesTitles.contains(game.title);
 
     Widget extraInfoWidget;
+
     if (showDynamicScore && infoType == _GameInfoType.dynamicScore) {
       final dynamicScore = _calculateRecommendationScore(game);
       extraInfoWidget = Text(
@@ -924,7 +989,7 @@ class _GamesPageState extends State<GamesPage> {
           break;
         case _GameInfoType.year:
           extraInfoWidget = Text(
-            '${game.releaseYear}',
+            '${game.releaseYear.toInt()}',
             style: GoogleFonts.pressStart2p(
               color: Colors.white.withOpacity(0.9),
               fontSize: 11,
@@ -933,7 +998,7 @@ class _GamesPageState extends State<GamesPage> {
           break;
         default:
           extraInfoWidget = Text(
-            '${game.avgDuration}min',
+            '${game.avgDuration.toInt()}min',
             style: GoogleFonts.pressStart2p(
               color: Colors.white.withOpacity(0.9),
               fontSize: 11,
