@@ -1,5 +1,7 @@
 import 'package:hive/hive.dart';
 
+part 'performance_metrics.g.dart';
+
 /// Modèle Hive pour tracker les métriques de performance
 ///
 /// **Justification des métriques** :

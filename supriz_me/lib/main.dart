@@ -8,7 +8,6 @@ import 'models/board_game.dart';
 import 'models/activity_rating.dart';
 import 'models/activity_preferences.dart';
 import 'models/performance_metrics.dart';
-import 'models/performance_metrics_adapter.dart';
 import 'models/movie_rating.dart';
 
 // Data loading
@@ -27,7 +26,7 @@ void main() async {
   Hive.registerAdapter(BoardGameAdapter());
   Hive.registerAdapter(ActivityRatingAdapter());
   Hive.registerAdapter(ActivityPreferencesAdapter());
-  Hive.registerAdapter(MovieRatingAdapter()); 
+  Hive.registerAdapter(MovieRatingAdapter());
   Hive.registerAdapter(PerformanceMetricsAdapter());
 
   // Clear old boxes to force reload with new parsing logic
@@ -37,7 +36,7 @@ void main() async {
     await Hive.deleteBoxFromDisk('board_games');
     await Hive.deleteBoxFromDisk('activity_ratings');
     await Hive.deleteBoxFromDisk('activity_preferences');
-    await Hive.deleteBoxFromDisk('movie_ratings'); 
+    await Hive.deleteBoxFromDisk('movie_ratings');
     await Hive.deleteBoxFromDisk('performanceMetrics');
   } catch (e) {
     // Boxes might not exist yet
@@ -51,8 +50,7 @@ void main() async {
       await Hive.openBox<ActivityRating>('activity_ratings');
   final activityPreferencesBox =
       await Hive.openBox<ActivityPreferences>('activity_preferences');
-  final movieRatingBox =
-      await Hive.openBox<MovieRating>('movie_ratings'); 
+  final movieRatingBox = await Hive.openBox<MovieRating>('movie_ratings');
   final metricsBox =
       await Hive.openBox<PerformanceMetrics>('performanceMetrics');
 

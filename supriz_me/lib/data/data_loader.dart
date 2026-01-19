@@ -54,7 +54,12 @@ class DataLoader {
       for (int i = 0; i < jsonData.length; i++) {
         try {
           final item = jsonData[i] as Map<String, dynamic>;
-          final category = _categorizeActivity(item);
+          // Utilise la catégorie du JSON, sinon génère automatiquement
+          final category = _normalizeCategory(item['categorie'] as String?) ??
+              _categorizeActivity(item);
+          // Utilise la difficulté du JSON, sinon 2.5 par défaut
+          final difficulty = (item['difficulty'] as num?)?.toDouble() ?? 2.5;
+
           final activity = Activity(
             id: '${item['nom']}_$i',
             title: item['nom'] ?? 'Unknown',
@@ -64,7 +69,7 @@ class DataLoader {
             minParticipants: item['joueurs_min'] ?? 1,
             maxParticipants: item['joueurs_max'] ?? 10,
             tags: [item['lieu'] ?? 'General'],
-            difficulty: 2.5, // Default difficulty
+            difficulty: difficulty,
           );
           activities.add(activity);
         } catch (e) {
@@ -91,8 +96,9 @@ class DataLoader {
           final item = jsonData[i] as Map<String, dynamic>;
 
           final mechanicsString = item['Mechanics']?.toString() ?? '';
-          final shortDescription =
-              mechanicsString.length > 100 ? mechanicsString.substring(0, 100) : mechanicsString;
+          final shortDescription = mechanicsString.length > 100
+              ? mechanicsString.substring(0, 100)
+              : mechanicsString;
 
           final game = BoardGame(
             id: '${item['Title']}_$i',
@@ -104,13 +110,13 @@ class DataLoader {
                 (item['Play Time (moyen)'] as num?)?.toDouble() ?? 60.0,
             complexity: _parseComplexity(item['Difficulty']),
             rating: _parseRatingString(item['Rating']),
-            
+
             // ✅ CORRECTION BoardGame: 'tags' devient 'genres'
-            genres: _parseGenres(item['Genre']), 
-            
+            genres: _parseGenres(item['Genre']),
+
             // ✅ CORRECTION BoardGame: Ajout de 'mechanics'
-            mechanics: _parseGenres(item['Mechanics']), 
-            
+            mechanics: _parseGenres(item['Mechanics']),
+
             releaseYear: (item['Release Year'] as num?)?.toInt() ?? 0,
             minAge: (item['Min Age'] as num?)?.toInt() ?? 8,
           );
@@ -286,6 +292,31 @@ class DataLoader {
     }
 
     return 'Extérieur';
+  }
+
+  /// Normalise les catégories du JSON vers les catégories de l'app
+  static String? _normalizeCategory(String? jsonCategory) {
+    if (jsonCategory == null || jsonCategory.isEmpty) return null;
+
+    final cat = jsonCategory.toLowerCase().trim();
+
+    // Mapping des catégories JSON vers les catégories de l'app
+    final categoryMap = {
+      'sport': 'Sport',
+      'jeu': 'Créatif',
+      'creatif': 'Créatif',
+      'créatif': 'Créatif',
+      'social': 'Social',
+      'detente': 'Relaxation',
+      'détente': 'Relaxation',
+      'outdoor': 'Aventure',
+      'exterieur': 'Aventure',
+      'extérieur': 'Aventure',
+      'interieur': 'Créatif',
+      'intérieur': 'Créatif',
+    };
+
+    return categoryMap[cat];
   }
 
   // --- Helpers des Jeux de Société (Dataset 3) ---

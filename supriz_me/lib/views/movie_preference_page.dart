@@ -47,9 +47,9 @@ class _MoviePreferencePageState extends State<MoviePreferencePage> {
 
   // ----- LOAD EXISTING PREFS -----
   void _loadPrefs() {
-    selectedGenres =
-        (widget.settingsBox.get("initial_movie_genres") as List?)?.cast<String>() ??
-            [];
+    selectedGenres = (widget.settingsBox.get("initial_movie_genres") as List?)
+            ?.cast<String>() ??
+        [];
     preferredDuration = widget.settingsBox.get("preferred_duration") ?? 120;
     allowSurprise = widget.settingsBox.get("allow_surprise") ?? true;
   }
@@ -59,10 +59,10 @@ class _MoviePreferencePageState extends State<MoviePreferencePage> {
     widget.settingsBox.put("initial_movie_genres", selectedGenres);
     widget.settingsBox.put("preferred_duration", preferredDuration);
     widget.settingsBox.put("allow_surprise", allowSurprise);
-    
+
     // FIX CLÉ : Enregistre que les préférences ont été initialisées
     widget.settingsBox.put("movie_prefs_initialized", true);
-    
+
     Navigator.pop(context);
   }
 
@@ -81,13 +81,17 @@ class _MoviePreferencePageState extends State<MoviePreferencePage> {
         padding: const EdgeInsets.all(16),
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            colors: [Color.fromARGB(255, 67, 128, 241), Color.fromARGB(255, 252, 136, 165)],
+            colors: [
+              Color.fromARGB(255, 67, 128, 241),
+              Color.fromARGB(255, 252, 136, 165)
+            ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
         ),
         child: SingleChildScrollView(
           child: Column(
+            mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // --- DURÉE ---

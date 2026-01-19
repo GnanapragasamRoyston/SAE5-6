@@ -13,9 +13,27 @@ class MovieRating extends HiveObject {
   @HiveField(2)
   final DateTime timestamp;
 
+  @HiveField(3)
+  final bool isFavorite;
+
   MovieRating({
     required this.movieId,
     required this.isLiked,
     required this.timestamp,
+    this.isFavorite = false,
   });
+
+  MovieRating copyWith({
+    String? movieId,
+    bool? isLiked,
+    DateTime? timestamp,
+    bool? isFavorite,
+  }) {
+    return MovieRating(
+      movieId: movieId ?? this.movieId,
+      isLiked: isLiked ?? this.isLiked,
+      timestamp: timestamp ?? this.timestamp,
+      isFavorite: isFavorite ?? this.isFavorite,
+    );
+  }
 }

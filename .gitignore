@@ -1,0 +1,32 @@
+# IDE
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# Flutter
+.packages
+.pub/
+build/
+.dart_tool/
+
+# Android
+android/gradle
+android/.gradle
+android/local.properties
+android/app/debug
+android/app/profile
+android/app/release
+
+# iOS
+ios/Flutter/Flutter.podspec
+ios/Flutter/Flutter.framework
+ios/Flutter/Flutter.modulemap
+ios/Flutter/Generated.xcconfig
+ios/Flutter/ephemeralflutter_export_environment.sh
+ios/Pods/
+ios/Runner.xcworkspace/xcshareddata/
+
+# Other
+.DS_Store
+*.log

@@ -13,9 +13,34 @@ class ActivityRating {
   @HiveField(2)
   final DateTime ratedAt;
 
+  @HiveField(3)
+  final bool isDone; // true si l'utilisateur a fait l'activité
+
+  @HiveField(4)
+  final bool isFavorite; // true si l'utilisateur veut la faire plus tard
+
   ActivityRating({
     required this.activityId,
     required this.rating,
     required this.ratedAt,
+    this.isDone = false,
+    this.isFavorite = false,
   });
+
+  // Méthode pour créer une copie avec certains champs modifiés
+  ActivityRating copyWith({
+    String? activityId,
+    int? rating,
+    DateTime? ratedAt,
+    bool? isDone,
+    bool? isFavorite,
+  }) {
+    return ActivityRating(
+      activityId: activityId ?? this.activityId,
+      rating: rating ?? this.rating,
+      ratedAt: ratedAt ?? this.ratedAt,
+      isDone: isDone ?? this.isDone,
+      isFavorite: isFavorite ?? this.isFavorite,
+    );
+  }
 }

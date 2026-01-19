@@ -16,23 +16,44 @@ class RecommendationCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       elevation: 4,
-      margin: const EdgeInsets.all(16),
+      margin: const EdgeInsets.all(8),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(12),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
           children: [
             Text(
               title,
-              style: Theme.of(context).textTheme.headlineSmall,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                    fontSize: 14,
+                  ),
             ),
             const SizedBox(height: 8),
-            Text(description),
+            Expanded(
+              child: Text(
+                description,
+                maxLines: 3,
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+            ),
             if (onTap != null) ...[
-              const SizedBox(height: 16),
-              ElevatedButton(
-                onPressed: onTap,
-                child: const Text('Plus de détails'),
+              const SizedBox(height: 8),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: onTap,
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                  ),
+                  child: const Text(
+                    'Plus de détails',
+                    style: TextStyle(fontSize: 12),
+                  ),
+                ),
               ),
             ]
           ],

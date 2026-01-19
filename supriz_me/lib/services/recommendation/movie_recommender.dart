@@ -48,6 +48,9 @@ class MovieRecommender {
       }
     }
 
+    // Calculer la préférence de durée basée sur les films aimés
+    final avgDurationPreference = _calculateAverageDurationOfLikedMovies();
+
     // 2. Calculer le score de recommandation pour chaque film non noté
     final List<Map<String, dynamic>> scoredMovies = [];
 
@@ -69,6 +72,11 @@ class MovieRecommender {
       recommendationScore +=
           movie.rating * 0.5; // Seulement 50% du poids original
 
+      // 🌟 Bonus de durée: préférer les films de durée similaire à ceux aimés
+      final durationBonus =
+          _calculateDurationBonus(movie.duration, avgDurationPreference);
+      recommendationScore += durationBonus;
+
       scoredMovies.add({
         'movie': movie,
         'score': recommendationScore,
@@ -82,6 +90,37 @@ class MovieRecommender {
         .map((item) => item['movie'] as Movie)
         .take(count)
         .toList();
+  }
+
+  /// Calcule la durée moyenne des films aimés par l'utilisateur
+  double _calculateAverageDurationOfLikedMovies() {
+    final likedRatings = movieRatingBox.values.where((r) => r.isLiked).toList();
+
+    if (likedRatings.isEmpty) {
+      return 120.0; // Défaut: 2h
+    }
+
+    double totalDuration = 0.0;
+    for (final rating in likedRatings) {
+      final movie = movieBox.get(rating.movieId);
+      if (movie != null) {
+        totalDuration += movie.duration;
+      }
+    }
+
+    return totalDuration / likedRatings.length;
+  }
+
+  /// Calcule un bonus de durée pour un film
+  /// Les films proches de la durée préférée ont un bonus
+  double _calculateDurationBonus(
+      double movieDuration, double preferredDuration) {
+    final durationDiff = (movieDuration - preferredDuration).abs();
+
+    // Bonus: -0 to +2 points basé sur la proximité
+    final bonus = (2.0 - (durationDiff / preferredDuration)).clamp(0.0, 2.0);
+
+    return bonus;
   }
 
   /// Méthode pour enregistrer le Like/Dislike.
