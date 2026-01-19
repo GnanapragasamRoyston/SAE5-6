@@ -1,6 +1,9 @@
+// game_details_page.dart
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hive/hive.dart';
+
 import '../models/board_game.dart';
 
 class GameDetailsPage extends StatefulWidget {
@@ -23,12 +26,12 @@ class _GameDetailsPageState extends State<GameDetailsPage> {
   Set<String> _likedGamesTitles = {};
   Set<String> _dislikedGamesTitles = {};
   Set<String> _favoriteGamesTitles = {};
-  Set<String> _toDoGamesTitles = {};
+  Set<String> _completedGamesTitles = {};
 
   static const String _likedGamesKey = 'liked_games_titles';
   static const String _dislikedGamesKey = 'disliked_games_titles';
   static const String _favoriteGamesKey = 'favorite_games_titles';
-  static const String _toDoGamesKey = 'todo_games_titles';
+  static const String _completedGamesKey = 'completed_games_titles';
 
   @override
   void initState() {
@@ -38,18 +41,19 @@ class _GameDetailsPageState extends State<GameDetailsPage> {
 
   void _loadFeedbackData() {
     final savedLikes =
-        List<String>.from(widget.settingsBox.get(_likedGamesKey) ?? []);
+    List<String>.from(widget.settingsBox.get(_likedGamesKey) ?? []);
     final savedDislikes =
-        List<String>.from(widget.settingsBox.get(_dislikedGamesKey) ?? []);
+    List<String>.from(widget.settingsBox.get(_dislikedGamesKey) ?? []);
     final savedFavorites =
-        List<String>.from(widget.settingsBox.get(_favoriteGamesKey) ?? []);
-    final savedToDo =
-        List<String>.from(widget.settingsBox.get(_toDoGamesKey) ?? []);
+    List<String>.from(widget.settingsBox.get(_favoriteGamesKey) ?? []);
+    final savedCompleted =
+    List<String>.from(widget.settingsBox.get(_completedGamesKey) ?? []);
+
     setState(() {
       _likedGamesTitles = savedLikes.toSet();
       _dislikedGamesTitles = savedDislikes.toSet();
       _favoriteGamesTitles = savedFavorites.toSet();
-      _toDoGamesTitles = savedToDo.toSet();
+      _completedGamesTitles = savedCompleted.toSet();
     });
   }
 
@@ -91,11 +95,11 @@ class _GameDetailsPageState extends State<GameDetailsPage> {
 
       final message = isLiked
           ? (_likedGamesTitles.contains(game.title)
-              ? '✓ Like enregistré'
-              : 'Like annulé')
+          ? '✓ Like enregistré'
+          : 'Like annulé')
           : (_dislikedGamesTitles.contains(game.title)
-              ? '✗ Dislike enregistré'
-              : 'Dislike annulé');
+          ? '✗ Dislike enregistré'
+          : 'Dislike annulé');
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -109,22 +113,23 @@ class _GameDetailsPageState extends State<GameDetailsPage> {
     }
   }
 
-  void _toggleFavorite(BoardGame game) async {
+  void _toggleFavorite() async {
     setState(() {
-      if (_favoriteGamesTitles.contains(game.title)) {
-        _favoriteGamesTitles.remove(game.title);
+      if (_favoriteGamesTitles.contains(widget.game.title)) {
+        _favoriteGamesTitles.remove(widget.game.title);
       } else {
-        _favoriteGamesTitles.add(game.title);
+        _favoriteGamesTitles.add(widget.game.title);
       }
     });
 
     await widget.settingsBox
         .put(_favoriteGamesKey, _favoriteGamesTitles.toList());
+
     widget.onFeedbackGiven();
 
-    final message = _favoriteGamesTitles.contains(game.title)
-        ? '⭐ Ajouté aux favoris'
-        : '⭐ Retiré des favoris';
+    final message = _favoriteGamesTitles.contains(widget.game.title)
+        ? '⭐ Ajouté à "À faire plus tard"'
+        : '⭐ Retiré de "À faire plus tard"';
 
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -137,21 +142,23 @@ class _GameDetailsPageState extends State<GameDetailsPage> {
     }
   }
 
-  void _toggleToDo(BoardGame game) async {
+  void _toggleCompleted() async {
     setState(() {
-      if (_toDoGamesTitles.contains(game.title)) {
-        _toDoGamesTitles.remove(game.title);
+      if (_completedGamesTitles.contains(widget.game.title)) {
+        _completedGamesTitles.remove(widget.game.title);
       } else {
-        _toDoGamesTitles.add(game.title);
+        _completedGamesTitles.add(widget.game.title);
       }
     });
 
-    await widget.settingsBox.put(_toDoGamesKey, _toDoGamesTitles.toList());
+    await widget.settingsBox
+        .put(_completedGamesKey, _completedGamesTitles.toList());
+
     widget.onFeedbackGiven();
 
-    final message = _toDoGamesTitles.contains(game.title)
-        ? '✅ Ajouté à faire plus tard'
-        : '⏸️ Retiré de faire plus tard';
+    final message = _completedGamesTitles.contains(widget.game.title)
+        ? '✅ Jeu complété !'
+        : '⏸️ Marqué comme non complété';
 
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -170,256 +177,242 @@ class _GameDetailsPageState extends State<GameDetailsPage> {
     final isLiked = _likedGamesTitles.contains(game.title);
     final isDisliked = _dislikedGamesTitles.contains(game.title);
     final isFavorite = _favoriteGamesTitles.contains(game.title);
-    final isToDo = _toDoGamesTitles.contains(game.title);
+    final isCompleted = _completedGamesTitles.contains(game.title);
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(game.title, maxLines: 2, overflow: TextOverflow.ellipsis),
-        backgroundColor: Colors.blue,
-      ),
+      backgroundColor: Colors.transparent,
       body: Container(
         decoration: const BoxDecoration(
-          gradient: LinearGradient(
+          gradient: RadialGradient(
+            radius: 1.2,
+            center: Alignment(0, -0.5),
             colors: [
-              Color(0xFF1A3A52),
-              Color(0xFF2563EB),
+              Color(0xFF101738),
+              Color(0xFF050814),
             ],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
           ),
         ),
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+        child: CustomScrollView(
+          slivers: [
+            SliverAppBar(
+              title: Text(
+                game.title,
+                style: GoogleFonts.pressStart2p(
+                  fontSize: 12,
+                  color: Colors.white,
+                ),
+              ),
+              backgroundColor: Colors.transparent,
+              elevation: 0,
+              pinned: true,
+            ),
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.all(20.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      game.title,
+                      style: GoogleFonts.pressStart2p(
+                        fontSize: 18,
+                        color: Colors.white,
+                        letterSpacing: 1.5,
+                        height: 1.5,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    Row(
                       children: [
+                        const Icon(
+                          Icons.star,
+                          color: Color(0xFFffd700),
+                          size: 20,
+                        ),
+                        const SizedBox(width: 4),
                         Text(
-                          game.title,
-                          style: GoogleFonts.bebasNeue(
-                            fontSize: 36,
+                          '${game.rating.toStringAsFixed(1)}/10',
+                          style: GoogleFonts.poppins(
                             color: Colors.white,
-                            letterSpacing: 1.5,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
                           ),
                         ),
-                        const SizedBox(height: 8),
-                        _buildDetailRow(
-                          icon: Icons.star_rate_rounded,
-                          label: 'Note',
-                          value: '${game.rating.toStringAsFixed(2)} / 10',
-                          color: Colors.yellow,
+                        const SizedBox(width: 20),
+                        const Icon(
+                          Icons.psychology_rounded,
+                          color: Color(0xFF00ff85),
+                          size: 20,
                         ),
-                        const SizedBox(height: 4),
-                        _buildDetailRow(
-                          icon: Icons.psychology_rounded,
-                          label: 'Difficulté',
-                          value: '${game.complexity.toStringAsFixed(2)} / 5',
-                          color: Colors.deepPurple[200],
+                        const SizedBox(width: 4),
+                        Text(
+                          'Diff: ${game.complexity.toStringAsFixed(1)}/5',
+                          style: GoogleFonts.poppins(
+                            color: Colors.white,
+                            fontSize: 16,
+                          ),
                         ),
                       ],
                     ),
-                  ),
-                ],
-              ),
+                    const SizedBox(height: 20),
 
-              const SizedBox(height: 24),
-
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  _buildFeedbackButton(
-                    icon: Icons.thumb_down_alt_rounded,
-                    color: Colors.pinkAccent,
-                    isActive: isDisliked,
-                    onTap: () => _handleGameFeedback(game, false),
-                  ),
-                  const SizedBox(width: 10),
-                  _buildFeedbackButton(
-                    icon: Icons.thumb_up_alt_rounded,
-                    color: Colors.greenAccent,
-                    isActive: isLiked,
-                    onTap: () => _handleGameFeedback(game, true),
-                  ),
-                  const SizedBox(width: 10),
-                  _buildFeedbackButton(
-                    icon: Icons.favorite,
-                    color: Colors.redAccent,
-                    isActive: isFavorite,
-                    onTap: () => _toggleFavorite(game),
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 24),
-
-              // Bouton Marquer comme complété
-              Center(
-                child: ElevatedButton.icon(
-                  icon: Icon(
-                    isToDo ? Icons.check_circle : Icons.radio_button_unchecked,
-                    color: Colors.white,
-                  ),
-                  label: Text(
-                    isToDo ? 'À faire ✓' : 'À faire plus tard',
-                    style: GoogleFonts.poppins(
-                      fontWeight: FontWeight.w600,
+                    Wrap(
+                      spacing: 8.0,
+                      runSpacing: 4.0,
+                      children: [
+                        ...game.genres.map(
+                              (genre) => Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 6,
+                            ),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF3cf2ff).withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(
+                                  color:
+                                  const Color(0xFF3cf2ff).withOpacity(0.5)),
+                            ),
+                            child: Text(
+                              genre,
+                              style: GoogleFonts.poppins(
+                                color: Colors.white,
+                                fontSize: 11,
+                              ),
+                            ),
+                          ),
+                        ),
+                        ...game.mechanics.map(
+                              (mechanic) => Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 6,
+                            ),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF3cf2ff).withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(
+                                  color:
+                                  const Color(0xFF3cf2ff).withOpacity(0.5)),
+                            ),
+                            child: Text(
+                              mechanic,
+                              style: GoogleFonts.poppins(
+                                color: Colors.white,
+                                fontSize: 11,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                  ),
-                  onPressed: () => _toggleToDo(game),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor:
-                        isToDo ? Colors.green : Colors.blue.shade700,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 24,
-                      vertical: 12,
+                    const SizedBox(height: 24),
+
+                    Text(
+                      'INFORMATIONS',
+                      style: GoogleFonts.pressStart2p(
+                        color: const Color(0xFF3cf2ff),
+                        fontSize: 12,
+                        letterSpacing: 1.5,
+                      ),
                     ),
-                  ),
+                    const SizedBox(height: 12),
+
+                    _buildInfoRow(
+                      icon: Icons.people_alt,
+                      label: 'Joueurs',
+                      value: '${game.minPlayers} - ${game.maxPlayers}',
+                      color: const Color(0xFF00ff85),
+                    ),
+                    const SizedBox(height: 8),
+                    _buildInfoRow(
+                      icon: Icons.access_time,
+                      label: 'Durée',
+                      value: '${game.avgDuration.toInt()} min',
+                      color: const Color(0xFF00ff85),
+                    ),
+                    const SizedBox(height: 8),
+                    _buildInfoRow(
+                      icon: Icons.calendar_today,
+                      label: 'Année',
+                      value: '${game.releaseYear.toInt()}',
+                      color: const Color(0xFF3cf2ff),
+                    ),
+                    const SizedBox(height: 8),
+                    _buildInfoRow(
+                      icon: Icons.child_care_rounded,
+                      label: 'Âge min',
+                      value: '${game.minAge} ans',
+                      color: const Color(0xFFffd700),
+                    ),
+                    const SizedBox(height: 40),
+
+                    // ✅ 3 BOUTONS DE FEEDBACK (thumb_down, thumb_up, cœur)
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        _buildFeedbackButton(
+                          icon: Icons.thumb_down_alt_rounded,
+                          color: Colors.pinkAccent,
+                          isActive: isDisliked,
+                          onTap: () => _handleGameFeedback(game, false),
+                        ),
+                        const SizedBox(width: 10),
+                        _buildFeedbackButton(
+                          icon: Icons.thumb_up_alt_rounded,
+                          color: Colors.greenAccent,
+                          isActive: isLiked,
+                          onTap: () => _handleGameFeedback(game, true),
+                        ),
+                        const SizedBox(width: 10),
+                        _buildFeedbackButton(
+                          icon: Icons.favorite,
+                          color: Colors.redAccent,
+                          isActive: isFavorite,
+                          onTap: _toggleFavorite,
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 30),
+
+                    // ✅ GROS BOUTON MARQUER COMPLÉTÉ
+                    _buildCompletedButton(isCompleted),
+
+                    const SizedBox(height: 40),
+                  ],
                 ),
               ),
-
-              const SizedBox(height: 24),
-              const Divider(color: Colors.white30),
-              const SizedBox(height: 16),
-
-              _buildDetailRow(
-                icon: Icons.people_alt,
-                label: 'Joueurs',
-                value: '${game.minPlayers} - ${game.maxPlayers} joueurs',
-                color: Colors.cyanAccent,
-              ),
-              const SizedBox(height: 12),
-              _buildDetailRow(
-                icon: Icons.timer,
-                label: 'Durée moyenne',
-                value: '${game.avgDuration} minutes',
-                color: Colors.orangeAccent,
-              ),
-              const SizedBox(height: 12),
-              _buildDetailRow(
-                icon: Icons.calendar_month,
-                label: 'Année de sortie',
-                value: '${game.releaseYear.toInt()}',
-                color: Colors.tealAccent,
-              ),
-              const SizedBox(height: 12),
-              _buildDetailRow(
-                icon: Icons.child_care_rounded,
-                label: 'Âge minimum',
-                value: '${game.minAge} ans et plus',
-                color: Colors.redAccent,
-              ),
-
-              // NOUVEAU : Affichage séparé des Genres
-              _buildTagDetailRow(
-                'Genres',
-                game.genres,
-                Colors.amberAccent,
-              ),
-
-              // NOUVEAU : Affichage séparé des Mécanismes
-              _buildTagDetailRow(
-                'Mécanismes',
-                game.mechanics,
-                Colors.limeAccent,
-              ),
-
-              const SizedBox(height: 30),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
   }
 
-  /// 🔥 NOUVELLE FONCTION : Affiche la liste de tags avec le style des détails (Couleurs Rose/Beige)
-  Widget _buildTagDetailRow(String title, List<String> tags, Color color) {
-    if (tags.isEmpty) return const SizedBox.shrink();
-
-    return Padding(
-      padding: const EdgeInsets.only(top: 12.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(Icons.category_rounded, color: Colors.pinkAccent, size: 18),
-              const SizedBox(width: 6),
-              Text(
-                '$title : ',
-                style: GoogleFonts.poppins(
-                  color: Colors.pink.shade50, // Beige/Rose clair
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Wrap(
-            spacing: 8.0,
-            runSpacing: 4.0,
-            children: tags
-                .where((tag) => tag.isNotEmpty)
-                .map(
-                  (tag) => Chip(
-                    label: Text(tag, style: GoogleFonts.poppins(fontSize: 12)),
-                    // 🔥 Fond du chip : Beige/Rose très clair
-                    backgroundColor: Colors.pink.shade50.withOpacity(0.1),
-                    // 🔥 Couleur du texte : Rose plus soutenu
-                    labelStyle: TextStyle(color: Colors.pink.shade300),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      // 🔥 Bordure : Rose clair
-                      side: BorderSide(
-                          color: Colors.pink.shade300.withOpacity(0.5)),
-                    ),
-                  ),
-                )
-                .toList(),
-          ),
-        ],
-      ),
-    );
-  }
-
-  /// VERSION COMPACTE DU DETAIL ROW (Valeur proche du label)
-  Widget _buildDetailRow({
+  Widget _buildInfoRow({
     required IconData icon,
     required String label,
     required String value,
-    Color? color,
+    required Color color,
   }) {
     return Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         Icon(icon, color: color, size: 18),
-        const SizedBox(width: 6),
-        Flexible(
-          child: Text(
-            '$label : ',
-            style: GoogleFonts.poppins(
-              color: Colors.white70,
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-            ),
+        const SizedBox(width: 8),
+        Text(
+          '$label: ',
+          style: GoogleFonts.poppins(
+            color: Colors.white.withOpacity(0.7),
+            fontSize: 14,
           ),
         ),
-        Flexible(
-          child: Text(
-            value,
-            style: GoogleFonts.poppins(
-              color: Colors.white,
-              fontSize: 14,
-              fontWeight: FontWeight.bold,
-            ),
-            overflow: TextOverflow.ellipsis,
+        Text(
+          value,
+          style: GoogleFonts.poppins(
+            color: Colors.white,
+            fontSize: 14,
+            fontWeight: FontWeight.bold,
           ),
         ),
       ],
@@ -435,19 +428,83 @@ class _GameDetailsPageState extends State<GameDetailsPage> {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: isActive ? color.withOpacity(0.2) : Colors.white12,
+          color: isActive ? color.withOpacity(0.2) : const Color(0xFF121b3a),
           shape: BoxShape.circle,
           border: Border.all(
-            color: isActive ? color : Colors.white24,
+            color: isActive ? color : const Color(0xFF3cf2ff),
             width: 2,
           ),
+          boxShadow: isActive
+              ? [
+            BoxShadow(
+              color: color.withOpacity(0.5),
+              blurRadius: 15,
+              offset: const Offset(0, 4),
+            ),
+          ]
+              : null,
         ),
         child: Icon(
           icon,
           color: isActive ? color : Colors.white70,
           size: 28,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCompletedButton(bool isCompleted) {
+    return Center(
+      child: GestureDetector(
+        onTap: _toggleCompleted,
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: isCompleted
+                  ? [
+                const Color(0xFF00FF88),
+                const Color(0xFF00CC66),
+              ]
+                  : [
+                const Color(0xFF3cf2ff),
+                const Color(0xFF0088ff),
+              ],
+            ),
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: (isCompleted
+                    ? const Color(0xFF00FF88)
+                    : const Color(0xFF3cf2ff))
+                    .withOpacity(0.5),
+                blurRadius: 20,
+                offset: const Offset(0, 8),
+              ),
+            ],
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                isCompleted ? Icons.check_circle : Icons.radio_button_unchecked,
+                color: Colors.white,
+                size: 24,
+              ),
+              const SizedBox(width: 12),
+              Text(
+                isCompleted ? 'COMPLÉTÉ' : 'MARQUER COMPLÉTÉ',
+                style: GoogleFonts.pressStart2p(
+                  fontSize: 12,
+                  color: Colors.white,
+                  letterSpacing: 1.5,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
