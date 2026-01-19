@@ -54,19 +54,14 @@ class HomePage extends StatelessWidget {
         child: SafeArea(
           child: Column(
             children: [
-              // Rien en haut pour l’instant
               const SizedBox(height: 0),
-
               Expanded(
                 child: SingleChildScrollView(
                   padding: const EdgeInsets.all(20),
                   child: Column(
                     children: [
-                      // Logo pixel art
                       _buildPixelLogo(),
                       const SizedBox(height: 20),
-
-                      // Nouvelle phrase sous le logo
                       Text(
                         "l'ennui vous gagne et vous ne savez pas quoi faire ? Laissez vous surprendre",
                         textAlign: TextAlign.center,
@@ -77,16 +72,10 @@ class HomePage extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 30),
-
-                      // Compteur "score" avec vraies données
                       _buildScoreCounter(),
                       const SizedBox(height: 30),
-
-                      // Bouton principal "Surpriz'Me"
                       _buildPlayButton(context),
                       const SizedBox(height: 35),
-
-                      // Menu catégories "gamepad"
                       _buildGamepadMenu(context),
                     ],
                   ),
@@ -194,6 +183,7 @@ class HomePage extends StatelessWidget {
     );
   }
 
+  // ✅ BOUTON SURPRIZ'ME AU HASARD AVEC AUTO-DÉCLENCHEMENT
   Widget _buildPlayButton(BuildContext context) {
     return Container(
       width: double.infinity,
@@ -215,17 +205,55 @@ class HomePage extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           borderRadius: BorderRadius.circular(35),
-          onTap: () => Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => ActivitiesPage(
-                activityBox: activityBox,
-                activityRatingBox: activityRatingBox,
-                activityPreferencesBox: activityPreferencesBox,
-                metricsBox: metricsBox,
-              ),
-            ),
-          ),
+          onTap: () {
+            final random = DateTime.now().millisecond % 3;
+
+            switch (random) {
+              case 0:
+              // ✅ 🎬 FILMS AVEC AUTO-DÉCLENCHEMENT
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => MoviesPage(
+                      movieBox: movieBox,
+                      movieRatingBox: movieRatingBox,
+                      settingsBox: settingsBox,
+                      autoSurprizme: true, // ✅ AUTO-DÉCLENCHE SURPRIZ'ME
+                    ),
+                  ),
+                );
+                break;
+              case 1:
+              // ✅ 🎲 JEUX AVEC AUTO-DÉCLENCHEMENT
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => GamesPage(
+                      boardGameBox: boardGameBox,
+                      settingsBox: settingsBox,
+                      autoSurprizme: true, // ✅ AUTO-DÉCLENCHE SURPRIZ'ME
+                    ),
+                  ),
+                );
+                break;
+              case 2:
+              default:
+              // ✅ ⚡ ACTIVITÉS AVEC AUTO-DÉCLENCHEMENT
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => ActivitiesPage(
+                      activityBox: activityBox,
+                      activityRatingBox: activityRatingBox,
+                      activityPreferencesBox: activityPreferencesBox,
+                      metricsBox: metricsBox,
+                      autoSurprizme: true, // ✅ AUTO-DÉCLENCHE SURPRIZ'ME
+                    ),
+                  ),
+                );
+                break;
+            }
+          },
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -283,6 +311,7 @@ class HomePage extends StatelessWidget {
                   movieBox: movieBox,
                   movieRatingBox: movieRatingBox,
                   settingsBox: settingsBox,
+                  // ✅ PAS D'AUTO-DÉCLENCHEMENT pour les boutons du menu
                 ),
               ),
             ),
@@ -301,6 +330,7 @@ class HomePage extends StatelessWidget {
                 page: GamesPage(
                   boardGameBox: boardGameBox,
                   settingsBox: settingsBox,
+                  // ✅ PAS D'AUTO-DÉCLENCHEMENT pour les boutons du menu
                 ),
               ),
             ),
@@ -316,6 +346,7 @@ class HomePage extends StatelessWidget {
                   activityRatingBox: activityRatingBox,
                   activityPreferencesBox: activityPreferencesBox,
                   metricsBox: metricsBox,
+                  // ✅ PAS D'AUTO-DÉCLENCHEMENT pour les boutons du menu
                 ),
               ),
             ),
