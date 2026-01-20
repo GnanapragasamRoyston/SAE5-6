@@ -12,13 +12,13 @@ import 'game_details_page.dart';
 class GamesPage extends StatefulWidget {
   final Box boardGameBox;
   final Box settingsBox;
-  final bool autoSurprizme; // ✅ NOUVEAU PARAMÈTRE
+  final bool autoSurprizme;
 
   const GamesPage({
     super.key,
     required this.boardGameBox,
     required this.settingsBox,
-    this.autoSurprizme = false, // ✅ PAR DÉFAUT FALSE
+    this.autoSurprizme = false,
   });
 
   @override
@@ -32,7 +32,6 @@ class _GamesPageState extends State<GamesPage> {
   int? _maxDuration;
   Set<String> _likedGamesTitles = {};
   Set<String> _dislikedGamesTitles = {};
-  Set<String> _favoriteGamesTitles = {};
   Set<String> _completedGamesTitles = {};
   Map<String, double> _tagProfileScores = {};
   List<String>? _initialGenres;
@@ -43,7 +42,6 @@ class _GamesPageState extends State<GamesPage> {
   static const String _maxDurationKey = 'max_duration_preference';
   static const String _likedGamesKey = 'liked_games_titles';
   static const String _dislikedGamesKey = 'disliked_games_titles';
-  static const String _favoriteGamesKey = 'favorite_games_titles';
   static const String _completedGamesKey = 'completed_games_titles';
 
   @override
@@ -57,17 +55,14 @@ class _GamesPageState extends State<GamesPage> {
 
   void _loadFeedbackData() {
     final savedLikes =
-    List<String>.from(widget.settingsBox.get(_likedGamesKey) ?? []);
+        List<String>.from(widget.settingsBox.get(_likedGamesKey) ?? []);
     final savedDislikes =
-    List<String>.from(widget.settingsBox.get(_dislikedGamesKey) ?? []);
-    final savedFavorites =
-    List<String>.from(widget.settingsBox.get(_favoriteGamesKey) ?? []);
+        List<String>.from(widget.settingsBox.get(_dislikedGamesKey) ?? []);
     final savedCompleted =
-    List<String>.from(widget.settingsBox.get(_completedGamesKey) ?? []);
+        List<String>.from(widget.settingsBox.get(_completedGamesKey) ?? []);
 
     _likedGamesTitles = savedLikes.toSet();
     _dislikedGamesTitles = savedDislikes.toSet();
-    _favoriteGamesTitles = savedFavorites.toSet();
     _completedGamesTitles = savedCompleted.toSet();
   }
 
@@ -76,7 +71,7 @@ class _GamesPageState extends State<GamesPage> {
 
     if (preferencesSet) {
       final List<String>? savedGenres =
-      widget.settingsBox.get(_userGenresKey)?.cast<String>();
+          widget.settingsBox.get(_userGenresKey)?.cast<String>();
       _initialGenres = savedGenres;
       _preferredPlayers = widget.settingsBox.get(_playersCountKey);
       _maxDuration = widget.settingsBox.get(_maxDurationKey);
@@ -88,7 +83,6 @@ class _GamesPageState extends State<GamesPage> {
         maxDuration: _maxDuration,
       );
 
-      // ✅ SEUL DÉCLENCHEMENT ICI (après chargement complet)
       if (widget.autoSurprizme && mounted) {
         await Future.delayed(const Duration(milliseconds: 500));
         if (mounted) {
@@ -96,6 +90,39 @@ class _GamesPageState extends State<GamesPage> {
         }
       }
     } else {
+      _navigateToPreferences(canGoBack: false);
+    }
+  }
+
+  Future<void> _resetGamePreferences() async {
+    await Future.wait([
+      widget.settingsBox.delete(_preferencesSetKey),
+      widget.settingsBox.delete(_userGenresKey),
+      widget.settingsBox.delete(_playersCountKey),
+      widget.settingsBox.delete(_maxDurationKey),
+      widget.settingsBox.delete(_likedGamesKey),
+      widget.settingsBox.delete(_dislikedGamesKey),
+      widget.settingsBox.delete(_completedGamesKey),
+    ]);
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Réinitialisation complète effectuée. Veuillez choisir de nouvelles préférences.',
+          ),
+        ),
+      );
+
+      setState(() {
+        _likedGamesTitles.clear();
+        _dislikedGamesTitles.clear();
+        _completedGamesTitles.clear();
+        _tagProfileScores.clear();
+        _recommendedGames.clear();
+        _isContentLoaded = false;
+      });
+
       _navigateToPreferences(canGoBack: false);
     }
   }
@@ -114,7 +141,7 @@ class _GamesPageState extends State<GamesPage> {
       _preferredPlayers = widget.settingsBox.get(_playersCountKey);
       _maxDuration = widget.settingsBox.get(_maxDurationKey);
       final List<String>? savedGenres =
-      widget.settingsBox.get(_userGenresKey)?.cast<String>();
+          widget.settingsBox.get(_userGenresKey)?.cast<String>();
       _initialGenres = savedGenres;
 
       _buildTagProfile();
@@ -145,7 +172,7 @@ class _GamesPageState extends State<GamesPage> {
     if (availableSurpriseGames.isNotEmpty) {
       final random = Random();
       final surpriseGame =
-      availableSurpriseGames[random.nextInt(availableSurpriseGames.length)];
+          availableSurpriseGames[random.nextInt(availableSurpriseGames.length)];
 
       Navigator.of(context).push(
         MaterialPageRoute(
@@ -194,8 +221,8 @@ class _GamesPageState extends State<GamesPage> {
       for (var title in _likedGamesTitles) {
         final game = widget.boardGameBox.values.cast<BoardGame>().firstWhere(
               (g) => g.title == title,
-          orElse: () => BoardGame.empty(),
-        );
+              orElse: () => BoardGame.empty(),
+            );
 
         if (game.title.isNotEmpty) {
           for (var tag in game.genres) {
@@ -211,8 +238,8 @@ class _GamesPageState extends State<GamesPage> {
       for (var title in _dislikedGamesTitles) {
         final game = widget.boardGameBox.values.cast<BoardGame>().firstWhere(
               (g) => g.title == title,
-          orElse: () => BoardGame.empty(),
-        );
+              orElse: () => BoardGame.empty(),
+            );
 
         if (game.title.isNotEmpty) {
           for (var tag in game.genres) {
@@ -229,21 +256,6 @@ class _GamesPageState extends State<GamesPage> {
     }
 
     _tagProfileScores = profile;
-  }
-
-  void _toggleGameFavorite(String gameTitle) {
-    if (_favoriteGamesTitles.contains(gameTitle)) {
-      _favoriteGamesTitles.remove(gameTitle);
-    } else {
-      _favoriteGamesTitles.add(gameTitle);
-    }
-
-    widget.settingsBox.put(_favoriteGamesKey, _favoriteGamesTitles.toList());
-    setState(() {});
-  }
-
-  bool _isGameFavorite(String gameTitle) {
-    return _favoriteGamesTitles.contains(gameTitle);
   }
 
   double _calculateRecommendationScore(BoardGame game) {
@@ -276,8 +288,8 @@ class _GamesPageState extends State<GamesPage> {
     for (var title in _likedGamesTitles) {
       final game = widget.boardGameBox.values.cast<BoardGame>().firstWhere(
             (g) => g.title == title,
-        orElse: () => BoardGame.empty(),
-      );
+            orElse: () => BoardGame.empty(),
+          );
 
       if (game.title.isNotEmpty) {
         totalComplexity += game.complexity;
@@ -329,11 +341,11 @@ class _GamesPageState extends State<GamesPage> {
 
     final message = isLiked
         ? (_likedGamesTitles.contains(game.title)
-        ? '✓ Jeu favori enregistré'
-        : 'Like annulé')
+            ? '✔ Jeu favori enregistré'
+            : 'Like annulé')
         : (_dislikedGamesTitles.contains(game.title)
-        ? '✗ Jeu pénalisé'
-        : 'Dislike annulé');
+            ? '✗ Jeu pénalisé'
+            : 'Dislike annulé');
 
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -370,7 +382,8 @@ class _GamesPageState extends State<GamesPage> {
 
     if (playerCount != null && playerCount > 0) {
       filteredGames = filteredGames.where((game) {
-        return playerCount >= game.minPlayers && playerCount <= game.maxPlayers;
+        return playerCount >= game.minPlayers &&
+            playerCount <= game.maxPlayers;
       });
     }
 
@@ -415,138 +428,141 @@ class _GamesPageState extends State<GamesPage> {
             Expanded(
               child: !_isContentLoaded
                   ? const Center(
-                child: CircularProgressIndicator(color: Color(0xFF00d9ff)),
-              )
+                      child: CircularProgressIndicator(
+                          color: Color(0xFF00d9ff)),
+                    )
                   : SingleChildScrollView(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  children: [
-                    _buildSurpriseMeButton(),
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF0d1b35),
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                            color: const Color(0xFF00d9ff), width: 2),
-                        boxShadow: [
-                          BoxShadow(
-                            color: const Color(0xFF00d9ff).withOpacity(0.3),
-                            blurRadius: 20,
-                            offset: const Offset(0, 8),
-                          ),
-                        ],
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      padding: const EdgeInsets.all(20),
+                      child: Column(
                         children: [
-                          Text(
-                            '${widget.boardGameBox.length}',
-                            style: GoogleFonts.pressStart2p(
-                              fontSize: 24,
-                              color: const Color(0xFF00d9ff),
-                              letterSpacing: 2,
+                          _buildSurpriseMeButton(),
+                          Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF0d1b35),
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(
+                                  color: const Color(0xFF00d9ff), width: 2),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: const Color(0xFF00d9ff)
+                                      .withOpacity(0.3),
+                                  blurRadius: 20,
+                                  offset: const Offset(0, 8),
+                                ),
+                              ],
+                            ),
+                            child: Row(
+                              mainAxisAlignment:
+                                  MainAxisAlignment.spaceAround,
+                              children: [
+                                Text(
+                                  '${widget.boardGameBox.length}',
+                                  style: GoogleFonts.pressStart2p(
+                                    fontSize: 24,
+                                    color: const Color(0xFF00d9ff),
+                                    letterSpacing: 2,
+                                  ),
+                                ),
+                                Text(
+                                  "JEUX DISPO",
+                                  style: GoogleFonts.pressStart2p(
+                                    fontSize: 10,
+                                    color:
+                                        Colors.white.withOpacity(0.9),
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
-                          Text(
-                            "JEUX DISPO",
-                            style: GoogleFonts.pressStart2p(
-                              fontSize: 10,
-                              color: Colors.white.withOpacity(0.9),
+                          const SizedBox(height: 20),
+                          if (_preferredPlayers != null ||
+                              _maxDuration != null)
+                            Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF0d1b35),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: const Color(0xFF00d9ff)
+                                      .withOpacity(0.5),
+                                ),
+                              ),
+                              child: Text(
+                                'FILTRES : ${_preferredPlayers != null ? '👤 $_preferredPlayers joueurs' : ''}${_maxDuration != null ? ' | ⏱️ ${_maxDuration}min' : ''}',
+                                style: GoogleFonts.pressStart2p(
+                                  fontSize: 9,
+                                  color:
+                                      Colors.white.withOpacity(0.9),
+                                ),
+                              ),
+                            ),
+                          const SizedBox(height: 25),
+                          _buildRecommendationsSection(),
+                          const SizedBox(height: 25),
+                          _buildArcadeSectionTitle(
+                              Icons.star, 'TOP NOTES'),
+                          const SizedBox(height: 12),
+                          _buildHorizontalGameList(
+                            _topRatedGames(),
+                            const Color(0xFFffd700),
+                            showFeedback: true,
+                            showDynamicScore: false,
+                            infoType: _GameInfoType.rating,
+                          ),
+                          const SizedBox(height: 25),
+                          _buildArcadeSectionTitle(
+                              Icons.psychology, 'PLUS DURS'),
+                          const SizedBox(height: 12),
+                          _buildHorizontalGameList(
+                            _mostComplexGames(),
+                            const Color(0xFFb67dff),
+                            showFeedback: true,
+                            showDynamicScore: false,
+                            infoType: _GameInfoType.complexity,
+                          ),
+                          const SizedBox(height: 25),
+                          _buildArcadeSectionTitle(
+                              Icons.new_releases, 'RÉCENTS'),
+                          const SizedBox(height: 12),
+                          _buildHorizontalGameList(
+                            _mostRecentGames(),
+                            const Color(0xFF00c2ff),
+                            showFeedback: true,
+                            showDynamicScore: false,
+                            infoType: _GameInfoType.year,
+                          ),
+                          const SizedBox(height: 25),
+                          _buildCompletedGamesSection(),
+                          const SizedBox(height: 40),
+                          Center(
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF0d1b35),
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                    color: const Color(0xFF00d9ff),
+                                    width: 2),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: const Color(0xFF00d9ff)
+                                        .withOpacity(0.4),
+                                    blurRadius: 15,
+                                    offset: const Offset(0, 5),
+                                  ),
+                                ],
+                              ),
+                              child: IconButton(
+                                icon: const Icon(Icons.home,
+                                    color: Colors.white, size: 32),
+                                onPressed: () => Navigator.popUntil(
+                                    context, (route) => route.isFirst),
+                              ),
                             ),
                           ),
                         ],
                       ),
                     ),
-                    const SizedBox(height: 20),
-
-                    if (_preferredPlayers != null || _maxDuration != null)
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF0d1b35),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                              color: const Color(0xFF00d9ff).withOpacity(0.5)),
-                        ),
-                        child: Text(
-                          'FILTRES : ${_preferredPlayers != null ? '👤 $_preferredPlayers joueurs' : ''}${_maxDuration != null ? ' | ⏱️ ${_maxDuration}min' : ''}',
-                          style: GoogleFonts.pressStart2p(
-                            fontSize: 9,
-                            color: Colors.white.withOpacity(0.9),
-                          ),
-                        ),
-                      ),
-                    const SizedBox(height: 25),
-
-                    _buildRecommendationsSection(),
-                    const SizedBox(height: 25),
-
-                    _buildArcadeSectionTitle(Icons.star, 'TOP NOTES'),
-                    const SizedBox(height: 12),
-                    _buildHorizontalGameList(
-                      _topRatedGames(),
-                      const Color(0xFFffd700),
-                      showFeedback: true,
-                      showDynamicScore: false,
-                      infoType: _GameInfoType.rating,
-                    ),
-                    const SizedBox(height: 25),
-
-                    _buildArcadeSectionTitle(Icons.psychology, 'PLUS DURS'),
-                    const SizedBox(height: 12),
-                    _buildHorizontalGameList(
-                      _mostComplexGames(),
-                      const Color(0xFFb67dff),
-                      showFeedback: true,
-                      showDynamicScore: false,
-                      infoType: _GameInfoType.complexity,
-                    ),
-                    const SizedBox(height: 25),
-
-                    _buildArcadeSectionTitle(Icons.new_releases, 'RÉCENTS'),
-                    const SizedBox(height: 12),
-                    _buildHorizontalGameList(
-                      _mostRecentGames(),
-                      const Color(0xFF00c2ff),
-                      showFeedback: true,
-                      showDynamicScore: false,
-                      infoType: _GameInfoType.year,
-                    ),
-                    const SizedBox(height: 25),
-
-                    _buildFavoriteGamesSection(),
-                    const SizedBox(height: 25),
-
-                    _buildCompletedGamesSection(),
-                    const SizedBox(height: 40),
-
-                    Center(
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF0d1b35),
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                              color: const Color(0xFF00d9ff), width: 2),
-                          boxShadow: [
-                            BoxShadow(
-                              color: const Color(0xFF00d9ff).withOpacity(0.4),
-                              blurRadius: 15,
-                              offset: const Offset(0, 5),
-                            ),
-                          ],
-                        ),
-                        child: IconButton(
-                          icon: const Icon(Icons.home,
-                              color: Colors.white, size: 32),
-                          onPressed: () => Navigator.popUntil(
-                              context, (route) => route.isFirst),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
             ),
           ],
         ),
@@ -565,7 +581,8 @@ class _GamesPageState extends State<GamesPage> {
         ),
       ),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+        padding:
+            const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
         child: Row(
           children: [
             Container(
@@ -574,7 +591,8 @@ class _GamesPageState extends State<GamesPage> {
                 color: Colors.black.withOpacity(0.25),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: const Icon(Icons.casino, color: Colors.white, size: 24),
+              child:
+                  const Icon(Icons.casino, color: Colors.white, size: 24),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -586,6 +604,10 @@ class _GamesPageState extends State<GamesPage> {
                   letterSpacing: 2,
                 ),
               ),
+            ),
+            IconButton(
+              icon: const Icon(Icons.refresh, color: Colors.white, size: 22),
+              onPressed: _resetGamePreferences,
             ),
             IconButton(
               icon: const Icon(Icons.settings, color: Colors.white, size: 22),
@@ -738,79 +760,6 @@ class _GamesPageState extends State<GamesPage> {
     );
   }
 
-  Widget _buildFavoriteGamesSection() {
-    final allGames = widget.boardGameBox.values.cast<BoardGame>().toList();
-    final favoriteGames = allGames
-        .where((game) => _favoriteGamesTitles.contains(game.title))
-        .toList();
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-          decoration: BoxDecoration(
-            color: const Color(0xFF0d1b35),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: const Color(0xFFffa940), width: 1.5),
-          ),
-          child: Row(
-            children: [
-              const Icon(Icons.bookmark, color: Color(0xFFffa940), size: 20),
-              const SizedBox(width: 10),
-              Text(
-                'À FAIRE PLUS TARD',
-                style: GoogleFonts.pressStart2p(
-                  fontSize: 11,
-                  color: Colors.white,
-                  letterSpacing: 2,
-                ),
-              ),
-              const Spacer(),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFffa940).withOpacity(0.3),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  '${favoriteGames.length}',
-                  style: GoogleFonts.pressStart2p(
-                    fontSize: 10,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 12),
-        if (favoriteGames.isEmpty)
-          Center(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 12),
-              child: Text(
-                'Aucun jeu ajouté',
-                style: GoogleFonts.poppins(color: Colors.white70, fontSize: 12),
-              ),
-            ),
-          )
-        else
-          SizedBox(
-            height: 170,
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              itemCount: favoriteGames.length,
-              itemBuilder: (context, index) {
-                final game = favoriteGames[index];
-                return _buildGameCard(game, const Color(0xFFffa940));
-              },
-            ),
-          ),
-      ],
-    );
-  }
-
   Widget _buildCompletedGamesSection() {
     final allGames = widget.boardGameBox.values.cast<BoardGame>().toList();
     final completedGames = allGames
@@ -825,15 +774,18 @@ class _GamesPageState extends State<GamesPage> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          padding:
+              const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           decoration: BoxDecoration(
             color: const Color(0xFF0d1b35),
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: const Color(0xFF00FF88), width: 1.5),
+            border:
+                Border.all(color: const Color(0xFF00FF88), width: 1.5),
           ),
           child: Row(
             children: [
-              const Icon(Icons.check_circle, color: Color(0xFF00FF88), size: 20),
+              const Icon(Icons.check_circle,
+                  color: Color(0xFF00FF88), size: 20),
               const SizedBox(width: 10),
               Text(
                 'JEUX COMPLÉTÉS',
@@ -845,7 +797,8 @@ class _GamesPageState extends State<GamesPage> {
               ),
               const Spacer(),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
                   color: const Color(0xFF00FF88).withOpacity(0.3),
                   borderRadius: BorderRadius.circular(12),
@@ -902,19 +855,21 @@ class _GamesPageState extends State<GamesPage> {
   }
 
   Widget _buildHorizontalGameList(
-      List<BoardGame> games,
-      Color? color, {
-        required bool showFeedback,
-        required bool showDynamicScore,
-        required _GameInfoType infoType,
-      }) {
+    List<BoardGame> games,
+    Color? color, {
+    required bool showFeedback,
+    required bool showDynamicScore,
+    required _GameInfoType infoType,
+  }) {
     if (games.isEmpty) {
       return SizedBox(
         height: 170,
         child: Center(
           child: Text(
             'Aucun jeu',
-            style: GoogleFonts.poppins(color: Colors.white.withOpacity(0.7)),
+            style: GoogleFonts.poppins(
+              color: Colors.white.withOpacity(0.7),
+            ),
           ),
         ),
       );
@@ -940,12 +895,12 @@ class _GamesPageState extends State<GamesPage> {
   }
 
   Widget _buildGameCard(
-      BoardGame game,
-      Color? color, {
-        bool showFeedback = true,
-        bool showDynamicScore = false,
-        _GameInfoType infoType = _GameInfoType.rating,
-      }) {
+    BoardGame game,
+    Color? color, {
+    bool showFeedback = true,
+    bool showDynamicScore = false,
+    _GameInfoType infoType = _GameInfoType.rating,
+  }) {
     final isLiked = _likedGamesTitles.contains(game.title);
     final isDisliked = _dislikedGamesTitles.contains(game.title);
 
@@ -966,7 +921,8 @@ class _GamesPageState extends State<GamesPage> {
         case _GameInfoType.rating:
           extraInfoWidget = Row(
             children: [
-              const Icon(Icons.star, color: Color(0xFFffd700), size: 12),
+              const Icon(Icons.star,
+                  color: Color(0xFFffd700), size: 12),
               const SizedBox(width: 4),
               Text(
                 '${game.rating.toStringAsFixed(1)}',
@@ -1036,13 +992,14 @@ class _GamesPageState extends State<GamesPage> {
             color: isLiked
                 ? Colors.greenAccent
                 : isDisliked
-                ? Colors.pinkAccent
-                : (color ?? const Color(0xFF00d9ff)),
+                    ? Colors.pinkAccent
+                    : (color ?? const Color(0xFF00d9ff)),
             width: 2,
           ),
           boxShadow: [
             BoxShadow(
-              color: (color ?? const Color(0xFF00d9ff)).withOpacity(0.45),
+              color:
+                  (color ?? const Color(0xFF00d9ff)).withOpacity(0.45),
               blurRadius: 18,
               offset: const Offset(0, 10),
             ),
@@ -1086,30 +1043,24 @@ class _GamesPageState extends State<GamesPage> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     GestureDetector(
-                      onTap: () => _handleGameFeedback(game, false),
+                      onTap: () =>
+                          _handleGameFeedback(game, false),
                       child: Icon(
                         Icons.thumb_down,
                         size: 18,
-                        color: isDisliked ? Colors.pinkAccent : Colors.white38,
+                        color: isDisliked
+                            ? Colors.pinkAccent
+                            : Colors.white38,
                       ),
                     ),
                     GestureDetector(
-                      onTap: () => _handleGameFeedback(game, true),
+                      onTap: () =>
+                          _handleGameFeedback(game, true),
                       child: Icon(
                         Icons.thumb_up,
                         size: 18,
-                        color: isLiked ? Colors.greenAccent : Colors.white38,
-                      ),
-                    ),
-                    GestureDetector(
-                      onTap: () => _toggleGameFavorite(game.title),
-                      child: Icon(
-                        _isGameFavorite(game.title)
-                            ? Icons.favorite
-                            : Icons.favorite_border,
-                        size: 18,
-                        color: _isGameFavorite(game.title)
-                            ? Colors.red
+                        color: isLiked
+                            ? Colors.greenAccent
                             : Colors.white38,
                       ),
                     ),

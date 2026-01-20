@@ -411,7 +411,6 @@ class _MoviesPageState extends State<MoviesPage> {
                     }).toList();
                   }()),
 
-                    _buildFavoriteMoviesSection(),
                     const SizedBox(height: 25),
 
                     _buildCompletedMoviesSection(),
@@ -584,86 +583,6 @@ class _MoviesPageState extends State<MoviesPage> {
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildFavoriteMoviesSection() {
-    final allMovies = widget.movieBox.values.toList();
-    final favoriteMovies = allMovies
-        .where((movie) => _favoriteMovieTitles.contains(movie.title))
-        .toList();
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-          decoration: BoxDecoration(
-            color: const Color(0xFF121b3a),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: const Color(0xFFffa940), width: 1.5),
-          ),
-          child: Row(
-            children: [
-              const Icon(Icons.bookmark, color: Color(0xFFffa940), size: 20),
-              const SizedBox(width: 10),
-              Text(
-                'À FAIRE PLUS TARD',
-                style: GoogleFonts.pressStart2p(
-                  fontSize: 11,
-                  color: Colors.white,
-                  letterSpacing: 2,
-                ),
-              ),
-              const Spacer(),
-              Container(
-                padding:
-                const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFffa940).withOpacity(0.3),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  '${favoriteMovies.length}',
-                  style: GoogleFonts.pressStart2p(
-                    fontSize: 10,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 12),
-        if (favoriteMovies.isEmpty)
-          Center(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 12),
-              child: Text(
-                'Aucun film ajouté',
-                style:
-                GoogleFonts.poppins(color: Colors.white70, fontSize: 12),
-              ),
-            ),
-          )
-        else
-          SizedBox(
-            height: 170,
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              itemCount: favoriteMovies.length,
-              itemBuilder: (context, index) {
-                final movie = favoriteMovies[index];
-                return MovieTile(
-                  movie: movie,
-                  recommender: _recommender,
-                  tileColor: const Color(0xFFffa940),
-                  moviesPageRef: this,
-                );
-              },
-            ),
-          ),
-      ],
     );
   }
 
@@ -1182,8 +1101,28 @@ class _MovieDetailPageState extends State<MovieDetailPage> {
                           ],
                         ),
                         const SizedBox(height: 30),
+                        // --- AJOUTER CE BLOC ICI ---
+                        Center(
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF121b3a),
+                              shape: BoxShape.circle,
+                              border: Border.all(color: const Color(0xFF3cf2ff), width: 2),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: const Color(0xFF00e0ff).withOpacity(0.4),
+                                  blurRadius: 15,
+                                  offset: const Offset(0, 5),
+                                ),
+                              ],
+                            ),
+                            child: IconButton(
+                              icon: const Icon(Icons.home, color: Colors.white, size: 32),
+                              onPressed: () => Navigator.popUntil(context, (route) => route.isFirst),
+                            ),
+                          ),
+                        ),
 
-                        _buildCompletedButton(isCompleted),
 
                         const SizedBox(height: 40),
                       ],
@@ -1229,61 +1168,6 @@ class _MovieDetailPageState extends State<MovieDetailPage> {
           icon,
           color: isActive ? color : Colors.white70,
           size: 28,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildCompletedButton(bool isCompleted) {
-    return Center(
-      child: GestureDetector(
-        onTap: _toggleCompleted,
-        child: Container(
-          width: double.infinity,
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: isCompleted
-                  ? [
-                const Color(0xFF00FF88),
-                const Color(0xFF00CC66),
-              ]
-                  : [
-                const Color(0xFF3cf2ff),
-                const Color(0xFF0088ff),
-              ],
-            ),
-            borderRadius: BorderRadius.circular(20),
-            boxShadow: [
-              BoxShadow(
-                color: (isCompleted
-                    ? const Color(0xFF00FF88)
-                    : const Color(0xFF3cf2ff))
-                    .withOpacity(0.5),
-                blurRadius: 20,
-                offset: const Offset(0, 8),
-              ),
-            ],
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                isCompleted ? Icons.check_circle : Icons.radio_button_unchecked,
-                color: Colors.white,
-                size: 24,
-              ),
-              const SizedBox(width: 12),
-              Text(
-                isCompleted ? 'COMPLÉTÉ' : 'MARQUER COMPLÉTÉ',
-                style: GoogleFonts.pressStart2p(
-                  fontSize: 12,
-                  color: Colors.white,
-                  letterSpacing: 1.5,
-                ),
-              ),
-            ],
-          ),
         ),
       ),
     );

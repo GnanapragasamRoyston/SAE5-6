@@ -26,12 +26,10 @@ class _GameDetailsPageState extends State<GameDetailsPage> {
   Set<String> _likedGamesTitles = {};
   Set<String> _dislikedGamesTitles = {};
   Set<String> _favoriteGamesTitles = {};
-  Set<String> _completedGamesTitles = {};
 
   static const String _likedGamesKey = 'liked_games_titles';
   static const String _dislikedGamesKey = 'disliked_games_titles';
   static const String _favoriteGamesKey = 'favorite_games_titles';
-  static const String _completedGamesKey = 'completed_games_titles';
 
   @override
   void initState() {
@@ -46,14 +44,11 @@ class _GameDetailsPageState extends State<GameDetailsPage> {
     List<String>.from(widget.settingsBox.get(_dislikedGamesKey) ?? []);
     final savedFavorites =
     List<String>.from(widget.settingsBox.get(_favoriteGamesKey) ?? []);
-    final savedCompleted =
-    List<String>.from(widget.settingsBox.get(_completedGamesKey) ?? []);
 
     setState(() {
       _likedGamesTitles = savedLikes.toSet();
       _dislikedGamesTitles = savedDislikes.toSet();
       _favoriteGamesTitles = savedFavorites.toSet();
-      _completedGamesTitles = savedCompleted.toSet();
     });
   }
 
@@ -142,42 +137,12 @@ class _GameDetailsPageState extends State<GameDetailsPage> {
     }
   }
 
-  void _toggleCompleted() async {
-    setState(() {
-      if (_completedGamesTitles.contains(widget.game.title)) {
-        _completedGamesTitles.remove(widget.game.title);
-      } else {
-        _completedGamesTitles.add(widget.game.title);
-      }
-    });
-
-    await widget.settingsBox
-        .put(_completedGamesKey, _completedGamesTitles.toList());
-
-    widget.onFeedbackGiven();
-
-    final message = _completedGamesTitles.contains(widget.game.title)
-        ? '✅ Jeu complété !'
-        : '⏸️ Marqué comme non complété';
-
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(message),
-          backgroundColor: Colors.grey.shade700,
-          duration: const Duration(milliseconds: 800),
-        ),
-      );
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final game = widget.game;
     final isLiked = _likedGamesTitles.contains(game.title);
     final isDisliked = _dislikedGamesTitles.contains(game.title);
     final isFavorite = _favoriteGamesTitles.contains(game.title);
-    final isCompleted = _completedGamesTitles.contains(game.title);
 
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -348,7 +313,6 @@ class _GameDetailsPageState extends State<GameDetailsPage> {
                     ),
                     const SizedBox(height: 40),
 
-                    // ✅ 3 BOUTONS DE FEEDBACK (thumb_down, thumb_up, cœur)
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -374,11 +338,32 @@ class _GameDetailsPageState extends State<GameDetailsPage> {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 30),
-
-                    // ✅ GROS BOUTON MARQUER COMPLÉTÉ
-                    _buildCompletedButton(isCompleted),
-
+                    const SizedBox(height: 40),
+                    
+                    // BOUTON HOME AJOUTÉ
+                    Center(
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF121b3a),
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                              color: const Color(0xFF3cf2ff), width: 2),
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(0xFF00e0ff).withOpacity(0.4),
+                              blurRadius: 15,
+                              offset: const Offset(0, 5),
+                            ),
+                          ],
+                        ),
+                        child: IconButton(
+                          icon: const Icon(Icons.home,
+                              color: Colors.white, size: 32),
+                          onPressed: () => Navigator.popUntil(
+                              context, (route) => route.isFirst),
+                        ),
+                      ),
+                    ),
                     const SizedBox(height: 40),
                   ],
                 ),
@@ -450,61 +435,6 @@ class _GameDetailsPageState extends State<GameDetailsPage> {
           icon,
           color: isActive ? color : Colors.white70,
           size: 28,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildCompletedButton(bool isCompleted) {
-    return Center(
-      child: GestureDetector(
-        onTap: _toggleCompleted,
-        child: Container(
-          width: double.infinity,
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: isCompleted
-                  ? [
-                const Color(0xFF00FF88),
-                const Color(0xFF00CC66),
-              ]
-                  : [
-                const Color(0xFF3cf2ff),
-                const Color(0xFF0088ff),
-              ],
-            ),
-            borderRadius: BorderRadius.circular(20),
-            boxShadow: [
-              BoxShadow(
-                color: (isCompleted
-                    ? const Color(0xFF00FF88)
-                    : const Color(0xFF3cf2ff))
-                    .withOpacity(0.5),
-                blurRadius: 20,
-                offset: const Offset(0, 8),
-              ),
-            ],
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                isCompleted ? Icons.check_circle : Icons.radio_button_unchecked,
-                color: Colors.white,
-                size: 24,
-              ),
-              const SizedBox(width: 12),
-              Text(
-                isCompleted ? 'COMPLÉTÉ' : 'MARQUER COMPLÉTÉ',
-                style: GoogleFonts.pressStart2p(
-                  fontSize: 12,
-                  color: Colors.white,
-                  letterSpacing: 1.5,
-                ),
-              ),
-            ],
-          ),
         ),
       ),
     );

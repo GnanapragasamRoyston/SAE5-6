@@ -31,6 +31,8 @@ class ActivitiesPage extends StatefulWidget {
   State<ActivitiesPage> createState() => _ActivitiesPageState();
 }
 
+// Remplacez votre classe _ActivitiesPageState par celle-ci
+
 class _ActivitiesPageState extends State<ActivitiesPage>
     with TickerProviderStateMixin, WidgetsBindingObserver {
   late ActivityRecommendationServiceVectorial recommendationService;
@@ -53,7 +55,6 @@ class _ActivitiesPageState extends State<ActivitiesPage>
     );
     _initializeRecommendationService();
 
-    // ✅ AUTO-DÉCLENCHE SURPRIZ'ME SI DEMANDÉ
     if (widget.autoSurprizme) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _triggerSurprizme();
@@ -103,6 +104,17 @@ class _ActivitiesPageState extends State<ActivitiesPage>
     }
   }
 
+  // ✅ NOUVELLE FONCTION RESET
+  void _resetPreferences() async {
+    await widget.activityPreferencesBox.clear();
+    setState(() {
+      _initializeRecommendationService();
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Préférences réinitialisées')),
+    );
+  }
+
   void _loadPreferencesAfterConfiguration() {
     if (widget.activityPreferencesBox.isNotEmpty) {
       userPreferences = widget.activityPreferencesBox.getAt(0) ??
@@ -150,7 +162,6 @@ class _ActivitiesPageState extends State<ActivitiesPage>
     );
   }
 
-  // ✅ NOUVELLE FONCTION POUR DÉCLENCHER SURPRIZ'ME
   void _triggerSurprizme() async {
     _surpriseRotationController.forward().then((_) {
       _surpriseRotationController.reset();
@@ -198,9 +209,17 @@ class _ActivitiesPageState extends State<ActivitiesPage>
     setState(() {});
   }
 
+  // ✅ FONCTION POUR RÉCUPÉRER LE SCORE ACTUEL
+  int? _getCurrentRating(String activityId) {
+    final rating = widget.activityRatingBox.values.firstWhereOrNull(
+      (r) => r.activityId == activityId,
+    );
+    return rating?.rating;
+  }
+
   void _toggleFavorite(String activityId) {
     final existingRating = widget.activityRatingBox.values.firstWhere(
-          (rating) => rating.activityId == activityId,
+      (rating) => rating.activityId == activityId,
       orElse: () => ActivityRating(
         activityId: activityId,
         rating: 2,
@@ -216,7 +235,7 @@ class _ActivitiesPageState extends State<ActivitiesPage>
 
     if (widget.activityRatingBox.values.contains(existingRating)) {
       final index =
-      widget.activityRatingBox.values.toList().indexOf(existingRating);
+          widget.activityRatingBox.values.toList().indexOf(existingRating);
       widget.activityRatingBox.putAt(index, updatedRating);
     } else {
       widget.activityRatingBox.add(updatedRating);
@@ -238,69 +257,27 @@ class _ActivitiesPageState extends State<ActivitiesPage>
 
   bool _isFavorite(String activityId) {
     final rating = widget.activityRatingBox.values.firstWhereOrNull(
-          (r) => r.activityId == activityId,
+      (r) => r.activityId == activityId,
     );
     return rating?.isFavorite ?? false;
   }
 
-  void _toggleDone(String activityId) {
-    final existingRating = widget.activityRatingBox.values.firstWhere(
-          (rating) => rating.activityId == activityId,
-      orElse: () => ActivityRating(
-        activityId: activityId,
-        rating: 2,
-        ratedAt: DateTime.now(),
-        isDone: false,
-        isFavorite: false,
-      ),
-    );
-
-    final updatedRating = existingRating.copyWith(
-      isDone: !existingRating.isDone,
-    );
-
-    if (widget.activityRatingBox.values.contains(existingRating)) {
-      final index =
-      widget.activityRatingBox.values.toList().indexOf(existingRating);
-      widget.activityRatingBox.putAt(index, updatedRating);
-    } else {
-      widget.activityRatingBox.add(updatedRating);
-    }
-
-    final message = updatedRating.isDone
-        ? '✅ Activité complétée !'
-        : '⏸️ Marquée comme non complétée';
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: Colors.grey.shade700,
-        duration: const Duration(milliseconds: 800),
-      ),
-    );
-
-    setState(() {});
-  }
-
   String _buildFiltersText() {
     List<String> filters = [];
-
     if (userPreferences.availableTime > 0) {
       filters.add('⏱️ ${userPreferences.availableTime}min');
     }
-
     if (userPreferences.groupSize > 0) {
       filters.add('👥 ${userPreferences.groupSize} pers.');
     }
-
     if (userPreferences.preferredCategories.isNotEmpty) {
-      final categoriesText = userPreferences.preferredCategories.take(2).join(', ');
+      final categoriesText =
+          userPreferences.preferredCategories.take(2).join(', ');
       filters.add('📁 $categoriesText');
     }
-
     if (!userPreferences.allowSurprise) {
       filters.add('🎲 Surprises OFF');
     }
-
     return filters.isEmpty ? 'Aucun filtre actif' : filters.join(' | ');
   }
 
@@ -334,8 +311,8 @@ class _ActivitiesPageState extends State<ActivitiesPage>
                       decoration: BoxDecoration(
                         color: const Color(0xFF0d1b35),
                         borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                            color: const Color(0xFF00d9ff), width: 2),
+                        border:
+                            Border.all(color: const Color(0xFF00d9ff), width: 2),
                         boxShadow: [
                           BoxShadow(
                             color: const Color(0xFF00d9ff).withOpacity(0.3),
@@ -366,7 +343,6 @@ class _ActivitiesPageState extends State<ActivitiesPage>
                       ),
                     ),
                     const SizedBox(height: 20),
-
                     if (preferencesSet)
                       Container(
                         padding: const EdgeInsets.all(12),
@@ -385,21 +361,14 @@ class _ActivitiesPageState extends State<ActivitiesPage>
                           textAlign: TextAlign.center,
                         ),
                       ),
-
                     const SizedBox(height: 25),
-
                     _buildRecommendationsSection(),
                     const SizedBox(height: 25),
-
-                    _buildFavoritesSection(),
                     const SizedBox(height: 25),
-
                     _buildCompletedSection(),
                     const SizedBox(height: 25),
-
                     _buildAllActivitiesSection(),
                     const SizedBox(height: 40),
-
                     Center(
                       child: Container(
                         decoration: BoxDecoration(
@@ -467,15 +436,11 @@ class _ActivitiesPageState extends State<ActivitiesPage>
                 overflow: TextOverflow.ellipsis,
               ),
             ),
+            // ✅ REMPLACEMENT DES STATS PAR LE RESET
             IconButton(
-              icon: const Icon(Icons.bar_chart, color: Colors.white, size: 22),
-              onPressed: () => Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) =>
-                      StatsPage(recommendationService: recommendationService),
-                ),
-              ),
+              icon: const Icon(Icons.refresh, color: Colors.white, size: 22),
+              onPressed: _resetPreferences,
+              tooltip: 'Reset Préférences',
             ),
             IconButton(
               icon: const Icon(Icons.settings, color: Colors.white, size: 22),
@@ -527,7 +492,7 @@ class _ActivitiesPageState extends State<ActivitiesPage>
             color: Colors.transparent,
             child: InkWell(
               borderRadius: BorderRadius.circular(40),
-              onTap: _triggerSurprizme, // ✅ UTILISE LA NOUVELLE FONCTION
+              onTap: _triggerSurprizme,
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -598,31 +563,23 @@ class _ActivitiesPageState extends State<ActivitiesPage>
     return FutureBuilder<List<(Activity, double)>>(
       future: recommendationService.getRecommendationsWithScores(limit: 50),
       builder: (context, snapshot) {
-        final metrics = recommendationService.getMetricsHistory();
-        if (metrics.isNotEmpty) {
-          lastMetrics = metrics.first;
-        }
-
         final topThree = snapshot.data?.take(3).toList() ?? [];
         final suggestions = snapshot.data?.skip(3).toList() ?? [];
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildArcadeSectionTitle(
-              Icons.star,
-              'POUR VOUS',
-            ),
+            _buildArcadeSectionTitle(Icons.star, 'POUR VOUS'),
             const SizedBox(height: 16),
             if (snapshot.connectionState == ConnectionState.waiting)
               const Center(
-                  child:
-                  CircularProgressIndicator(color: Color(0xFF00d9ff)))
+                  child: CircularProgressIndicator(color: Color(0xFF00d9ff)))
             else if (!snapshot.hasData || snapshot.data!.isEmpty)
               Center(
                 child: Text(
                   'Aucune recommandation',
-                  style: GoogleFonts.poppins(color: Colors.white.withOpacity(0.7)),
+                  style:
+                      GoogleFonts.poppins(color: Colors.white.withOpacity(0.7)),
                 ),
               )
             else
@@ -650,7 +607,8 @@ class _ActivitiesPageState extends State<ActivitiesPage>
                   ),
                   if (suggestions.isNotEmpty) ...[
                     const SizedBox(height: 20),
-                    _buildArcadeSectionTitle(Icons.lightbulb, 'VOUS POURRIEZ AIMER'),
+                    _buildArcadeSectionTitle(
+                        Icons.lightbulb, 'VOUS POURRIEZ AIMER'),
                     const SizedBox(height: 12),
                     SizedBox(
                       height: 170,
@@ -672,6 +630,8 @@ class _ActivitiesPageState extends State<ActivitiesPage>
 
   Widget _buildActivityTile(Activity activity, Color tileColor,
       {String? medal}) {
+    final currentRating = _getCurrentRating(activity.id);
+
     return Container(
       margin: const EdgeInsets.only(right: 12),
       width: 160,
@@ -686,10 +646,7 @@ class _ActivitiesPageState extends State<ActivitiesPage>
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(
-          color: tileColor,
-          width: 2,
-        ),
+        border: Border.all(color: tileColor, width: 2),
         boxShadow: [
           BoxShadow(
             color: tileColor.withOpacity(0.45),
@@ -774,20 +731,26 @@ class _ActivitiesPageState extends State<ActivitiesPage>
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
+                  // ✅ DISLIKE ROUGE SI ACTIF
                   GestureDetector(
                     onTap: () => _rateActivity(activity.id, 1),
-                    child: const Icon(
+                    child: Icon(
                       Icons.thumb_down,
                       size: 18,
-                      color: Colors.white38,
+                      color: (currentRating != null && currentRating < 3)
+                          ? Colors.red
+                          : Colors.white38,
                     ),
                   ),
+                  // ✅ LIKE VERT SI ACTIF
                   GestureDetector(
                     onTap: () => _rateActivity(activity.id, 3),
-                    child: const Icon(
+                    child: Icon(
                       Icons.thumb_up,
                       size: 18,
-                      color: Colors.white38,
+                      color: (currentRating != null && currentRating >= 3)
+                          ? Colors.green
+                          : Colors.white38,
                     ),
                   ),
                   GestureDetector(
@@ -797,8 +760,9 @@ class _ActivitiesPageState extends State<ActivitiesPage>
                           ? Icons.favorite
                           : Icons.favorite_border,
                       size: 18,
-                      color:
-                      _isFavorite(activity.id) ? Colors.red : Colors.white38,
+                      color: _isFavorite(activity.id)
+                          ? Colors.red
+                          : Colors.white38,
                     ),
                   ),
                 ],
@@ -807,65 +771,6 @@ class _ActivitiesPageState extends State<ActivitiesPage>
           ),
         ),
       ),
-    );
-  }
-
-  Widget _buildFavoritesSection() {
-    final allActivities = recommendationService.getAllActivities();
-    final favoriteIds = widget.activityRatingBox.values
-        .where((r) => r.isFavorite)
-        .map((r) => r.activityId)
-        .toSet();
-
-    final favoriteActivities = allActivities
-        .where((activity) => favoriteIds.contains(activity.id))
-        .toList();
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _buildArcadeSectionTitle(
-          Icons.bookmark,
-          'À FAIRE PLUS TARD',
-          trailing: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            decoration: BoxDecoration(
-              color: const Color(0xFFffa940).withOpacity(0.3),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Text(
-              '${favoriteActivities.length}',
-              style: GoogleFonts.pressStart2p(
-                fontSize: 10,
-                color: Colors.white,
-              ),
-            ),
-          ),
-        ),
-        const SizedBox(height: 12),
-        if (favoriteActivities.isEmpty)
-          Center(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 12),
-              child: Text(
-                'Aucune activité ajoutée',
-                style: GoogleFonts.poppins(color: Colors.white70, fontSize: 12),
-              ),
-            ),
-          )
-        else
-          SizedBox(
-            height: 170,
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              itemCount: favoriteActivities.length,
-              itemBuilder: (context, index) {
-                return _buildActivityTile(
-                    favoriteActivities[index], const Color(0xFFffa940));
-              },
-            ),
-          ),
-      ],
     );
   }
 
@@ -880,9 +785,7 @@ class _ActivitiesPageState extends State<ActivitiesPage>
         .where((activity) => completedIds.contains(activity.id))
         .toList();
 
-    if (completedActivities.isEmpty) {
-      return const SizedBox.shrink();
-    }
+    if (completedActivities.isEmpty) return const SizedBox.shrink();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -898,10 +801,7 @@ class _ActivitiesPageState extends State<ActivitiesPage>
             ),
             child: Text(
               '${completedActivities.length}',
-              style: GoogleFonts.pressStart2p(
-                fontSize: 10,
-                color: Colors.white,
-              ),
+              style: GoogleFonts.pressStart2p(fontSize: 10, color: Colors.white),
             ),
           ),
         ),
@@ -945,21 +845,15 @@ class _ActivitiesPageState extends State<ActivitiesPage>
             color: Colors.transparent,
             child: InkWell(
               borderRadius: BorderRadius.circular(12),
-              onTap: () {
-                setState(() {
-                  showAllActivities = !showAllActivities;
-                });
-              },
+              onTap: () => setState(() => showAllActivities = !showAllActivities),
               child: Padding(
-                padding:
-                const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+                padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Icon(
-                      showAllActivities ? Icons.expand_less : Icons.expand_more,
-                      color: Colors.white,
-                    ),
+                        showAllActivities ? Icons.expand_less : Icons.expand_more,
+                        color: Colors.white),
                     const SizedBox(width: 8),
                     Text(
                       showAllActivities ? 'MASQUER' : 'TOUTES LES ACTIVITÉS',
@@ -980,9 +874,7 @@ class _ActivitiesPageState extends State<ActivitiesPage>
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             itemCount: activities.length,
-            itemBuilder: (context, index) {
-              return _buildActivityCard(activities[index]);
-            },
+            itemBuilder: (context, index) => _buildActivityCard(activities[index]),
           ),
         ],
       ],
@@ -990,9 +882,9 @@ class _ActivitiesPageState extends State<ActivitiesPage>
   }
 
   Widget _buildActivityCard(Activity activity) {
-    final isRated = widget.activityRatingBox.values.any(
-          (rating) => rating.activityId == activity.id,
-    );
+    final isRated = widget.activityRatingBox.values
+        .any((rating) => rating.activityId == activity.id);
+    final currentRating = _getCurrentRating(activity.id);
 
     return GestureDetector(
       onTap: () {
@@ -1001,9 +893,7 @@ class _ActivitiesPageState extends State<ActivitiesPage>
             builder: (context) => ActivityDetailsPage(
               activity: activity,
               activityRatingBox: widget.activityRatingBox,
-              onFeedbackGiven: () {
-                setState(() {});
-              },
+              onFeedbackGiven: () => setState(() {}),
             ),
           ),
         );
@@ -1017,10 +907,9 @@ class _ActivitiesPageState extends State<ActivitiesPage>
           border: Border.all(color: const Color(0xFF00d9ff).withOpacity(0.5)),
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFF00d9ff).withOpacity(0.2),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
+                color: const Color(0xFF00d9ff).withOpacity(0.2),
+                blurRadius: 10,
+                offset: const Offset(0, 4)),
           ],
         ),
         child: Column(
@@ -1028,29 +917,20 @@ class _ActivitiesPageState extends State<ActivitiesPage>
           children: [
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        activity.title,
-                        style: GoogleFonts.pressStart2p(
-                          fontSize: 11,
-                          color: Colors.white,
-                        ),
-                      ),
+                      Text(activity.title,
+                          style: GoogleFonts.pressStart2p(
+                              fontSize: 11, color: Colors.white)),
                       const SizedBox(height: 4),
-                      Text(
-                        activity.description,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: GoogleFonts.poppins(
-                          fontSize: 11,
-                          color: Colors.white70,
-                        ),
-                      ),
+                      Text(activity.description,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: GoogleFonts.poppins(
+                              fontSize: 11, color: Colors.white70)),
                     ],
                   ),
                 ),
@@ -1058,19 +938,15 @@ class _ActivitiesPageState extends State<ActivitiesPage>
                   Container(
                     margin: const EdgeInsets.only(left: 8),
                     padding:
-                    const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
                       color: const Color(0xFFffa940).withOpacity(0.3),
                       borderRadius: BorderRadius.circular(6),
                       border: Border.all(color: const Color(0xFFffa940)),
                     ),
-                    child: Text(
-                      'NOUVEAU',
-                      style: GoogleFonts.pressStart2p(
-                        fontSize: 8,
-                        color: const Color(0xFFffa940),
-                      ),
-                    ),
+                    child: Text('NOUVEAU',
+                        style: GoogleFonts.pressStart2p(
+                            fontSize: 8, color: const Color(0xFFffa940))),
                   ),
               ],
             ),
@@ -1084,29 +960,23 @@ class _ActivitiesPageState extends State<ActivitiesPage>
                 ),
                 Row(
                   children: [
-                    ScaleTransition(
-                      scale: Tween(begin: 1.0, end: 1.3).animate(
-                        _bounceControllers[activity.id] ??
-                            const AlwaysStoppedAnimation(1.0),
-                      ),
-                      child: IconButton(
-                        onPressed: () => _rateActivity(activity.id, 3),
-                        icon: const Icon(Icons.thumb_up),
-                        color: Colors.white60,
-                        iconSize: 20,
-                      ),
+                    // ✅ LIKE VERT
+                    IconButton(
+                      onPressed: () => _rateActivity(activity.id, 3),
+                      icon: const Icon(Icons.thumb_up),
+                      color: (currentRating != null && currentRating >= 3)
+                          ? Colors.green
+                          : Colors.white60,
+                      iconSize: 20,
                     ),
-                    ScaleTransition(
-                      scale: Tween(begin: 1.0, end: 1.3).animate(
-                        _bounceControllers[activity.id] ??
-                            const AlwaysStoppedAnimation(1.0),
-                      ),
-                      child: IconButton(
-                        onPressed: () => _rateActivity(activity.id, 1),
-                        icon: const Icon(Icons.thumb_down),
-                        color: Colors.white60,
-                        iconSize: 20,
-                      ),
+                    // ✅ DISLIKE ROUGE
+                    IconButton(
+                      onPressed: () => _rateActivity(activity.id, 1),
+                      icon: const Icon(Icons.thumb_down),
+                      color: (currentRating != null && currentRating < 3)
+                          ? Colors.red
+                          : Colors.white60,
+                      iconSize: 20,
                     ),
                   ],
                 ),

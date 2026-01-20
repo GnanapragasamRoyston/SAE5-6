@@ -124,42 +124,6 @@ class _ActivityDetailsPageState extends State<ActivityDetailsPage> {
     widget.onFeedbackGiven();
   }
 
-  void _toggleDone() async {
-    final updatedRating = _currentRating.copyWith(
-      isDone: !_currentRating.isDone,
-    );
-
-    final existingIndex = widget.activityRatingBox.values
-        .toList()
-        .indexWhere((r) => r.activityId == widget.activity.id);
-
-    if (existingIndex != -1) {
-      widget.activityRatingBox.putAt(existingIndex, updatedRating);
-    } else {
-      widget.activityRatingBox.add(updatedRating);
-    }
-
-    setState(() {
-      _currentRating = updatedRating;
-    });
-
-    final message = _currentRating.isDone
-        ? '✅ Activité complétée !'
-        : '⏸️ Marquer comme non complétée';
-
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(message),
-          backgroundColor: Colors.grey.shade700,
-          duration: const Duration(milliseconds: 800),
-        ),
-      );
-    }
-
-    widget.onFeedbackGiven();
-  }
-
   @override
   Widget build(BuildContext context) {
     final activity = widget.activity;
@@ -323,10 +287,32 @@ class _ActivityDetailsPageState extends State<ActivityDetailsPage> {
                       ],
                     ),
 
-                    const SizedBox(height: 30),
+                    const SizedBox(height: 40),
 
-                    _buildDoneButton(),
-
+                    // BOUTON HOME AJOUTÉ
+                    Center(
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF121b3a),
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                              color: const Color(0xFF3cf2ff), width: 2),
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(0xFF00e0ff).withOpacity(0.4),
+                              blurRadius: 15,
+                              offset: const Offset(0, 5),
+                            ),
+                          ],
+                        ),
+                        child: IconButton(
+                          icon: const Icon(Icons.home,
+                              color: Colors.white, size: 32),
+                          onPressed: () => Navigator.popUntil(
+                              context, (route) => route.isFirst),
+                        ),
+                      ),
+                    ),
                     const SizedBox(height: 40),
                   ],
                 ),
@@ -369,62 +355,6 @@ class _ActivityDetailsPageState extends State<ActivityDetailsPage> {
           icon,
           color: isActive ? color : Colors.white70,
           size: 28,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildDoneButton() {
-    final isDone = _currentRating.isDone;
-    return Center(
-      child: GestureDetector(
-        onTap: _toggleDone,
-        child: Container(
-          width: double.infinity,
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: isDone
-                  ? [
-                const Color(0xFF00FF88),
-                const Color(0xFF00CC66),
-              ]
-                  : [
-                const Color(0xFF3cf2ff),
-                const Color(0xFF0088ff),
-              ],
-            ),
-            borderRadius: BorderRadius.circular(20),
-            boxShadow: [
-              BoxShadow(
-                color: (isDone
-                    ? const Color(0xFF00FF88)
-                    : const Color(0xFF3cf2ff))
-                    .withOpacity(0.5),
-                blurRadius: 20,
-                offset: const Offset(0, 8),
-              ),
-            ],
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                isDone ? Icons.check_circle : Icons.radio_button_unchecked,
-                color: Colors.white,
-                size: 24,
-              ),
-              const SizedBox(width: 12),
-              Text(
-                isDone ? 'COMPLÉTÉE' : 'MARQUER COMPLÉTÉE',
-                style: GoogleFonts.pressStart2p(
-                  fontSize: 12,
-                  color: Colors.white,
-                  letterSpacing: 1.5,
-                ),
-              ),
-            ],
-          ),
         ),
       ),
     );
