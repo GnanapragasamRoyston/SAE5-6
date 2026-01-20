@@ -3,9 +3,6 @@ import '../models/movie.dart';
 import '../models/activity.dart';
 import '../models/board_game.dart';
 
-// --------------------------------------------------------------------------
-// FONCTIONS DE PARSING PRINCIPALES (Appelées par compute)
-// --------------------------------------------------------------------------
 
 /// Parseur des Jeux de Société.
 List<BoardGame> parseBoardGamesJson(String jsonString) {
@@ -63,13 +60,13 @@ List<Movie> parseMoviesJson(String jsonString) {
         genre: jsonData['genre'] ?? 'Unknown',
         duration: (jsonData['duration'] as num?)?.toDouble() ?? 120.0,
         rating: _parseMovieRating(
-            jsonData['score']), // Renommé pour éviter les conflits
+            jsonData['score']), 
         tags: _parseMovieTags(
-            jsonData['genre']), // Renommé pour éviter les conflits
+            jsonData['genre']), 
       );
       movies.add(movie);
     } catch (e) {
-      // Skip malformed entries
+      // Ignorer les entrées malformées
     }
   }
   return movies;
@@ -97,18 +94,15 @@ List<Activity> parseActivitiesJson(String jsonString) {
       );
       activities.add(activity);
     } catch (e) {
-      // Skip malformed entries
     }
   }
   return activities;
 }
 
-// --------------------------------------------------------------------------
 // FONCTIONS D'AIDE (Top-level pour être accessibles par les Isolates)
 // Elles contiennent la logique de parsing pour chaque modèle.
-// --------------------------------------------------------------------------
 
-// --- Helpers des Jeux de Société (Dataset 3 - Votre Focus) ---
+//Helpers des Jeux de Société (Dataset 3 )
 
 double _parseRatingString(String? value) {
   if (value == null) return 3.0;
@@ -127,7 +121,7 @@ double _parseComplexity(dynamic value) {
   return 2.5;
 }
 
-// --- Helpers des Films (Dataset 1) ---
+// Helpers des Films (Dataset 1)
 
 double _parseMovieRating(dynamic value) {
   if (value is num) return (value.toDouble() / 10).clamp(0.0, 5.0);
@@ -143,7 +137,7 @@ List<String> _parseMovieTags(String? value) {
   return value.split(',').map((tag) => tag.trim()).toList();
 }
 
-// --- Helpers des Activités (Dataset 2) ---
+// Helpers des Activités (Dataset 2)
 
 double _parseDurationString(String? value) {
   if (value == null || value.isEmpty) return 90.0;
@@ -151,7 +145,7 @@ double _parseDurationString(String? value) {
   final cleanValue = value.toLowerCase().trim();
   double totalMinutes = 0;
 
-  // 1. Handle "2h" or "1h30" or "1h 30min" format (priority)
+  
   if (cleanValue.contains('h')) {
     final hourMatch = RegExp(r'(\d+)\s*h').firstMatch(cleanValue);
     if (hourMatch != null) {
@@ -167,7 +161,6 @@ double _parseDurationString(String? value) {
     if (totalMinutes > 0) return totalMinutes;
   }
 
-  // 2. Handle "45min", "45 min", "10min" format
   if (cleanValue.contains('min')) {
     final minMatch = RegExp(r'(\d+)\s*min').firstMatch(cleanValue);
     if (minMatch != null) {
@@ -184,7 +177,7 @@ String _categorizeActivity(Map<String, dynamic> item) {
   final nom = (item['nom'] ?? '').toString().toLowerCase();
   final description = (item['description'] ?? '').toString().toLowerCase();
 
-  // Logique de catégorisation (la même que celle fournie)
+  // Logique de catégorisation 
   if (lieu.contains('parc') ||
       lieu.contains('extérieur') ||
       nom.contains('rando') ||

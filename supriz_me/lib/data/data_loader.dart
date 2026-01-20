@@ -15,7 +15,7 @@ class DataLoader {
     required Box settingsBox,
   }) async {
     try {
-      // 1. Optimisation Films : On ne charge que si la boîte est vide
+      // Optimisation Films 
       if (movieBox.isEmpty) {
         print('Initialisation de la base de données Films...');
         final movies = await _loadMoviesFromAssets();
@@ -26,7 +26,7 @@ class DataLoader {
         print('Films déjà chargés en cache local (${movieBox.length} éléments).');
       }
 
-      // 2. Optimisation Activités
+      // Optimisation Activités
       if (activityBox.isEmpty) {
         print('Initialisation de la base de données Activités...');
         final activities = await _loadActivitiesFromAssets();
@@ -34,7 +34,7 @@ class DataLoader {
         await activityBox.putAll(activityMap);
       }
 
-      // 3. Optimisation Jeux de Société
+      // Optimisation Jeux de Société
       if (boardGameBox.isEmpty) {
         print('Initialisation de la base de données Jeux...');
         final games = await _loadBoardGamesFromAssets();
@@ -58,7 +58,7 @@ class DataLoader {
     await movieBox.clear();
     await activityBox.clear();
     await boardGameBox.clear();
-    // On peut aussi clear la settingsBox si tu veux effacer les préférences
+    // On peut aussi clear la settingsBox si on veut effacer les préférences
     // await settingsBox.clear(); 
     
     // Relance le chargement propre
@@ -70,9 +70,7 @@ class DataLoader {
     );
   }
 
-  // -------------------------------------------------------------------------
-  // Méthodes privées de lecture JSON (Renommées pour être internes)
-  // -------------------------------------------------------------------------
+  // Méthodes privées de lecture JSON
 
   static Future<List<Movie>> _loadMoviesFromAssets() async {
     try {
@@ -93,7 +91,7 @@ class DataLoader {
             tags: _parseTags(jsonData['genre']),
           );
           movies.add(movie);
-        } catch (e) { /* Skip malformed */ }
+        } catch (e) {  }
       }
       return movies;
     } catch (e) { return []; }
@@ -123,7 +121,7 @@ class DataLoader {
             difficulty: difficulty,
           );
           activities.add(activity);
-        } catch (e) { /* Skip malformed */ }
+        } catch (e) {  }
       }
       return activities;
     } catch (e) { return []; }
@@ -167,9 +165,7 @@ class DataLoader {
     }
   }
 
-  // -------------------------------------------------------------------------
   // Helpers (Inchangés, gardés pour le fonctionnement)
-  // -------------------------------------------------------------------------
 
   static double _parseRating(dynamic value) {
     if (value is num) return (value.toDouble() / 10).clamp(0.0, 5.0);
