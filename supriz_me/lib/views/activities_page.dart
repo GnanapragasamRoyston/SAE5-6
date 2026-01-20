@@ -16,6 +16,7 @@ class ActivitiesPage extends StatefulWidget {
   final Box<ActivityRating> activityRatingBox;
   final Box<ActivityPreferences> activityPreferencesBox;
   final Box<PerformanceMetrics> metricsBox;
+  final bool autoSurprizme; // ✅ NOUVEAU PARAMÈTRE
 
   const ActivitiesPage({
     super.key,
@@ -23,11 +24,14 @@ class ActivitiesPage extends StatefulWidget {
     required this.activityRatingBox,
     required this.activityPreferencesBox,
     required this.metricsBox,
+    this.autoSurprizme = false, // ✅ PAR DÉFAUT FALSE
   });
 
   @override
   State<ActivitiesPage> createState() => _ActivitiesPageState();
 }
+
+// Remplacez votre classe _ActivitiesPageState par celle-ci
 
 class _ActivitiesPageState extends State<ActivitiesPage>
     with TickerProviderStateMixin, WidgetsBindingObserver {
@@ -37,7 +41,6 @@ class _ActivitiesPageState extends State<ActivitiesPage>
   bool showAllActivities = false;
   PerformanceMetrics? lastMetrics;
 
-  // Controllers pour animations
   late AnimationController _surpriseRotationController;
   final Map<String, AnimationController> _bounceControllers = {};
   final Map<String, AnimationController> _fadeControllers = {};
@@ -46,12 +49,17 @@ class _ActivitiesPageState extends State<ActivitiesPage>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    // Initialiser le controller pour la rotation du bouton Surprise
     _surpriseRotationController = AnimationController(
       duration: const Duration(milliseconds: 300),
       vsync: this,
     );
     _initializeRecommendationService();
+
+    if (widget.autoSurprizme) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _triggerSurprizme();
+      });
+    }
   }
 
   @override
@@ -67,13 +75,10 @@ class _ActivitiesPageState extends State<ActivitiesPage>
     super.dispose();
   }
 
-  /// Recalcule les recommendations à chaque fois qu'on revient à la page
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
-      setState(() {
-        // Forcer le rebuild pour recalculer les recommendations
-      });
+      setState(() {});
     }
   }
 
@@ -84,14 +89,12 @@ class _ActivitiesPageState extends State<ActivitiesPage>
       metricsBox: widget.metricsBox,
     );
 
-    // Charger les préférences existantes ou utiliser les defaults
     if (widget.activityPreferencesBox.isNotEmpty) {
       userPreferences = widget.activityPreferencesBox.getAt(0) ??
           ActivityPreferences.defaultPreferences();
       preferencesSet = true;
       recommendationService.initializePreferences(userPreferences);
     } else {
-      // Première fois : afficher le dialog pour configuration
       userPreferences = ActivityPreferences.defaultPreferences();
       preferencesSet = false;
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -101,8 +104,18 @@ class _ActivitiesPageState extends State<ActivitiesPage>
     }
   }
 
+  // ✅ NOUVELLE FONCTION RESET
+  void _resetPreferences() async {
+    await widget.activityPreferencesBox.clear();
+    setState(() {
+      _initializeRecommendationService();
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Préférences réinitialisées')),
+    );
+  }
+
   void _loadPreferencesAfterConfiguration() {
-    // Charger les préférences sauvegardées
     if (widget.activityPreferencesBox.isNotEmpty) {
       userPreferences = widget.activityPreferencesBox.getAt(0) ??
           ActivityPreferences.defaultPreferences();
@@ -111,7 +124,6 @@ class _ActivitiesPageState extends State<ActivitiesPage>
       userPreferences = ActivityPreferences.defaultPreferences();
       preferencesSet = false;
     }
-
     recommendationService.initializePreferences(userPreferences);
   }
 
@@ -138,7 +150,6 @@ class _ActivitiesPageState extends State<ActivitiesPage>
                   ),
                 ),
               ).then((_) {
-                // Charger les préférences après configuration (pas de réinitialization)
                 setState(() {
                   _loadPreferencesAfterConfiguration();
                 });
@@ -151,8 +162,28 @@ class _ActivitiesPageState extends State<ActivitiesPage>
     );
   }
 
+  void _triggerSurprizme() async {
+    _surpriseRotationController.forward().then((_) {
+      _surpriseRotationController.reset();
+    });
+    final surprise = await recommendationService.getSurpriseActivity();
+    if (surprise != null && mounted) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => ActivityDetailsPage(
+            activity: surprise,
+            activityRatingBox: widget.activityRatingBox,
+            onFeedbackGiven: () {
+              setState(() {});
+            },
+          ),
+        ),
+      );
+    }
+  }
+
   void _rateActivity(String activityId, int rating) {
-    // Créer un bounce controller s'il n'existe pas
     if (!_bounceControllers.containsKey(activityId)) {
       _bounceControllers[activityId] = AnimationController(
         duration: const Duration(milliseconds: 300),
@@ -160,32 +191,33 @@ class _ActivitiesPageState extends State<ActivitiesPage>
       );
     }
 
-    // Lancer l'animation bounce
     _bounceControllers[activityId]!.forward().then((_) {
       _bounceControllers[activityId]!.reverse();
     });
 
-    // Sauvegarder la note
     recommendationService.rateActivity(activityId, rating);
 
-    // Feedback visuel : SnackBar de confirmation
     final message = rating >= 3 ? '✓ J\'aime !' : '✗ Je n\'aime pas';
-    final color = Colors.grey.shade700; // Gris unifié
-
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
-        backgroundColor: color,
+        backgroundColor: Colors.grey.shade700,
         duration: const Duration(milliseconds: 800),
       ),
     );
 
-    // Recalculer les recommandations EN TEMPS RÉEL
     setState(() {});
   }
 
+  // ✅ FONCTION POUR RÉCUPÉRER LE SCORE ACTUEL
+  int? _getCurrentRating(String activityId) {
+    final rating = widget.activityRatingBox.values.firstWhereOrNull(
+      (r) => r.activityId == activityId,
+    );
+    return rating?.rating;
+  }
+
   void _toggleFavorite(String activityId) {
-    // Récupérer la note existante ou créer une nouvelle
     final existingRating = widget.activityRatingBox.values.firstWhere(
       (rating) => rating.activityId == activityId,
       orElse: () => ActivityRating(
@@ -197,12 +229,10 @@ class _ActivitiesPageState extends State<ActivitiesPage>
       ),
     );
 
-    // Inverser le statut favori
     final updatedRating = existingRating.copyWith(
       isFavorite: !existingRating.isFavorite,
     );
 
-    // Sauvegarder
     if (widget.activityRatingBox.values.contains(existingRating)) {
       final index =
           widget.activityRatingBox.values.toList().indexOf(existingRating);
@@ -211,7 +241,6 @@ class _ActivitiesPageState extends State<ActivitiesPage>
       widget.activityRatingBox.add(updatedRating);
     }
 
-    // Feedback visuel
     final message = updatedRating.isFavorite
         ? '⭐ Ajouté aux favoris'
         : '⭐ Retiré des favoris';
@@ -233,142 +262,299 @@ class _ActivitiesPageState extends State<ActivitiesPage>
     return rating?.isFavorite ?? false;
   }
 
-  void _toggleDone(String activityId) {
-    // Récupérer la note existante ou créer une nouvelle
-    final existingRating = widget.activityRatingBox.values.firstWhere(
-      (rating) => rating.activityId == activityId,
-      orElse: () => ActivityRating(
-        activityId: activityId,
-        rating: 2,
-        ratedAt: DateTime.now(),
-        isDone: false,
-        isFavorite: false,
-      ),
-    );
-
-    // Inverser le statut "fait"
-    final updatedRating = existingRating.copyWith(
-      isDone: !existingRating.isDone,
-    );
-
-    // Sauvegarder
-    if (widget.activityRatingBox.values.contains(existingRating)) {
-      final index =
-          widget.activityRatingBox.values.toList().indexOf(existingRating);
-      widget.activityRatingBox.putAt(index, updatedRating);
-    } else {
-      widget.activityRatingBox.add(updatedRating);
+  String _buildFiltersText() {
+    List<String> filters = [];
+    if (userPreferences.availableTime > 0) {
+      filters.add('⏱️ ${userPreferences.availableTime}min');
     }
-
-    // Feedback visuel
-    final message = updatedRating.isDone
-        ? '✅ Activité complétée !'
-        : '⏸️ Marquer comme non complétée';
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: Colors.grey.shade700,
-        duration: const Duration(milliseconds: 800),
-      ),
-    );
-
-    setState(() {});
+    if (userPreferences.groupSize > 0) {
+      filters.add('👥 ${userPreferences.groupSize} pers.');
+    }
+    if (userPreferences.preferredCategories.isNotEmpty) {
+      final categoriesText =
+          userPreferences.preferredCategories.take(2).join(', ');
+      filters.add('📁 $categoriesText');
+    }
+    if (!userPreferences.allowSurprise) {
+      filters.add('🎲 Surprises OFF');
+    }
+    return filters.isEmpty ? 'Aucun filtre actif' : filters.join(' | ');
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Activités"),
-        backgroundColor: Colors.blue,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.bar_chart),
-            tooltip: 'Statistiques',
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) =>
-                      StatsPage(recommendationService: recommendationService),
-                ),
-              );
-            },
-          ),
-          IconButton(
-            icon: const Icon(Icons.settings),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => ActivityPreferencesPage(
-                    preferencesBox: widget.activityPreferencesBox,
-                    activityBox: widget.activityBox,
-                    activityRatingBox: widget.activityRatingBox,
-                  ),
-                ),
-              ).then((_) {
-                setState(() {
-                  _initializeRecommendationService();
-                });
-              });
-            },
-          ),
-        ],
-      ),
+      backgroundColor: const Color(0xFF050814),
       body: Container(
         decoration: const BoxDecoration(
-          gradient: LinearGradient(
+          gradient: RadialGradient(
+            radius: 1.2,
+            center: Alignment(0, -0.5),
             colors: [
-              Color(0xFF1A3A52), // Bleu marine foncé
-              Color(0xFF2563EB), // Bleu moyen
+              Color(0xFF0a1628),
+              Color(0xFF050814),
             ],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
           ),
         ),
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Section Recommandations
-              _buildRecommendationsSection(),
-              const SizedBox(height: 20),
-
-              // Section Surprise
-              _buildSurpriseSection(),
-              const SizedBox(height: 20),
-
-              // Section À faire plus tard
-              _buildFavoritesSection(),
-              const SizedBox(height: 20),
-
-              // Section Activités complétées
-              _buildCompletedSection(),
-              const SizedBox(height: 20),
-
-              // Section Toutes les activités
-              _buildAllActivitiesSection(),
-              const SizedBox(height: 32),
-
-              // Bouton Home
-              Center(
-                child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.popUntil(context, (route) => route.isFirst);
-                  },
-                  style: ElevatedButton.styleFrom(
-                    shape: const CircleBorder(),
-                    padding: const EdgeInsets.all(20),
-                    backgroundColor: Colors.grey.shade700,
-                  ),
-                  child: const Icon(Icons.home, color: Colors.white, size: 30),
+        child: Column(
+          children: [
+            _buildArcadeHeader(),
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildSurprizmeButton(),
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF0d1b35),
+                        borderRadius: BorderRadius.circular(16),
+                        border:
+                            Border.all(color: const Color(0xFF00d9ff), width: 2),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFF00d9ff).withOpacity(0.3),
+                            blurRadius: 20,
+                            offset: const Offset(0, 8),
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+                        children: [
+                          Text(
+                            '${widget.activityBox.length}',
+                            style: GoogleFonts.pressStart2p(
+                              fontSize: 24,
+                              color: const Color(0xFF00d9ff),
+                              letterSpacing: 2,
+                            ),
+                          ),
+                          Text(
+                            "ACTIVITÉS DISPO",
+                            style: GoogleFonts.pressStart2p(
+                              fontSize: 10,
+                              color: Colors.white.withOpacity(0.9),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    if (preferencesSet)
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF0d1b35),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                              color: const Color(0xFF00d9ff).withOpacity(0.5)),
+                        ),
+                        child: Text(
+                          'FILTRES : ${_buildFiltersText()}',
+                          style: GoogleFonts.pressStart2p(
+                            fontSize: 9,
+                            color: Colors.white.withOpacity(0.9),
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    const SizedBox(height: 25),
+                    _buildRecommendationsSection(),
+                    const SizedBox(height: 25),
+                    const SizedBox(height: 25),
+                    _buildCompletedSection(),
+                    const SizedBox(height: 25),
+                    _buildAllActivitiesSection(),
+                    const SizedBox(height: 40),
+                    Center(
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF0d1b35),
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                              color: const Color(0xFF00d9ff), width: 2),
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(0xFF00d9ff).withOpacity(0.4),
+                              blurRadius: 15,
+                              offset: const Offset(0, 5),
+                            ),
+                          ],
+                        ),
+                        child: IconButton(
+                          icon: const Icon(Icons.home,
+                              color: Colors.white, size: 32),
+                          onPressed: () => Navigator.popUntil(
+                              context, (route) => route.isFirst),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildArcadeHeader() {
+    return Container(
+      height: 80,
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Color(0xFFff0080), Color(0xFFff6600)],
+          begin: Alignment.centerLeft,
+          end: Alignment.centerRight,
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.black.withOpacity(0.25),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Icon(Icons.sports, color: Colors.white, size: 24),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                'ACTIVITÉS ARCADE',
+                style: GoogleFonts.pressStart2p(
+                  fontSize: 14,
+                  color: Colors.white,
+                  letterSpacing: 2,
+                ),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            // ✅ REMPLACEMENT DES STATS PAR LE RESET
+            IconButton(
+              icon: const Icon(Icons.refresh, color: Colors.white, size: 22),
+              onPressed: _resetPreferences,
+              tooltip: 'Reset Préférences',
+            ),
+            IconButton(
+              icon: const Icon(Icons.settings, color: Colors.white, size: 22),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => ActivityPreferencesPage(
+                      preferencesBox: widget.activityPreferencesBox,
+                      activityBox: widget.activityBox,
+                      activityRatingBox: widget.activityRatingBox,
+                    ),
+                  ),
+                ).then((_) {
+                  setState(() {
+                    _initializeRecommendationService();
+                  });
+                });
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSurprizmeButton() {
+    return Column(
+      children: [
+        Container(
+          width: double.infinity,
+          height: 70,
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [Color(0xFFff0080), Color(0xFFff6600)],
+              begin: Alignment.centerLeft,
+              end: Alignment.centerRight,
+            ),
+            borderRadius: BorderRadius.circular(40),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFFff0080).withOpacity(0.6),
+                blurRadius: 25,
+                offset: const Offset(0, 12),
               ),
             ],
           ),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              borderRadius: BorderRadius.circular(40),
+              onTap: _triggerSurprizme,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: const BoxDecoration(
+                      color: Colors.white,
+                      shape: BoxShape.circle,
+                    ),
+                    child: RotationTransition(
+                      turns: Tween(begin: 0.0, end: 1.0)
+                          .animate(_surpriseRotationController),
+                      child: const Icon(Icons.play_arrow,
+                          color: Colors.black87, size: 24),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Text(
+                    "SURPRIZ'ME",
+                    style: GoogleFonts.bebasNeue(
+                      fontSize: 24,
+                      color: Colors.white,
+                      letterSpacing: 3,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
         ),
+        const SizedBox(height: 30),
+      ],
+    );
+  }
+
+  Widget _buildArcadeSectionTitle(IconData icon, String label,
+      {Widget? trailing}) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: const Color(0xFF0d1b35),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFF00d9ff), width: 1.5),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: Colors.white, size: 18),
+          const SizedBox(width: 10),
+          Text(
+            label,
+            style: GoogleFonts.pressStart2p(
+              fontSize: 11,
+              color: Colors.white,
+              letterSpacing: 2,
+            ),
+          ),
+          if (trailing != null) ...[
+            const Spacer(),
+            trailing,
+          ],
+        ],
       ),
     );
   }
@@ -377,171 +563,62 @@ class _ActivitiesPageState extends State<ActivitiesPage>
     return FutureBuilder<List<(Activity, double)>>(
       future: recommendationService.getRecommendationsWithScores(limit: 50),
       builder: (context, snapshot) {
-        // Récupérer la dernière métrique
-        final metrics = recommendationService.getMetricsHistory();
-        if (metrics.isNotEmpty) {
-          lastMetrics = metrics.first;
-        }
-
         final topThree = snapshot.data?.take(3).toList() ?? [];
         final suggestions = snapshot.data?.skip(3).toList() ?? [];
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Titre avec fond - TOP 3
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(
-                  color: Colors.white.withValues(alpha: 0.3),
-                  width: 1,
-                ),
-              ),
-              child: Row(
-                children: [
-                  const Icon(Icons.star, color: Colors.yellow, size: 24),
-                  const SizedBox(width: 8),
-                  Text(
-                    'POUR VOUS',
-                    style: GoogleFonts.bebasNeue(
-                      fontSize: 16,
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 1.5,
-                    ),
-                  ),
-                  const Spacer(),
-                  // Badge de performance
-                  if (lastMetrics != null)
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.purple.withValues(alpha: 0.3),
-                        borderRadius: BorderRadius.circular(6),
-                        border: Border.all(
-                          color: Colors.purple.withValues(alpha: 0.6),
-                        ),
-                      ),
-                      child: Text(
-                        '⏱️ ${lastMetrics!.tempsCalculMs}ms',
-                        style: GoogleFonts.poppins(
-                          fontSize: 11,
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-            ),
+            _buildArcadeSectionTitle(Icons.star, 'POUR VOUS'),
             const SizedBox(height: 16),
             if (snapshot.connectionState == ConnectionState.waiting)
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.9),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const CircularProgressIndicator(),
-              )
-            else if (snapshot.hasError)
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.red.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  'Erreur: ${snapshot.error}',
-                  style: GoogleFonts.poppins(color: Colors.red),
-                ),
-              )
+              const Center(
+                  child: CircularProgressIndicator(color: Color(0xFF00d9ff)))
             else if (!snapshot.hasData || snapshot.data!.isEmpty)
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.9),
-                  borderRadius: BorderRadius.circular(12),
-                ),
+              Center(
                 child: Text(
-                  'Aucune recommandation disponible',
-                  style: GoogleFonts.poppins(color: Colors.grey),
+                  'Aucune recommandation',
+                  style:
+                      GoogleFonts.poppins(color: Colors.white.withOpacity(0.7)),
                 ),
               )
             else
               Column(
                 children: [
-                  // Top 3
-                  for (int i = 0; i < topThree.length; i++)
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
-                      child: _buildRecommendationCard(
-                        topThree[i].$1,
-                        i,
-                        topThree[i].$2,
-                      ),
-                    ),
-                  // Section "Vous pourriez aimer"
-                  if (suggestions.isNotEmpty) ...[
-                    const SizedBox(height: 24),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 8),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(
-                          color: Colors.white.withValues(alpha: 0.2),
-                          width: 1,
-                        ),
-                      ),
-                      child: Row(
-                        children: [
-                          const Icon(Icons.lightbulb,
-                              color: Colors.amber, size: 22),
-                          const SizedBox(width: 8),
-                          Text(
-                            'VOUS POURRIEZ AIMER',
-                            style: GoogleFonts.bebasNeue(
-                              fontSize: 14,
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                              letterSpacing: 1.2,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    SingleChildScrollView(
+                  SizedBox(
+                    height: 170,
+                    child: ListView.builder(
                       scrollDirection: Axis.horizontal,
-                      child: Row(
-                        children: [
-                          for (int i = 0; i < suggestions.length; i++)
-                            Padding(
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 8),
-                              child: SizedBox(
-                                width: 260,
-                                height: 180,
-                                child: _buildRecommendationCard(
-                                  suggestions[i].$1,
-                                  i + 3,
-                                  suggestions[i].$2,
-                                  isSuggestion: true,
-                                ),
-                              ),
-                            ),
-                        ],
+                      itemCount: topThree.length,
+                      itemBuilder: (context, i) {
+                        final medals = ['🥇', '🥈', '🥉'];
+                        final colors = [
+                          const Color(0xFFffd700),
+                          const Color(0xFFc0c0c0),
+                          const Color(0xFFcd7f32),
+                        ];
+                        return _buildActivityTile(
+                          topThree[i].$1,
+                          colors[i],
+                          medal: medals[i],
+                        );
+                      },
+                    ),
+                  ),
+                  if (suggestions.isNotEmpty) ...[
+                    const SizedBox(height: 20),
+                    _buildArcadeSectionTitle(
+                        Icons.lightbulb, 'VOUS POURRIEZ AIMER'),
+                    const SizedBox(height: 12),
+                    SizedBox(
+                      height: 170,
+                      child: ListView.builder(
+                        scrollDirection: Axis.horizontal,
+                        itemCount: suggestions.length,
+                        itemBuilder: (context, i) => _buildActivityTile(
+                            suggestions[i].$1, const Color(0xFF00c2ff)),
                       ),
                     ),
-                    const SizedBox(height: 20),
                   ],
                 ],
               ),
@@ -551,370 +628,149 @@ class _ActivitiesPageState extends State<ActivitiesPage>
     );
   }
 
-  Widget _buildRecommendationCard(Activity activity, int index, double score,
-      {bool isSuggestion = false}) {
-    final medals = ['🥇', '🥈', '🥉'];
-    final colors = [
-      const Color(0xFFFFD700), // Gold
-      const Color(0xFFC0C0C0), // Silver
-      const Color(0xFFCD7F32), // Bronze
-    ];
+  Widget _buildActivityTile(Activity activity, Color tileColor,
+      {String? medal}) {
+    final currentRating = _getCurrentRating(activity.id);
 
-    final cardColor = isSuggestion
-        ? const Color(0xFF4A90E2).withValues(alpha: 0.15)
-        : colors[index].withValues(alpha: 0.15);
-    final borderColor = isSuggestion
-        ? const Color(0xFF4A90E2).withValues(alpha: 0.6)
-        : colors[index].withValues(alpha: 0.6);
-    final gradientColor1 = isSuggestion
-        ? const Color(0xFF4A90E2).withValues(alpha: 0.25)
-        : colors[index].withValues(alpha: 0.25);
-    final gradientColor2 = isSuggestion
-        ? const Color(0xFF4A90E2).withValues(alpha: 0.1)
-        : colors[index].withValues(alpha: 0.1);
-    final shadowColor = isSuggestion
-        ? const Color(0xFF4A90E2).withValues(alpha: 0.4)
-        : colors[index].withValues(alpha: 0.4);
-
-    // Créer un fade controller si n'existe pas
-    if (!_fadeControllers.containsKey(activity.id)) {
-      _fadeControllers[activity.id] = AnimationController(
-        duration: const Duration(milliseconds: 600),
-        vsync: this,
-      );
-      _fadeControllers[activity.id]!.forward();
-    }
-
-    return FadeTransition(
-      opacity: _fadeControllers[activity.id] ?? AlwaysStoppedAnimation(1.0),
-      child: SlideTransition(
-        position: Tween<Offset>(begin: const Offset(0, 0.1), end: Offset.zero)
-            .animate(
-          CurvedAnimation(
-            parent:
-                _fadeControllers[activity.id] ?? AlwaysStoppedAnimation(1.0),
-            curve: Curves.easeOut,
-          ),
+    return Container(
+      margin: const EdgeInsets.only(right: 12),
+      width: 160,
+      height: 170,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            tileColor.withOpacity(0.3),
+            tileColor.withOpacity(0.1),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
         ),
-        child: GestureDetector(
-          onTap: () {
-            Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (context) => ActivityDetailsPage(
-                  activity: activity,
-                  activityRatingBox: widget.activityRatingBox,
-                  onFeedbackGiven: () {
-                    setState(() {});
-                  },
-                ),
-              ),
-            );
-          },
-          child: Container(
-            width: double.infinity,
-            height: isSuggestion ? 140 : 190,
-            margin: const EdgeInsets.only(bottom: 8),
-            decoration: BoxDecoration(
-              color: cardColor,
-              gradient: LinearGradient(
-                colors: [
-                  gradientColor1,
-                  gradientColor2,
-                ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: borderColor,
-                width: 2.5,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: shadowColor,
-                  blurRadius: 12,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(10),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        isSuggestion ? '💡' : medals[index],
-                        style: TextStyle(fontSize: isSuggestion ? 20 : 28),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              activity.title,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: GoogleFonts.poppins(
-                                fontSize: isSuggestion ? 13 : 16,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                              ),
-                            ),
-                            if (!isSuggestion) ...[
-                              const SizedBox(height: 4),
-                              Text(
-                                activity.description,
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                                style: GoogleFonts.poppins(
-                                  fontSize: 12,
-                                  color: Colors.white.withValues(alpha: 0.8),
-                                ),
-                              ),
-                            ],
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 3),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Expanded(
-                        child: Text(
-                          '${activity.duration.toInt()} min • ${activity.category}',
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: GoogleFonts.poppins(
-                            fontSize: isSuggestion ? 10 : 12,
-                            color: Colors.white.withValues(alpha: 0.7),
-                          ),
-                        ),
-                      ),
-                      Column(
-                        children: [
-                          Row(
-                            children: [
-                              IconButton(
-                                onPressed: () => _rateActivity(activity.id, 3),
-                                icon: const Icon(Icons.thumb_up),
-                                color: Colors.grey,
-                                iconSize: isSuggestion ? 18 : 20,
-                                padding: EdgeInsets.zero,
-                                constraints: const BoxConstraints(),
-                              ),
-                              const SizedBox(width: 8),
-                              IconButton(
-                                onPressed: () => _rateActivity(activity.id, 1),
-                                icon: const Icon(Icons.thumb_down),
-                                color: Colors.grey,
-                                iconSize: isSuggestion ? 18 : 20,
-                                padding: EdgeInsets.zero,
-                                constraints: const BoxConstraints(),
-                              ),
-                            ],
-                          ),
-                          IconButton(
-                            onPressed: () => _toggleFavorite(activity.id),
-                            icon: _isFavorite(activity.id)
-                                ? const Icon(Icons.favorite)
-                                : const Icon(Icons.favorite_border),
-                            color: _isFavorite(activity.id)
-                                ? Colors.red
-                                : Colors.grey,
-                            iconSize: isSuggestion ? 18 : 20,
-                            padding: EdgeInsets.zero,
-                            constraints: const BoxConstraints(),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: tileColor, width: 2),
+        boxShadow: [
+          BoxShadow(
+            color: tileColor.withOpacity(0.45),
+            blurRadius: 18,
+            offset: const Offset(0, 10),
           ),
-        ),
+        ],
       ),
-    );
-  }
-
-  Widget _buildSurpriseSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        // Texte motivant
-        Padding(
-          padding: const EdgeInsets.only(left: 12, right: 12, bottom: 12),
-          child: Text(
-            'Sortez de votre zone de confort',
-            style: GoogleFonts.bebasNeue(
-              fontSize: 18,
-              fontWeight: FontWeight.w700,
-              letterSpacing: 0.5,
-              color: Colors.white,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(18),
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => ActivityDetailsPage(
+                activity: activity,
+                activityRatingBox: widget.activityRatingBox,
+                onFeedbackGiven: () {
+                  setState(() {});
+                },
+              ),
             ),
-          ),
-        ),
-        // Bouton Surprise compact et épuré
-        Center(
-          child: ElevatedButton.icon(
-            onPressed: () async {
-              _surpriseRotationController.forward().then((_) {
-                _surpriseRotationController.reset();
-              });
-
-              final surprise =
-                  await recommendationService.getSurpriseActivity();
-              if (surprise != null && mounted) {
-                showDialog(
-                  context: context,
-                  builder: (context) => AlertDialog(
-                    title: Text(surprise.title),
-                    content: Column(
-                      mainAxisSize: MainAxisSize.min,
+          );
+        },
+        child: Padding(
+          padding: const EdgeInsets.all(12.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
                       children: [
-                        Text(surprise.description),
-                        const SizedBox(height: 12),
-                        Text('Durée: ${surprise.duration.toInt()} min'),
-                        Text('Catégorie: ${surprise.category}'),
+                        if (medal != null) ...[
+                          Text(medal, style: const TextStyle(fontSize: 20)),
+                          const SizedBox(width: 6),
+                        ],
+                        Expanded(
+                          child: Text(
+                            activity.title,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: GoogleFonts.pressStart2p(
+                              color: Colors.white,
+                              fontSize: 10,
+                              height: 1.1,
+                            ),
+                          ),
+                        ),
                       ],
                     ),
-                    actions: [
-                      ElevatedButton(
-                        onPressed: () {
-                          _rateActivity(surprise.id, 3);
-                          Navigator.pop(context);
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.grey,
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        const Icon(Icons.timer, color: Colors.orange, size: 12),
+                        const SizedBox(width: 4),
+                        Text(
+                          '${activity.duration.toInt()}min',
+                          style: GoogleFonts.poppins(
+                            color: Colors.white.withOpacity(0.8),
+                            fontSize: 10,
+                          ),
                         ),
-                        child: const Text('J\'aime'),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      activity.category,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: GoogleFonts.poppins(
+                        color: Colors.white.withOpacity(0.7),
+                        fontSize: 9,
                       ),
-                      ElevatedButton(
-                        onPressed: () {
-                          _rateActivity(surprise.id, 1);
-                          Navigator.pop(context);
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.grey,
-                        ),
-                        child: const Text('Je n\'aime pas'),
-                      ),
-                    ],
+                    ),
+                  ],
+                ),
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  // ✅ DISLIKE ROUGE SI ACTIF
+                  GestureDetector(
+                    onTap: () => _rateActivity(activity.id, 1),
+                    child: Icon(
+                      Icons.thumb_down,
+                      size: 18,
+                      color: (currentRating != null && currentRating < 3)
+                          ? Colors.red
+                          : Colors.white38,
+                    ),
                   ),
-                );
-              }
-            },
-            icon: const Icon(Icons.casino, color: Colors.white),
-            label: Text(
-              'SURPRIZME !',
-              style: GoogleFonts.bebasNeue(
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
-                letterSpacing: 1.5,
-                color: Colors.white,
-              ),
-            ),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF00C4CC),
-              padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(30),
-              ),
-              elevation: 8,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildFavoritesSection() {
-    final allActivities = recommendationService.getAllActivities();
-    final favoriteIds = widget.activityRatingBox.values
-        .where((r) => r.isFavorite)
-        .map((r) => r.activityId)
-        .toSet();
-
-    final favoriteActivities = allActivities
-        .where((activity) => favoriteIds.contains(activity.id))
-        .toList();
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Titre
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.15),
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(
-              color: Colors.white.withValues(alpha: 0.3),
-              width: 1,
-            ),
-          ),
-          child: Row(
-            children: [
-              const Icon(Icons.bookmark, color: Colors.yellow, size: 24),
-              const SizedBox(width: 8),
-              Text(
-                'À FAIRE PLUS TARD',
-                style: GoogleFonts.bebasNeue(
-                  fontSize: 16,
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 1.5,
-                ),
-              ),
-              const Spacer(),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: Colors.yellow.withValues(alpha: 0.3),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  '${favoriteActivities.length}',
-                  style: GoogleFonts.poppins(
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
+                  // ✅ LIKE VERT SI ACTIF
+                  GestureDetector(
+                    onTap: () => _rateActivity(activity.id, 3),
+                    child: Icon(
+                      Icons.thumb_up,
+                      size: 18,
+                      color: (currentRating != null && currentRating >= 3)
+                          ? Colors.green
+                          : Colors.white38,
+                    ),
                   ),
-                ),
+                  GestureDetector(
+                    onTap: () => _toggleFavorite(activity.id),
+                    child: Icon(
+                      _isFavorite(activity.id)
+                          ? Icons.favorite
+                          : Icons.favorite_border,
+                      size: 18,
+                      color: _isFavorite(activity.id)
+                          ? Colors.red
+                          : Colors.white38,
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
         ),
-        const SizedBox(height: 12),
-        if (favoriteActivities.isEmpty)
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 12),
-            child: Center(
-              child: Text(
-                'Aucune activité ajoutée',
-                style: GoogleFonts.poppins(
-                  color: Colors.white70,
-                  fontSize: 12,
-                ),
-              ),
-            ),
-          )
-        else
-          ...favoriteActivities.map((activity) {
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: _buildActivityCard(activity),
-            );
-          }),
-      ],
+      ),
     );
   }
 
@@ -929,137 +785,39 @@ class _ActivitiesPageState extends State<ActivitiesPage>
         .where((activity) => completedIds.contains(activity.id))
         .toList();
 
-    if (completedActivities.isEmpty) {
-      return const SizedBox.shrink();
-    }
+    if (completedActivities.isEmpty) return const SizedBox.shrink();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Titre
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.15),
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(
-              color: Colors.white.withValues(alpha: 0.3),
-              width: 1,
+        _buildArcadeSectionTitle(
+          Icons.check_circle,
+          'ACTIVITÉS COMPLÉTÉES',
+          trailing: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: const Color(0xFF00ff85).withOpacity(0.3),
+              borderRadius: BorderRadius.circular(12),
             ),
-          ),
-          child: Row(
-            children: [
-              const Icon(Icons.check_circle,
-                  color: Colors.greenAccent, size: 24),
-              const SizedBox(width: 8),
-              Text(
-                'ACTIVITÉS COMPLÉTÉES',
-                style: GoogleFonts.bebasNeue(
-                  fontSize: 16,
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 1.5,
-                ),
-              ),
-              const Spacer(),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: Colors.greenAccent.withValues(alpha: 0.3),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  '${completedActivities.length}',
-                  style: GoogleFonts.poppins(
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-            ],
+            child: Text(
+              '${completedActivities.length}',
+              style: GoogleFonts.pressStart2p(fontSize: 10, color: Colors.white),
+            ),
           ),
         ),
         const SizedBox(height: 12),
-        // Liste des activités complétées
-        ...completedActivities.map((activity) {
-          return Padding(
-            padding: const EdgeInsets.only(bottom: 8),
-            child: _buildCompletedActivityCard(activity),
-          );
-        }),
+        SizedBox(
+          height: 170,
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            itemCount: completedActivities.length,
+            itemBuilder: (context, index) {
+              return _buildActivityTile(
+                  completedActivities[index], const Color(0xFF00ff85));
+            },
+          ),
+        ),
       ],
-    );
-  }
-
-  Widget _buildCompletedActivityCard(Activity activity) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.greenAccent.withValues(alpha: 0.1),
-        gradient: LinearGradient(
-          colors: [
-            Colors.greenAccent.withValues(alpha: 0.08),
-            Colors.greenAccent.withValues(alpha: 0.03),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: Colors.greenAccent.withValues(alpha: 0.4),
-          width: 1.5,
-        ),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  activity.title,
-                  style: GoogleFonts.poppins(
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  '${activity.duration.toInt()} min • ${activity.category}',
-                  style: GoogleFonts.poppins(
-                    fontSize: 11,
-                    color: Colors.white.withValues(alpha: 0.6),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Row(
-            children: [
-              IconButton(
-                onPressed: () => _toggleDone(activity.id),
-                icon: const Icon(Icons.check_circle),
-                color: Colors.greenAccent,
-                iconSize: 20,
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(),
-              ),
-              const SizedBox(width: 4),
-              IconButton(
-                onPressed: () => _toggleFavorite(activity.id),
-                icon: const Icon(Icons.star),
-                color: _isFavorite(activity.id) ? Colors.yellow : Colors.grey,
-                iconSize: 18,
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(),
-              ),
-            ],
-          ),
-        ],
-      ),
     );
   }
 
@@ -1067,46 +825,56 @@ class _ActivitiesPageState extends State<ActivitiesPage>
     final activities = recommendationService.getAllActivities();
 
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        // Bouton pour afficher/masquer
-        ElevatedButton.icon(
-          icon: Icon(showAllActivities ? Icons.expand_less : Icons.expand_more),
-          label: Text(
-            showAllActivities
-                ? 'Masquer les activités'
-                : 'Voir toutes les activités',
+        Container(
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [Color(0xFF00d9ff), Color(0xFF00a3cc)],
+            ),
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF00d9ff).withOpacity(0.4),
+                blurRadius: 15,
+                offset: const Offset(0, 6),
+              ),
+            ],
           ),
-          onPressed: () {
-            setState(() {
-              showAllActivities = !showAllActivities;
-            });
-          },
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.cyan.withValues(alpha: 0.7),
-            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              borderRadius: BorderRadius.circular(12),
+              onTap: () => setState(() => showAllActivities = !showAllActivities),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                        showAllActivities ? Icons.expand_less : Icons.expand_more,
+                        color: Colors.white),
+                    const SizedBox(width: 8),
+                    Text(
+                      showAllActivities ? 'MASQUER' : 'TOUTES LES ACTIVITÉS',
+                      style: GoogleFonts.pressStart2p(
+                          fontSize: 10, color: Colors.white),
+                    ),
+                  ],
+                ),
+              ),
+            ),
           ),
         ),
         if (showAllActivities) ...[
           const SizedBox(height: 16),
-          // Titre simple
-          Text(
-            'TOUTES LES ACTIVITÉS',
-            style: GoogleFonts.bebasNeue(
-              fontSize: 16,
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-              letterSpacing: 1.5,
-            ),
-          ),
+          _buildArcadeSectionTitle(Icons.list_alt, 'CATALOGUE'),
           const SizedBox(height: 12),
           ListView.builder(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             itemCount: activities.length,
-            itemBuilder: (context, index) {
-              return _buildActivityCard(activities[index]);
-            },
+            itemBuilder: (context, index) => _buildActivityCard(activities[index]),
           ),
         ],
       ],
@@ -1114,10 +882,9 @@ class _ActivitiesPageState extends State<ActivitiesPage>
   }
 
   Widget _buildActivityCard(Activity activity) {
-    // Vérifier si l'activité a été testée
-    final isRated = widget.activityRatingBox.values.any(
-      (rating) => rating.activityId == activity.id,
-    );
+    final isRated = widget.activityRatingBox.values
+        .any((rating) => rating.activityId == activity.id);
+    final currentRating = _getCurrentRating(activity.id);
 
     return GestureDetector(
       onTap: () {
@@ -1126,127 +893,96 @@ class _ActivitiesPageState extends State<ActivitiesPage>
             builder: (context) => ActivityDetailsPage(
               activity: activity,
               activityRatingBox: widget.activityRatingBox,
-              onFeedbackGiven: () {
-                setState(() {});
-              },
+              onFeedbackGiven: () => setState(() {}),
             ),
           ),
         );
       },
       child: Container(
         margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.95),
+          color: const Color(0xFF0d1b35),
           borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: const Color(0xFF00d9ff).withOpacity(0.5)),
+          boxShadow: [
+            BoxShadow(
+                color: const Color(0xFF00d9ff).withOpacity(0.2),
+                blurRadius: 10,
+                offset: const Offset(0, 4)),
+          ],
         ),
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          activity.title,
-                          style: GoogleFonts.poppins(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          activity.description,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(activity.title,
+                          style: GoogleFonts.pressStart2p(
+                              fontSize: 11, color: Colors.white)),
+                      const SizedBox(height: 4),
+                      Text(activity.description,
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                           style: GoogleFonts.poppins(
-                            fontSize: 12,
-                            color: Colors.grey,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  if (!isRated)
-                    GestureDetector(
-                      onTap: () {
-                        // Placeholder pour action future
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text('${activity.title} - À découvrir!'),
-                            duration: const Duration(milliseconds: 1500),
-                          ),
-                        );
-                      },
-                      child: Container(
-                        margin: const EdgeInsets.only(left: 8),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.orange.withValues(alpha: 0.2),
-                          borderRadius: BorderRadius.circular(6),
-                          border: Border.all(color: Colors.orange, width: 1.5),
-                        ),
-                        child: Text(
-                          'À découvrir',
-                          style: GoogleFonts.poppins(
-                            fontSize: 11,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.orange[700],
-                          ),
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    '${activity.duration.toInt()} min • ${activity.category}',
-                    style: GoogleFonts.poppins(fontSize: 12),
-                  ),
-                  Row(
-                    children: [
-                      ScaleTransition(
-                        scale: Tween(begin: 1.0, end: 1.3).animate(
-                          _bounceControllers[activity.id] ??
-                              AlwaysStoppedAnimation(1.0),
-                        ),
-                        child: IconButton(
-                          onPressed: () => _rateActivity(activity.id, 3),
-                          icon: const Icon(Icons.thumb_up),
-                          color: Colors.grey,
-                          iconSize: 24,
-                        ),
-                      ),
-                      const SizedBox(width: 4),
-                      ScaleTransition(
-                        scale: Tween(begin: 1.0, end: 1.3).animate(
-                          _bounceControllers[activity.id] ??
-                              AlwaysStoppedAnimation(1.0),
-                        ),
-                        child: IconButton(
-                          onPressed: () => _rateActivity(activity.id, 1),
-                          icon: const Icon(Icons.thumb_down),
-                          color: Colors.grey,
-                          iconSize: 24,
-                        ),
-                      ),
+                              fontSize: 11, color: Colors.white70)),
                     ],
                   ),
-                ],
-              ),
-            ],
-          ),
+                ),
+                if (!isRated)
+                  Container(
+                    margin: const EdgeInsets.only(left: 8),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFffa940).withOpacity(0.3),
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(color: const Color(0xFFffa940)),
+                    ),
+                    child: Text('NOUVEAU',
+                        style: GoogleFonts.pressStart2p(
+                            fontSize: 8, color: const Color(0xFFffa940))),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  '${activity.duration.toInt()} min • ${activity.category}',
+                  style: GoogleFonts.poppins(fontSize: 11, color: Colors.white70),
+                ),
+                Row(
+                  children: [
+                    // ✅ LIKE VERT
+                    IconButton(
+                      onPressed: () => _rateActivity(activity.id, 3),
+                      icon: const Icon(Icons.thumb_up),
+                      color: (currentRating != null && currentRating >= 3)
+                          ? Colors.green
+                          : Colors.white60,
+                      iconSize: 20,
+                    ),
+                    // ✅ DISLIKE ROUGE
+                    IconButton(
+                      onPressed: () => _rateActivity(activity.id, 1),
+                      icon: const Icon(Icons.thumb_down),
+                      color: (currentRating != null && currentRating < 3)
+                          ? Colors.red
+                          : Colors.white60,
+                      iconSize: 20,
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ],
         ),
       ),
     );

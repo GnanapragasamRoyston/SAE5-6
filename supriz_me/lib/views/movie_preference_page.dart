@@ -12,31 +12,13 @@ class MoviePreferencePage extends StatefulWidget {
 }
 
 class _MoviePreferencePageState extends State<MoviePreferencePage> {
-  // ----- VARIABLES -----
   List<String> selectedGenres = [];
-  int preferredDuration = 120; // en minutes
-  bool allowSurprise = true;
+  int preferredDuration = 120;
 
   final List<String> allGenres = const [
-    "action",
-    "adventure",
-    "animation",
-    "comedy",
-    "crime",
-    "documentary",
-    "drama",
-    "family",
-    "fantasy",
-    "history",
-    "horror",
-    "music",
-    "mystery",
-    "romance",
-    "science fiction",
-    "thriller",
-    "tv_movie",
-    "war",
-    "western",
+    "action", "adventure", "animation", "comedy", "crime", "documentary",
+    "drama", "family", "fantasy", "history", "horror", "music", "mystery",
+    "romance", "science fiction", "thriller", "tv_movie", "war", "western",
   ];
 
   @override
@@ -45,162 +27,136 @@ class _MoviePreferencePageState extends State<MoviePreferencePage> {
     _loadPrefs();
   }
 
-  // ----- LOAD EXISTING PREFS -----
   void _loadPrefs() {
     selectedGenres = (widget.settingsBox.get("initial_movie_genres") as List?)
-            ?.cast<String>() ??
-        [];
+        ?.cast<String>() ?? [];
     preferredDuration = widget.settingsBox.get("preferred_duration") ?? 120;
-    allowSurprise = widget.settingsBox.get("allow_surprise") ?? true;
   }
 
-  // ----- SAVE PREFS -----
   void _savePrefs() {
     widget.settingsBox.put("initial_movie_genres", selectedGenres);
     widget.settingsBox.put("preferred_duration", preferredDuration);
-    widget.settingsBox.put("allow_surprise", allowSurprise);
-
-    // FIX CLÉ : Enregistre que les préférences ont été initialisées
     widget.settingsBox.put("movie_prefs_initialized", true);
-
     Navigator.pop(context);
   }
 
-  // ----- UI -----
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          "Préférences Films",
-          style: GoogleFonts.bebasNeue(fontSize: 26),
-        ),
-        backgroundColor: const Color.fromARGB(255, 59, 100, 233),
-      ),
+      backgroundColor: const Color(0xFF050814),
       body: Container(
-        padding: const EdgeInsets.all(16),
         decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              Color.fromARGB(255, 67, 128, 241),
-              Color.fromARGB(255, 252, 136, 165)
-            ],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
+          gradient: RadialGradient(
+            radius: 1.2, center: Alignment(0, -0.5),
+            colors: [Color(0xFF101738), Color(0xFF050814)],
           ),
         ),
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // --- DURÉE ---
-              Text(
-                "⏱ Durée préférée",
-                style: GoogleFonts.poppins(
-                  fontSize: 18,
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
+        child: CustomScrollView(
+          slivers: [
+            SliverAppBar(
+              pinned: true,
+              backgroundColor: Colors.transparent,
+              expandedHeight: 120,
+              flexibleSpace: Container(
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(colors: [Color(0xFFff4b81), Color(0xFFff9f4b)]),
+                ),
+                child: FlexibleSpaceBar(
+                  centerTitle: true,
+                  title: Text("PRÉFÉRENCES FILMS", style: GoogleFonts.pressStart2p(fontSize: 14, color: Colors.white)),
                 ),
               ),
-              Slider(
-                value: preferredDuration.toDouble(),
-                min: 30,
-                max: 240,
-                divisions: 14,
-                label: "$preferredDuration min",
-                onChanged: (val) {
-                  setState(() {
-                    preferredDuration = val.toInt();
-                  });
-                },
-              ),
-              Text(
-                "$preferredDuration minutes",
-                style: GoogleFonts.poppins(color: Colors.white70),
-              ),
-              const SizedBox(height: 24),
-
-              // --- GENRES ---
-              Text(
-                "🎬 Genres préférés",
-                style: GoogleFonts.poppins(
-                  fontSize: 18,
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 10),
-
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: [
-                  for (final genre in allGenres)
-                    FilterChip(
-                      label: Text(
-                        genre.toUpperCase(),
-                        style: const TextStyle(color: Colors.black),
+            ),
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.all(20.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildSectionTitle(Icons.access_time, "DURÉE PRÉFÉRÉE"),
+                    const SizedBox(height: 16),
+                    Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF121b3a),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: const Color(0xFF3cf2ff), width: 2),
                       ),
-                      selected: selectedGenres.contains(genre),
-                      selectedColor: const Color.fromARGB(255, 241, 84, 123),
-                      backgroundColor: Colors.white12,
-                      onSelected: (selected) {
-                        setState(() {
-                          if (selected) {
-                            selectedGenres.add(genre);
-                          } else {
-                            selectedGenres.remove(genre);
-                          }
-                        });
-                      },
+                      child: Column(
+                        children: [
+                          Text("$preferredDuration MIN", style: GoogleFonts.pressStart2p(fontSize: 28, color: const Color(0xFF3cf2ff))),
+                          Slider(
+                            value: preferredDuration.toDouble(),
+                            min: 30, max: 240, divisions: 14,
+                            onChanged: (val) => setState(() => preferredDuration = val.toInt()),
+                          ),
+                        ],
+                      ),
                     ),
-                ],
-              ),
-              const SizedBox(height: 24),
-
-              // --- SURPRISE ---
-              CheckboxListTile(
-                title: const Text(
-                  'Autoriser les surprises',
-                  style: TextStyle(color: Colors.white),
-                ),
-                subtitle: const Text(
-                  'Proposer des films inattendus',
-                  style: TextStyle(color: Colors.white70),
-                ),
-                value: allowSurprise,
-                onChanged: (value) {
-                  setState(() {
-                    allowSurprise = value ?? true;
-                  });
-                },
-              ),
-              const SizedBox(height: 30),
-
-              // --- SAVE BUTTON ---
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: _savePrefs,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color.fromARGB(255, 241, 84, 123),
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                  ),
-                  child: Text(
-                    "Valider",
-                    style: GoogleFonts.poppins(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
+                    const SizedBox(height: 32),
+                    _buildSectionTitle(Icons.movie_filter, "GENRES PRÉFÉRÉS"),
+                    const SizedBox(height: 16),
+                    Wrap(
+                      spacing: 10, runSpacing: 10,
+                      children: allGenres.map((genre) {
+                        final isSelected = selectedGenres.contains(genre);
+                        return GestureDetector(
+                          onTap: () => setState(() => isSelected ? selectedGenres.remove(genre) : selectedGenres.add(genre)),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                            decoration: BoxDecoration(
+                              gradient: isSelected ? const LinearGradient(colors: [Color(0xFFff4b81), Color(0xFFff9f4b)]) : null,
+                              color: isSelected ? null : const Color(0xFF121b3a),
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(color: isSelected ? const Color(0xFFff4b81) : const Color(0xFF3cf2ff).withOpacity(0.5), width: 2),
+                            ),
+                            child: Text(genre.toUpperCase(), style: GoogleFonts.poppins(fontSize: 11, color: Colors.white)),
+                          ),
+                        );
+                      }).toList(),
                     ),
-                  ),
+                    const SizedBox(height: 40),
+                    _buildSubmitButton(),
+                    const SizedBox(height: 40),
+                  ],
                 ),
               ),
-              const SizedBox(height: 30),
-            ],
-          ),
+            ),
+          ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildSubmitButton() {
+    return Container(
+      width: double.infinity, height: 60,
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(colors: [Color(0xFFff0080), Color(0xFFff6600)]),
+        borderRadius: BorderRadius.circular(30),
+      ),
+      child: InkWell(
+        onTap: _savePrefs,
+        child: Center(child: Text("VALIDER", style: GoogleFonts.pressStart2p(fontSize: 16, color: Colors.white))),
+      ),
+    );
+  }
+
+  Widget _buildSectionTitle(IconData icon, String label) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: const Color(0xFF121b3a),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFF3cf2ff), width: 1.5),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, color: Colors.white, size: 18),
+          const SizedBox(width: 10),
+          Text(label, style: GoogleFonts.pressStart2p(fontSize: 11, color: Colors.white)),
+        ],
       ),
     );
   }
