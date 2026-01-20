@@ -475,7 +475,7 @@ class _MoviesPageState extends State<MoviesPage> {
             const SizedBox(width: 12),
             Expanded(
               child: Text(
-                "FILMS ARCADE",
+                "FILMS",
                 style: GoogleFonts.pressStart2p(
                   fontSize: 14,
                   color: Colors.white,
