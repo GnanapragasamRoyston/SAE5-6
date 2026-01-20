@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hive/hive.dart';
@@ -10,6 +11,7 @@ import '../services/recommendation/activity_recommendation_service_vectorial.dar
 import 'activity_preferences_page.dart';
 import 'activity_details_page.dart';
 import 'stats_page.dart';
+
 
 class ActivitiesPage extends StatefulWidget {
   final Box<Activity> activityBox;
@@ -163,23 +165,66 @@ class _ActivitiesPageState extends State<ActivitiesPage>
   }
 
   void _triggerSurprizme() async {
+    // Animation du bouton (comme avant)
     _surpriseRotationController.forward().then((_) {
       _surpriseRotationController.reset();
     });
-    final surprise = await recommendationService.getSurpriseActivity();
-    if (surprise != null && mounted) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => ActivityDetailsPage(
-            activity: surprise,
-            activityRatingBox: widget.activityRatingBox,
-            onFeedbackGiven: () {
-              setState(() {});
-            },
-          ),
-        ),
+
+    // 1. Récupérer les recommandations actuelles (pour les exclure de la surprise)
+    // On veut une "vraie" surprise, donc pas ce qui est déjà affiché en top liste.
+    final recommendations = await recommendationService.getRecommendationsWithScores(limit: 5);
+    final recommendedIds = recommendations.map((r) => r.$1.id).toSet();
+
+    // 2. Récupérer toutes les activités
+    final allActivities = widget.activityBox.values.toList();
+
+    // 3. Filtrer pour trouver des candidats valides
+    final availableSurprises = allActivities.where((activity) {
+      // Exclure celles déjà recommandées en haut de page
+      final isRecommended = recommendedIds.contains(activity.id);
+
+      // Vérifier le statut (Noté ou Fait)
+      final ratingObj = widget.activityRatingBox.values.firstWhereOrNull(
+        (r) => r.activityId == activity.id
       );
+      
+      // On exclut si c'est "Disliké" (note < 3) ou marqué comme "Fait"
+      final isDisliked = ratingObj != null && ratingObj.rating < 3;
+      final isDone = ratingObj?.isDone ?? false;
+
+      // La surprise doit être : Pas recommandée ET Pas détestée ET Pas déjà faite
+      return !isRecommended && !isDisliked && !isDone;
+    }).toList();
+
+    // 4. Sélectionner une activité au hasard
+    if (availableSurprises.isNotEmpty) {
+      final random = Random();
+      final surprise = availableSurprises[random.nextInt(availableSurprises.length)];
+
+      if (mounted) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ActivityDetailsPage(
+              activity: surprise,
+              activityRatingBox: widget.activityRatingBox,
+              onFeedbackGiven: () {
+                setState(() {});
+              },
+            ),
+          ),
+        );
+      }
+    } else {
+      // Cas de secours : Si l'utilisateur a tout fait ou tout noté
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Zut ! Aucune surprise inédite disponible (tout est déjà noté ou fait).'),
+            backgroundColor: Colors.amber,
+          ),
+        );
+      }
     }
   }
 
