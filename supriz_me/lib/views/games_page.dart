@@ -34,6 +34,7 @@ class _GamesPageState extends State<GamesPage> {
   int? _preferredPlayers;
   int? _maxDuration;
   Set<String> _likedGamesTitles = {};
+  Set<String> _favoriteGamesTitles = {};
   Set<String> _dislikedGamesTitles = {};
   Set<String> _completedGamesTitles = {};
   Map<String, double> _tagProfileScores = {};
@@ -44,6 +45,7 @@ class _GamesPageState extends State<GamesPage> {
   static const String _playersCountKey = 'player_count_preference';
   static const String _maxDurationKey = 'max_duration_preference';
   static const String _likedGamesKey = 'liked_games_titles';
+  static const String _favoritesKey = 'favorite_games_titles';
   static const String _dislikedGamesKey = 'disliked_games_titles';
   static const String _completedGamesKey = 'completed_games_titles';
 
@@ -63,8 +65,11 @@ class _GamesPageState extends State<GamesPage> {
         List<String>.from(widget.settingsBox.get(_dislikedGamesKey) ?? []);
     final savedCompleted =
         List<String>.from(widget.settingsBox.get(_completedGamesKey) ?? []);
+    final savedFavorites = 
+        List<String>.from(widget.settingsBox.get(_favoritesKey) ?? []);
 
     _likedGamesTitles = savedLikes.toSet();
+    _favoriteGamesTitles = savedFavorites.toSet();
     _dislikedGamesTitles = savedDislikes.toSet();
     _completedGamesTitles = savedCompleted.toSet();
   }
@@ -348,6 +353,7 @@ class _GamesPageState extends State<GamesPage> {
     return 1.0;
   }
 
+ // --- GESTION DU POUCE (LIKE/DISLIKE) POUR L'ALGORITHME ---
   void _handleGameFeedback(BoardGame game, bool isLiked) async {
     setState(() {
       if (isLiked) {
@@ -367,19 +373,15 @@ class _GamesPageState extends State<GamesPage> {
       }
     });
 
+    // Sauvegarde des likes/dislikes
     await widget.settingsBox.put(_likedGamesKey, _likedGamesTitles.toList());
-    await widget.settingsBox
-        .put(_dislikedGamesKey, _dislikedGamesTitles.toList());
+    await widget.settingsBox.put(_dislikedGamesKey, _dislikedGamesTitles.toList());
 
     _reloadRecommendationSystem();
 
     final message = isLiked
-        ? (_likedGamesTitles.contains(game.title)
-            ? '✔ Jeu favori enregistré'
-            : 'Like annulé')
-        : (_dislikedGamesTitles.contains(game.title)
-            ? '✗ Jeu pénalisé'
-            : 'Dislike annulé');
+        ? (_likedGamesTitles.contains(game.title) ? '👍 Recommandation boostée' : 'Like annulé')
+        : (_dislikedGamesTitles.contains(game.title) ? '👎 Jeu écarté' : 'Dislike annulé');
 
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -392,6 +394,29 @@ class _GamesPageState extends State<GamesPage> {
     }
   }
 
+  // --- GESTION DU COEUR (FAVORIS) POUR TA LISTE PERSO ---
+  void _toggleFavorite(BoardGame game) async {
+    setState(() {
+      if (_favoriteGamesTitles.contains(game.title)) {
+        _favoriteGamesTitles.remove(game.title);
+      } else {
+        _favoriteGamesTitles.add(game.title);
+      }
+    });
+
+    // Sauvegarde dans une clé spécifique
+    await widget.settingsBox.put('favorite_games_titles', _favoriteGamesTitles.toList());
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(_favoriteGamesTitles.contains(game.title) ? '❤️ Ajouté aux favoris' : '💔 Retiré des favoris'),
+          backgroundColor: Colors.redAccent.withOpacity(0.8),
+          duration: const Duration(milliseconds: 800),
+        ),
+      );
+    }
+  }
   void _loadRecommendations({
     List<String>? genres,
     int? playerCount,
@@ -537,6 +562,35 @@ class _GamesPageState extends State<GamesPage> {
                                 ),
                               ),
                             ),
+                          const SizedBox(height: 25),
+                          _buildArcadeSectionTitle(Icons.favorite, 'MES FAVORIS'),
+                          const SizedBox(height: 12),
+                          Builder(builder: (context) {
+                            final favGames = widget.boardGameBox.values
+                                .where((g) => _favoriteGamesTitles.contains(g.title))
+                                      .toList();
+
+                                  if (favGames.isEmpty) {
+                                    return Container(
+                                      padding: const EdgeInsets.symmetric(vertical: 20),
+                                      child: Center(
+                                        child: Text(
+                                          "Aucun favori pour le moment",
+                                          style: GoogleFonts.poppins(color: Colors.white38, fontSize: 12),
+                                        ),
+                                      ),
+                                    );
+                                  }
+
+                            return SizedBox(
+                              height: 170,
+                              child: ListView.builder(
+                                scrollDirection: Axis.horizontal,
+                                itemCount: favGames.length,
+                                itemBuilder: (context, index) => _buildGameCard(favGames[index], Colors.orange),
+                              ),
+                            );
+                          }),
                           const SizedBox(height: 25),
                           _buildRecommendationsSection(),
                           const SizedBox(height: 25),
@@ -1083,26 +1137,35 @@ class _GamesPageState extends State<GamesPage> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    GestureDetector(
-                      onTap: () =>
-                          _handleGameFeedback(game, false),
+                      GestureDetector(
+                      onTap: () => _handleGameFeedback(game, false),
                       child: Icon(
                         Icons.thumb_down,
                         size: 18,
-                        color: isDisliked
-                            ? Colors.pinkAccent
+                        color: isDisliked ? Colors.pinkAccent : Colors.white38,
+                      ),
+                    ),
+                    // --- BOUTON FAVORIS (COEUR) ---
+                    // C'est ici qu'on change pour utiliser _toggleFavorite
+                    GestureDetector(
+                      onTap: () => _toggleFavorite(game), 
+                      child: Icon(
+                        _favoriteGamesTitles.contains(game.title) 
+                            ? Icons.favorite 
+                            : Icons.favorite_border,
+                        size: 20,
+                        color: _favoriteGamesTitles.contains(game.title) 
+                            ? Colors.redAccent 
                             : Colors.white38,
                       ),
                     ),
+                    // --- BOUTON LIKE (POUCE HAUT) ---
                     GestureDetector(
-                      onTap: () =>
-                          _handleGameFeedback(game, true),
+                      onTap: () => _handleGameFeedback(game, true),
                       child: Icon(
                         Icons.thumb_up,
                         size: 18,
-                        color: isLiked
-                            ? Colors.greenAccent
-                            : Colors.white38,
+                        color: isLiked ? Colors.greenAccent : Colors.white38,
                       ),
                     ),
                   ],

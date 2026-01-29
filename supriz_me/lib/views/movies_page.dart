@@ -290,6 +290,34 @@ class _MoviesPageState extends State<MoviesPage> {
                       ),
                     const SizedBox(height: 25),
 
+                    _buildArcadeSectionTitle(Icons.star, 'MES FILMS FAVORIS'),
+                    const SizedBox(height: 12),
+                    Builder(builder: (context) {
+                      final favMovies = widget.movieBox.values
+                          .where((m) => _isMovieFavorite(m.title))
+                          .toList();
+
+                      if (favMovies.isEmpty) {
+                        return Text("Aucun film en favori", 
+                                    style: GoogleFonts.poppins(color: Colors.white54, fontSize: 12));
+                      }
+
+                      return SizedBox(
+                        height: 170,
+                        child: ListView.builder(
+                          scrollDirection: Axis.horizontal,
+                          itemCount: favMovies.length,
+                          itemBuilder: (context, index) => MovieTile(
+                            movie: favMovies[index],
+                            recommender: _recommender,
+                            tileColor: Colors.amber, 
+                            moviesPageRef: this,
+                          ),
+                        ),
+                      );
+                    }),
+                    const SizedBox(height: 25),
+
                     _buildArcadeSectionTitle(Icons.favorite, 'RECOMMANDÉS'),
                     const SizedBox(height: 12),
                     ValueListenableBuilder<Box>(
