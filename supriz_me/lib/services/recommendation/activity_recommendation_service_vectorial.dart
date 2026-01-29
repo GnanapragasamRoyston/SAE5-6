@@ -336,7 +336,7 @@ class ActivityRecommendationServiceVectorial {
   /// Pour sortir de ta zone de confort
   /// Utilise la distance euclidienne (plus grande distance = plus différent)
   Future<Activity?> getSurpriseActivity() async {
-    if (userPreferences.allowSurprise == false) return null;
+    //if (userPreferences.allowSurprise == false) return null;
 
     final stopwatch = Stopwatch()..start();
 
@@ -413,8 +413,17 @@ class ActivityRecommendationServiceVectorial {
 
       // Retourner l'activité la plus différente (plus grande distance)
       if (scored.isEmpty) return null;
-      scored.sort((a, b) => b.$2.compareTo(a.$2)); // Tri décroissant
-      return scored.first.$1;
+
+      // 1. Trier par distance (plus différent au début)
+      scored.sort((a, b) => b.$2.compareTo(a.$2));
+
+      int range = min(5, scored.length);
+  
+      // 3. On choisit un index au hasard dans ce top 5
+      int randomIndex = Random().nextInt(range);
+  
+      return scored[randomIndex].$1;
+  
     } catch (e) {
       stopwatch.stop();
       return null;

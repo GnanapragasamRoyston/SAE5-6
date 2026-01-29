@@ -85,7 +85,11 @@ class _GamesPreferencesPageState extends State<GamesPreferencesPage> {
               backgroundColor: Colors.transparent,
               elevation: 0,
               expandedHeight: 120,
-              automaticallyImplyLeading: widget.isEditing,
+              automaticallyImplyLeading: true, 
+              leading: IconButton(
+                icon: const Icon(Icons.arrow_back, color: Colors.white),
+                onPressed: () => Navigator.of(context).pop(),
+              ),
               flexibleSpace: Container(
                 decoration: const BoxDecoration(
                   gradient: LinearGradient(

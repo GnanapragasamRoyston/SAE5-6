@@ -928,6 +928,7 @@ class _MovieDetailPageState extends State<MovieDetailPage> {
             child: CustomScrollView(
               slivers: [
                 SliverAppBar(
+                  iconTheme: const IconThemeData(color: Colors.white),
                   title: Text(
                     widget.movie.title,
                     style: GoogleFonts.pressStart2p(

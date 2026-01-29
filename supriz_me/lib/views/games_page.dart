@@ -28,6 +28,9 @@ class GamesPage extends StatefulWidget {
 class _GamesPageState extends State<GamesPage> {
   bool _isContentLoaded = false;
   List<BoardGame> _recommendedGames = [];
+  // Stockage des notes normalisées pour l'affichage uniquement
+  Map<String, double> _normalizedDisplayScores = {}; 
+  
   int? _preferredPlayers;
   int? _maxDuration;
   Set<String> _likedGamesTitles = {};
@@ -94,6 +97,36 @@ class _GamesPageState extends State<GamesPage> {
     }
   }
 
+  // --- LOGIQUE DE NORMALISATION ---
+  
+  void _normalizeRecommendations(List<BoardGame> games) {
+    if (games.isEmpty) return;
+
+    // Calcul des scores bruts via votre algorithme interne
+    final scores = games.map((g) => _calculateRecommendationScore(g)).toList();
+    final double maxS = scores.reduce(max);
+    final double minS = scores.reduce(min);
+
+    _normalizedDisplayScores.clear();
+
+    for (var game in games) {
+      double raw = _calculateRecommendationScore(game);
+      double normalized;
+
+      if (maxS == minS) {
+        normalized = 10.0;
+      } else {
+        // Formule Min-Max pour projeter sur [0, 10]
+        normalized = ((raw - minS) / (maxS - minS)) * 10;
+      }
+
+      // Stockage de la note arrondie à 2 décimales pour l'UI
+      _normalizedDisplayScores[game.title] = double.parse(normalized.toStringAsFixed(2));
+    }
+  }
+
+  // --------------------------------
+
   Future<void> _resetGamePreferences() async {
     await Future.wait([
       widget.settingsBox.delete(_preferencesSetKey),
@@ -120,6 +153,7 @@ class _GamesPageState extends State<GamesPage> {
         _completedGamesTitles.clear();
         _tagProfileScores.clear();
         _recommendedGames.clear();
+        _normalizedDisplayScores.clear();
         _isContentLoaded = false;
       });
 
@@ -389,16 +423,22 @@ class _GamesPageState extends State<GamesPage> {
 
     if (filteredGames.isNotEmpty) {
       initialRecs = filteredGames.toList();
+      // On garde le tri interne pour la précision
       initialRecs.sort((a, b) {
         final scoreA = _calculateRecommendationScore(a);
         final scoreB = _calculateRecommendationScore(b);
         return scoreB.compareTo(scoreA);
       });
       initialRecs = initialRecs.take(20).toList();
+      
+      // On génère les notes normalisées uniquement pour les 20 sélectionnés
+      _normalizeRecommendations(initialRecs);
+      
     } else {
       initialRecs = allGames.toList();
       initialRecs.sort((a, b) => b.rating.compareTo(a.rating));
       initialRecs = initialRecs.take(10).toList();
+      _normalizedDisplayScores.clear(); // Pas de score dynamique ici
     }
 
     setState(() {
@@ -597,7 +637,7 @@ class _GamesPageState extends State<GamesPage> {
             const SizedBox(width: 12),
             Expanded(
               child: Text(
-                "JEUX ARCADE",
+                "JEUX",
                 style: GoogleFonts.pressStart2p(
                   fontSize: 14,
                   color: Colors.white,
@@ -906,13 +946,14 @@ class _GamesPageState extends State<GamesPage> {
 
     Widget extraInfoWidget;
 
+    // --- MISE À JOUR DE L'AFFICHAGE DU SCORE ---
     if (showDynamicScore && infoType == _GameInfoType.dynamicScore) {
-      final dynamicScore = _calculateRecommendationScore(game);
+      final displayNote = _normalizedDisplayScores[game.title] ?? 0.0;
       extraInfoWidget = Text(
-        '${dynamicScore.toStringAsFixed(1)}',
+        '${displayNote.toStringAsFixed(2)}/10', // Score normalisé à 2 chiffres
         style: GoogleFonts.pressStart2p(
-          color: Colors.white,
-          fontSize: 11,
+          color: const Color(0xFF00d9ff),
+          fontSize: 9,
           letterSpacing: 1,
         ),
       );

@@ -123,8 +123,8 @@ class _GameDetailsPageState extends State<GameDetailsPage> {
     widget.onFeedbackGiven();
 
     final message = _favoriteGamesTitles.contains(widget.game.title)
-        ? '⭐ Ajouté à "À faire plus tard"'
-        : '⭐ Retiré de "À faire plus tard"';
+        ? '⭐ Ajouté au favoris'
+        : '⭐ Retiré des favoris';
 
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -169,6 +169,7 @@ class _GameDetailsPageState extends State<GameDetailsPage> {
               ),
               backgroundColor: Colors.transparent,
               elevation: 0,
+              iconTheme: const IconThemeData(color: Colors.white),
               pinned: true,
             ),
             SliverToBoxAdapter(

@@ -156,6 +156,7 @@ class _ActivityDetailsPageState extends State<ActivityDetailsPage> {
               ),
               backgroundColor: Colors.transparent,
               elevation: 0,
+              iconTheme: const IconThemeData(color: Colors.white),
               pinned: true,
             ),
             SliverToBoxAdapter(
